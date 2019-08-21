@@ -1,11 +1,36 @@
 import unittest      as ut
 import unittest.mock as mk
 
+import dataclasses as dclass
 import collections as collect
 
 import source.keyword as keyword
 
 import source.simulation.models as models
+
+
+class TestModel(ut.TestCase):
+    """test base input Model"""
+
+    def setUp(self):
+        """Setup the tests"""
+
+        self.Model = models.Model()
+
+    def test___init__(self):
+        """test __init__ for class"""
+
+        self.assertIsInstance(self.Model, models.Model)
+
+        self.assertEqual(self.Model.model_key, None)
+
+        self.assertTrue(dclass.is_dataclass(self.Model))
+
+    def test___call__(self):
+        """test __call__ for model"""
+
+        self.assertIsNone(self.Model(*(mk.MagicMock(), mk.MagicMock()),
+                                     **{'test': mk.MagicMock()}))
 
 
 class TestModels(ut.TestCase):
@@ -16,9 +41,11 @@ class TestModels(ut.TestCase):
 
         self.models = {}
         for input_key in keyword.required_inputs:
-            self.models[input_key] = mk.MagicMock()
+            self.models[input_key] = mk.create_autospec(models.Model,
+                                                        spec_set=True)
         for _ in range(3):
-            self.models[mk.MagicMock(spec=str)] = mk.MagicMock()
+            self.models[mk.MagicMock(spec=str)] = \
+                mk.create_autospec(models.Model, spec_set=True)
 
         self.Models = models.Models(self.models)
 

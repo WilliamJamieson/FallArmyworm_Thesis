@@ -84,6 +84,7 @@ init_mass     = 'init_mass'
 init_juvenile = 'init_juvenile'
 init_mature   = 'init_mature'
 init_sex      = 'init_sex'
+init_plant    = 'init_plant'
 
 egg_survival   = 'egg_survival'
 larva_survival = 'larva_survival'

@@ -139,12 +139,10 @@ class TestBehaviors(ut.TestCase):
 
         self.assertIsInstance(self.Behavior.gut, agent_gut.Gut)
         self.assertEqual(self.Behavior.gut.max_gut, kwargs[keyword.max_gut])
-        self.assertEqual(self.Behavior.gut.behavior, keyword.gut)
 
         self.assertIsInstance(self.Behavior.mass, agent_mass.Mass)
         self.assertEqual(self.Behavior.mass.max_gut, kwargs[keyword.max_gut])
         self.assertEqual(self.Behavior.mass.growth,  kwargs[keyword.growth])
-        self.assertEqual(self.Behavior.mass.behavior, keyword.mass)
 
     def test_make_development(self):
         """test make the development behavior"""

@@ -40,8 +40,6 @@ class TestMass(ut.TestCase):
         self.assertEqual(self.Mass.max_gut, self.max_gut)
         self.assertEqual(self.Mass.growth,  self.growth)
 
-        self.assertEqual(self.Mass.behavior, keyword.mass)
-
         self.assertTrue(dclass.is_dataclass(self.Mass))
 
     def test__volume(self):
@@ -177,4 +175,3 @@ class TestMass(ut.TestCase):
         self.assertIsInstance(self.Mass, mass.Mass)
         self.assertEqual(self.Mass.max_gut, self.max_gut)
         self.assertEqual(self.Mass.growth,  self.growth)
-        self.assertEqual(self.Mass.behavior, keyword.mass)

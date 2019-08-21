@@ -1,27 +1,23 @@
-# TODO: UPDATE THESE FOR NEW SYSTEMS
-
-import numpy       as np
+import dataclasses as dclass
 import scipy.stats as stats
 
-import source.hints    as hints
-import source.keywords as keywords
+import source.hint    as hint
+import source.keyword as keyword
 
-import source.models.model as model
+import source.simulation.models as models
 
 
-class MaxGut(model.Model):
+@dclass.dataclass
+class MaxGut(models.Model):
     """
     Class to contain a max_gut model:
         max_gut = mass^(3/4)
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.max_gut
+    model_key = keyword.max_gut
 
     def __call__(self, mass: float) -> float:
         """
@@ -37,588 +33,298 @@ class MaxGut(model.Model):
 
         return mass**0.75
 
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'MaxGut':
-        """
-        Setup the model
 
-        Args:
-            *args:    place holder
-            **kwargs: place holder
-
-        Returns:
-            the setup model
-        """
-
-        return cls()
-
-
-class Growth(model.Model):
+@dclass.dataclass
+class Growth(models.Model):
     """
     Class to contain a growth model:
         growth = alpha*energy - beta*mass
 
     Variables:
-        _alpha: energy variable
-        _beta:  cost variable
+        alpha: alpha constant
+            dict:
+                key:   genotype_key
+                value: alpha value
+        beta: beta constant
+            dict:
+                key:   genotype_key
+                value: beta value
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.growth
+    model_key = keyword.growth
 
-    def __init__(self, alpha: hints.variable,
-                       beta:  hints.variable):
-        self._alpha = alpha
-        self._beta  = beta
+    alpha: hint.variable
+    beta:  hint.variable
 
-    def __call__(self, mass:      float,
-                       energy:    float,
-                       phenotype: str) -> float:
+    def __call__(self, mass:     float,
+                       energy:   float,
+                       genotype: str) -> float:
         """
         Run the mathematical model
             growth = alpha*energy - beta*mass
 
         Args:
-            mass:      insect mass
-            energy:    insect energy
-            phenotype: insect phenotype
+            mass:     insect mass
+            energy:   insect energy
+            genotype: insect genotype
 
         Returns:
             the result of the above equation (growth)
         """
 
-        alpha = self._alpha(phenotype)
-        beta  = self._beta( phenotype)
+        alpha = self.alpha[genotype]
+        beta  = self.beta[ genotype]
 
         return alpha*energy - beta*mass
 
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Growth':
-        """
-        Setup the model
 
-        Args:
-            *args:    arg[0]= value(s) for alpha, arg[2]=value(s) for beta
-            **kwargs: other args
-
-        Returns:
-            the setup model
-        """
-
-        alpha = cls.setup_variable(*args[0], **kwargs)
-        beta  = cls.setup_variable(*args[1], **kwargs)
-
-        return cls(alpha, beta)
-
-
-class Recovery(model.Model):
-    """
-    Class to contain a growth model:
-        growth = alpha*mass^0.75 - beta*mass
-
-    Variables:
-        _alpha: energy variable
-        _beta:  cost variable
-
-    Methods:
-        __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
-    """
-
-    keyword = keywords.recovery
-
-    def __init__(self, alpha: hints.variable,
-                       beta:  hints.variable):
-        self._alpha = alpha
-        self._beta  = beta
-
-    def __call__(self, mass: float,
-                       bt:   str) -> float:
-        """
-        Run the mathematical model
-            growth = alpha*energy - beta*mass
-
-        Args:
-            mass: leaf mass
-            bt:   plant bt
-
-        Returns:
-            the result of the above equation (growth)
-        """
-
-        alpha  = self._alpha(bt)
-        beta   = self._beta( bt)
-        energy = mass**0.75
-
-        return alpha*energy - beta*mass
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Recovery':
-        """
-        Setup the model
-
-        Args:
-            *args:    arg[0]= value(s) for alpha, arg[2]=value(s) for beta
-            **kwargs: other args
-
-        Returns:
-            the setup model
-        """
-
-        alpha = cls.setup_variable(*args[0], **kwargs)
-        beta  = cls.setup_variable(*args[1], **kwargs)
-
-        return cls(alpha, beta)
-
-
-class InitMass(model.Model):
-    """
-    Class to contain a initial mass model:
-        Is made of 2 parts:
-            1. model for number of eggs in an egg_mass
-            2. model for mass of egg_mass
-
-    Variables:
-        _lam: average number of eggs in egg_mass
-
-        _mu:    average mass of an egg_mass
-        _sigma: standard deviation in egg_mass
-
-        _max_size: maximum allowed size
-
-    Methods:
-        __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
-    """
-
-    keyword = keywords.init_mass
-
-    def __init__(self, lam:      hints.variable,
-                       mu:       hints.variable,
-                       sigma:    hints.variable,
-                       max_size: hints.variable):
-        self._lam = lam
-
-        self._mu    = mu
-        self._sigma = sigma
-
-        self._max_size = max_size
-        
-    def _egg_num(self, phenotype: str) -> float:
-        """
-        Get the number of eggs for the egg mass:
-            this is poisson distributed with mean=_lam
-
-        Args:
-            phenotype: insect phenotype
-
-        Returns:
-            number of eggs in an egg mass
-        """
-
-        lam = self._lam(phenotype)
-
-        return stats.poisson.rvs(lam)
-
-    @staticmethod
-    def _lower(mu:    float,
-               sigma: float) -> float:
-        """
-        Get lower bound for egg mass distribution
-
-        Args:
-            mu:    mean
-            sigma: standard deviation
-
-        Returns:
-            truncnorm lower bound
-        """
-
-        eps = np.finfo(float).eps
-
-        return (eps - mu)/sigma
-
-    def _upper(self, mu:        float,
-                     sigma:     float,
-                     num:       float,
-                     phenotype: str) -> float:
-        """
-        Get upper bound for egg mass distribution
-
-        Args:
-            mu:    mean
-            sigma: standard deviation
-
-            num:       number of eggs
-            phenotype: insect phenotype
-
-        Returns:
-            truncnorm upper bound
-        """
-
-        upper = self._max_size(phenotype)*num
-
-        return (upper - mu)/sigma
-
-    def _egg_mass(self, num:       float,
-                        phenotype: str) -> float:
-        """
-        Get the mass for the egg mass:
-            this is normally distributed with mean=_mu, std_dev=sigma
-
-
-        Args:
-            num:       number of eggs
-            phenotype: insect phenotype
-
-        Returns:
-            mass of egg mass
-        """
-
-        mu    = self._mu(phenotype)
-        sigma = self._sigma(phenotype)
-
-        lower = self._lower(mu, sigma)
-        upper = self._upper(mu, sigma, num, phenotype)
-
-        return stats.truncnorm.rvs(lower, upper, loc=mu, scale=sigma)
-
-    def __call__(self, phenotype: str) -> float:
-        """
-        Run complete statistical model:
-            egg_mass/egg_num
-
-        Args:
-            phenotype: insect phenotype
-
-        Returns:
-            initial mass for one egg
-        """
-
-        num  = self._egg_num(phenotype)
-        mass = self._egg_mass(num, phenotype)
-
-        return mass/num
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'InitMass':
-        """
-
-        Args:
-            *args:    arg[0]=lam, arg[1]=mu, arg[2]=sigma, arg[3]=max_size
-            **kwargs: other args
-
-        Returns:
-            setup class
-        """
-
-        lam      = cls.setup_variable(*args[0], **kwargs)
-        mu       = cls.setup_variable(*args[1], **kwargs)
-        sigma    = cls.setup_variable(*args[2], **kwargs)
-        max_size = cls.setup_variable(*args[3], **kwargs)
-
-        return cls(lam, mu, sigma, max_size)
-
-
-class InitMature(model.Model):
-    """
-    Class to model the mass of a mature insect:
-        - truncated normal between 0 and max
-
-    Variables:
-        _mu:    average mass of mature insect
-        _sigma: standard deviation in mass of mature insect
-
-        _max_size: maximum allowed mass
-
-    Methods:
-        __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
-    """
-
-    keyword = keywords.init_mature
-
-    def __init__(self, mu: hints.variable,
-                       sigma: hints.variable,
-                       max_size: hints.variable):
-        self._mu    = mu
-        self._sigma = sigma
-
-        self._max_size = max_size
-
-    @staticmethod
-    def _lower(mu: float,
-               sigma: float) -> float:
-        """
-        Get lower bound for egg mass distribution
-
-        Args:
-            mu:    mean
-            sigma: standard deviation
-
-        Returns:
-            truncnorm lower bound
-        """
-
-        eps = np.finfo(float).eps
-
-        return (eps - mu) / sigma
-
-    def _upper(self, mu:        float,
-                     sigma:     float,
-                     phenotype: str) -> float:
-        """
-        Get upper bound for egg mass distribution
-
-        Args:
-            mu:    mean
-            sigma: standard deviation
-
-            phenotype: insect phenotype
-
-        Returns:
-            truncnorm upper bound
-        """
-
-        upper = self._max_size(phenotype)
-
-        return (upper - mu) / sigma
-
-    def __call__(self, phenotype: str) -> float:
-        """
-        Get the mass for the egg mass:
-            this is normally distributed with mean=_mu, std_dev=sigma
-
-
-        Args:
-            phenotype: insect phenotype
-
-        Returns:
-            mass of egg mass
-        """
-
-        mu    = self._mu(phenotype)
-        sigma = self._sigma(phenotype)
-
-        lower = self._lower(mu, sigma)
-        upper = self._upper(mu, sigma, phenotype)
-
-        return stats.truncnorm.rvs(lower, upper, loc=mu, scale=sigma)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'InitMature':
-        """
-
-        Args:
-            *args:    arg[0]=mu, arg[1]=sigma, arg[2]=max_size
-            **kwargs: other args
-
-        Returns:
-            setup class
-        """
-
-        mu       = cls.setup_variable(*args[0], **kwargs)
-        sigma    = cls.setup_variable(*args[1], **kwargs)
-        max_size = cls.setup_variable(*args[2], **kwargs)
-
-        return cls(mu, sigma, max_size)
-
-
-class EggNum(model.Model):
+@dclass.dataclass()
+class InitNum(models.Model):
     """
     Class to model initial number of eggs in egg mass:
         draw from Poisson distribution
 
     Variables:
-        _number: average number of eggs in egg mass
+        lam: average number of eggs in egg_mass
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.egg_num
+    model_key = keyword.init_num
 
-    def __init__(self, number: hints.variable):
-        self._number = number
+    lam: float
 
-    def __call__(self, *args) -> int:
+    def __call__(self, genotype: str) -> int:
         """
         Args:
-            *args: args[0] = adult phenotype (optional)
-                   args[1] = adult mass      (optional),
+            genotype: the genotype of the mother
 
         Returns:
             number of eggs
         """
 
-        if len(args) > 0:
-            lam = self._number(args[0])
-        else:
-            lam = self._number()
-
-        return int(stats.poisson.rvs(lam))
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'EggNum':
-        """
-        Setup the class
-
-        Args:
-            *args:    args[0]=number tuple
-            **kwargs: other args
-
-        Returns:
-            Fully setup class
-        """
-
-        number = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(number)
+        return int(stats.poisson.rvs(self.lam))
 
 
-class EggMass(model.Model):
+@dclass.dataclass
+class InitMass(models.Model):
     """
     Class to model an egg_mass's total mass
         draw from a normal distribution
 
     Variables:
-        _mu:      mean mass
-        _sigma:   standard deviation in mass
-        _maximum: maximum mass of single egg
+        mu:    average mass of an egg_mass
+            dict:
+                key: genotype key
+                value: mu value
+
+        sigma: standard deviation in egg_mass
+
+        maximum: maximum allowed size
+            dict:
+                key: genotype key
+                value: max_size
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.egg_mass
+    model_key = keyword.init_mass
 
-    def __init__(self, mu:      hints.variable,
-                       sigma:   hints.variable,
-                       maximum: hints.variable):
-        self._mu      = mu
-        self._sigma   = sigma
-        self._maximum = maximum
+    mu:      hint.variable
+    sigma:   float
+    maximum: hint.variable
 
-    @staticmethod
-    def _lower(mu:    float,
-               sigma: float) -> float:
+    def _lower(self, mu: float) -> float:
         """
-        Get lower bound for egg mass distribution
+        Get mass distribution lower bound
 
         Args:
-            mu:    mean
-            sigma: standard deviation
+            mu: mean of distribution
 
         Returns:
-            truncnorm lower bound
+            adjusted lower bound
         """
 
-        eps = np.finfo(float).eps
+        return (-mu)/self.sigma
 
-        return (eps - mu)/sigma
-
-    def _upper(self, mu:        float,
-                     sigma:     float,
-                     num:       float,
-                     *args) -> float:
+    def _upper(self, mu:       float,
+                     number:   int,
+                     genotype: str) -> float:
         """
-        Get upper bound for egg mass distribution
+        Get mass distribution upper bound
 
         Args:
-            mu:    mean
-            sigma: standard deviation
-
-            num:   number of eggs
-            *args: args[0] = phenotype (optional
+            mu:       mean of distribution
+            number:   number of eggs
+            genotype: genotype of insect
 
         Returns:
-            truncnorm upper bound
+            adjusted upper bound
         """
 
-        if len(args) > 0:
-            upper = self._maximum(args[0])*num
-        else:
-            upper = self._maximum()*num
+        upper = number*self.maximum[genotype]
 
-        return (upper - mu)/sigma
+        return (upper - mu)/self.sigma
 
-    def __call__(self, num: float, *args) -> float:
+    def __call__(self, number:   int,
+                       genotype: str) -> float:
         """
-        Get the mass for the egg mass:
-            this is normally distributed with mean=_mu, std_dev=sigma
-
+        Get the total mass of the egg_mass
 
         Args:
-            num:   number of eggs
-            *args: args[0] = adult phenotype (optional)
-                   args[1] = adult mass      (optional),
+            number:   number of eggs
+            genotype: insect genotype
 
         Returns:
-            mass of egg mass
+            mass of egg_mass
         """
 
-        if len(args) > 0:
-            phenotype = args[0]
-            mu    = self._mu(phenotype)
-            sigma = self._sigma(phenotype)
-            lower = self._lower(mu, sigma)
-            upper = self._upper(mu, sigma, num, phenotype)
-        else:
-            mu    = self._mu()
-            sigma = self._sigma()
-            lower = self._lower(mu, sigma)
-            upper = self._upper(mu, sigma, num)
+        mu = self.mu[genotype]
 
-        return float(stats.truncnorm.rvs(lower, upper, loc=mu, scale=sigma))
+        lower = self._lower(mu)
+        upper = self._upper(mu, number, genotype)
 
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'EggMass':
-        """
-        Setup the class
-
-        Args:
-            *args:    args[0]=mu tuple,
-                      args[1]=sigma tuple,
-                      args[2]=maximum tuple
-            **kwargs: other args
-
-        Returns:
-            Fully setup class
-        """
-
-        mu      = cls.setup_variable(*args[0], **kwargs)
-        sigma   = cls.setup_variable(*args[1], **kwargs)
-        maximum = cls.setup_variable(*args[2], **kwargs)
-
-        return cls(mu, sigma, maximum)
+        return float(stats.truncnorm.rvs(lower, upper,
+                                         loc=mu, scale=self.sigma))
 
 
-class InitLeaf(model.Model):
+@dclass.dataclass
+class InitJuvenile(models.Model):
     """
-    Class to contain an initial mass model for a leaf:
-        draw from a normal distribution
+    Class to contain a initial mass model for larvae:
+        Is made of 2 parts:
+            1. model for number of eggs in an egg_mass
+            2. model for mass of egg_mass
 
     Variables:
-        _mu:      mean mass
-        _sigma:   standard deviation in mass
-        _maximum: maximum mass
+        lam: average number of eggs in egg_mass
+
+        mu:    average mass of an egg_mass
+            dict:
+                key: genotype key
+                value: mu value
+
+        sigma: standard deviation in egg_mass
+
+        maximum: maximum allowed size
+            dict:
+                key: genotype key
+                value: max_size
+
+    Methods:
+        __call__: call the model
+    """
+
+    model_key = keyword.init_juvenile
+
+    lam:     float
+    mu:      hint.variable
+    sigma:   float
+    maximum: hint.variable
+
+    def _number(self) -> float:
+        """
+        Get the number of eggs in egg_mass
+
+        Returns:
+            the number of eggs
+        """
+
+        return stats.poisson.rvs(self.lam)
+
+    def _lower(self, mu: float) -> float:
+        """
+        Get mass distribution lower bound
+
+        Args:
+            mu: mean of distribution
+
+        Returns:
+            adjusted lower bound
+        """
+
+        return (-mu)/self.sigma
+
+    def _upper(self, mu:       float,
+                     number:   float,
+                     genotype: str) -> float:
+        """
+        Get mass distribution upper bound
+
+        Args:
+            mu:       mean of distribution
+            number:   number of eggs
+            genotype: genotype of insect
+
+        Returns:
+            adjusted upper bound
+        """
+
+        upper = number*self.maximum[genotype]
+
+        return (upper - mu)/self.sigma
+
+    def _total_mass(self, number:   float,
+                          genotype: str) -> float:
+        """
+        Get the total mass of the egg_mass
+
+        Args:
+            number:   number of eggs
+            genotype: insect genotype
+
+        Returns:
+            mass of egg_mass
+        """
+
+        mu = self.mu[genotype]
+
+        lower = self._lower(mu)
+        upper = self._upper(mu, number, genotype)
+
+        return stats.truncnorm.rvs(lower, upper, loc=mu, scale=self.sigma)
+
+    def __call__(self, genotype: str) -> float:
+        """
+        Run complete statistical model:
+            egg_mass/egg_num
+
+        Args:
+            genotype: insect genotype
+
+        Returns:
+            initial mass for one larva
+        """
+
+        num  = self._number()
+        mass = self._total_mass(num, genotype)
+
+        return float(mass/num)
+
+
+@dclass.dataclass
+class InitMature(models.Model):
+    """
+    Class to model the mass of a mature insect:
+        - truncated normal between 0 and max
+
+    Variables:
+        mu:    average mass of a mature insect
+            dict:
+                key: genotype key
+                value: mu value
+
+        sigma: standard deviation in mass
+
+        maximum: maximum allowed size
+            dict:
+                key: genotype key
+                value: max_size
 
     Methods:
         __call__: call the model
@@ -627,100 +333,120 @@ class InitLeaf(model.Model):
         setup: setup the mathematical model
     """
 
-    keyword = keywords.init_leaf
+    model_key = keyword.init_mature
 
-    def __init__(self, mu:      hints.variable,
-                       sigma:   hints.variable,
-                       maximum: hints.variable):
-        self._mu      = mu
-        self._sigma   = sigma
-        self._maximum = maximum
+    mu:      hint.variable
+    sigma:   float
+    maximum: hint.variable
 
-    @staticmethod
-    def _lower(mu:    float,
-               sigma: float) -> float:
+    def _lower(self, mu: float) -> float:
         """
-        Get lower bound for leaf mass distribution
+        Get mass distribution lower bound
 
         Args:
-            mu:    mean
-            sigma: standard deviation
+            mu: mean of distribution
 
         Returns:
-            truncnorm lower bound
+            adjusted lower bound
         """
 
-        eps = np.finfo(float).eps
+        return (-mu) / self.sigma
 
-        return (eps - mu)/sigma
 
-    def _upper(self, mu:        float,
-                     sigma:     float,
-                     *args) -> float:
+    def _upper(self, mu:       float,
+                     genotype: str) -> float:
         """
-        Get upper bound for leaf mass distribution
+        Get mass distribution upper bound
 
         Args:
-            mu:    mean
-            sigma: standard deviation
-
-            *args: args[0] = bt
+            mu:       mean of distribution
+            genotype: genotype of insect
 
         Returns:
-            truncnorm upper bound
+            adjusted upper bound
         """
 
-        if len(args) > 0:
-            upper = self._maximum(args[0])
-        else:
-            upper = self._maximum()
+        upper = self.maximum[genotype]
 
-        return (upper - mu)/sigma
+        return (upper - mu) / self.sigma
 
-    def __call__(self, *args) -> float:
+    def __call__(self, genotype: str) -> float:
         """
-        Get the mass for the egg mass:
-            this is normally distributed with mean=_mu, std_dev=sigma
-
+        Get the mass of the mature insect
 
         Args:
-            *args: args[0] = plant bt      (optional),
+            genotype: insect genotype
 
         Returns:
-            mass of egg mass
+            mass of mature insect
         """
 
-        if len(args) > 0:
-            bt    = args[0]
-            mu    = self._mu(bt)
-            sigma = self._sigma(bt)
-            lower = self._lower(mu, sigma)
-            upper = self._upper(mu, sigma, bt)
-        else:
-            mu    = self._mu()
-            sigma = self._sigma()
-            lower = self._lower(mu, sigma)
-            upper = self._upper(mu, sigma)
+        mu = self.mu[genotype]
 
-        return float(stats.truncnorm.rvs(lower, upper, loc=mu, scale=sigma))
+        lower = self._lower(mu)
+        upper = self._upper(mu, genotype)
 
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'InitLeaf':
+        return float(stats.truncnorm.rvs(lower, upper,
+                                         loc=mu, scale=self.sigma))
+
+
+@dclass.dataclass
+class InitPlant(models.Model):
+    """
+    Class to model the mass of food in plant:
+        - truncated normal between 0 and max
+
+    Variables:
+        mu: average mass food in plant
+
+        sigma: standard deviation of food in plant
+
+        maximum: maximum allowed food
+
+    Methods:
+        __call__: call the model
+    """
+
+    model_key = keyword.init_plant
+
+    mu:      float
+    sigma:   float
+    maximum: float
+
+    def _lower(self) -> float:
         """
-        Setup the class
+        Get mass distribution lower bound
+
+        Returns:
+            adjusted lower bound
+        """
+
+        return (-self.mu) / self.sigma
+
+
+    def _upper(self) -> float:
+        """
+        Get mass distribution upper bound
+
+        Returns:
+            adjusted upper bound
+        """
+
+        return (self.maximum - self.mu) / self.sigma
+
+    def __call__(self, bt: str) -> float:
+        """
+        Get the mass of food on the plant
 
         Args:
-            *args:    args[0]=mu tuple,
-                      args[1]=sigma tuple,
-                      args[2]=maximum tuple
-            **kwargs: other args
+            bt: the bt state of the plant
 
         Returns:
-            Fully setup class
+            mass of food in plant
         """
 
-        mu      = cls.setup_variable(*args[0], **kwargs)
-        sigma   = cls.setup_variable(*args[1], **kwargs)
-        maximum = cls.setup_variable(*args[2], **kwargs)
+        lower = self._lower()
+        upper = self._upper()
 
-        return cls(mu, sigma, maximum)
+        return float(stats.truncnorm.rvs(lower, upper,
+                                         loc=self.mu, scale=self.sigma))

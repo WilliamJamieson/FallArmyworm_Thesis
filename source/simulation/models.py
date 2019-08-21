@@ -1,6 +1,36 @@
+import dataclasses as dclass
 import collections as collect
 
+import source.hint    as hint
 import source.keyword as keyword
+
+
+@dclass.dataclass
+class Model(object):
+    """
+    Base class mathematical input models:
+
+        model_key: is the keyword for the model to be stored under
+
+    Methods:
+        __call__: call the model
+    """
+
+    model_key = None
+
+    def __call__(self, *args, **kwargs):
+        """
+        Call the model
+
+        Args:
+            *args:    input args
+            **kwargs: input kwargs
+
+        Returns:
+            result of model
+        """
+
+        pass
 
 
 class Models(collect.UserDict):
@@ -21,7 +51,7 @@ class Models(collect.UserDict):
         setup: setup the model from data
     """
 
-    def add_model(self, model) -> None:
+    def add_model(self, model: hint.model) -> None:
         """
         Add the model to the system
 

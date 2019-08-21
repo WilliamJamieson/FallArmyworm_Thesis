@@ -21,8 +21,6 @@ class Gut(object):
 
     max_gut: hint.max_gut
 
-    behavior: str = keyword.gut
-
     @staticmethod
     def _volume(larva: hint.larva) -> float:
         """

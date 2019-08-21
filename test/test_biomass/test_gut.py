@@ -36,8 +36,6 @@ class TestGut(ut.TestCase):
 
         self.assertEqual(self.Gut.max_gut, self.max_gut)
 
-        self.assertEqual(self.Gut.behavior, keyword.gut)
-
         self.assertTrue(dclass.is_dataclass(self.Gut))
 
     def test__volume(self):
@@ -105,4 +103,3 @@ class TestGut(ut.TestCase):
         self.Gut = gut.Gut.setup(**kwargs)
         self.assertIsInstance(self.Gut, gut.Gut)
         self.assertEqual(self.Gut.max_gut, self.max_gut)
-        self.assertEqual(self.Gut.behavior, keyword.gut)

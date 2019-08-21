@@ -228,11 +228,14 @@ schedule = 'main_schedule.Schedule'
 
 # Simulation Hints
 simulation = 'main_simulation.Simulation'
+model      = 'main_models.Model'
 models     = 'main_models.Models'
 behaviors  = 'main_behaviors.Behaviors'
 
 init_pop  = typing.Tuple[int, int, int]
 init_pops = typing.Tuple[init_pop, init_pop, init_pop, init_pop, init_pop]
+
+variable = typing.Dict[str, float]
 
 
 # Biomass Hints

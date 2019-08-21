@@ -23,8 +23,6 @@ class Mass(object):
     max_gut: hint.max_gut
     growth:  hint.growth
 
-    behavior: str = keyword.mass
-
     @staticmethod
     def _volume(larva: hint.larva) -> float:
         """
