@@ -86,14 +86,14 @@ init_mature   = 'init_mature'
 init_sex      = 'init_sex'
 init_plant    = 'init_plant'
 
+egg_development   = 'egg_development'
+larva_development = 'larva_development'
+pupa_development  = 'pupa_development'
+
 egg_survival   = 'egg_survival'
 larva_survival = 'larva_survival'
 pupa_survival  = 'pupa_survival'
 adult_survival = 'adult_survival'
-
-egg_development   = 'egg_development'
-larva_development = 'larva_development'
-pupa_development  = 'pupa_development'
 
 larva_movement = 'larva_movement'
 adult_movement = 'adult_movement'
@@ -121,17 +121,10 @@ required_inputs = [max_gut, growth, lifetime_male, lifetime_female, limited,
                    init_mass, init_mature, init_sex]
 
 # Behavior_keys
-gut  = 'gut'
-mass = 'mass'
-
 survival_egg   = 'survival_egg'
 survival_larva = 'survival_larva'
 survival_pupa  = 'survival_pupa'
 survival_adult = 'survival_adult'
-
-development_egg   = 'development_egg'
-development_larva = 'development_larva'
-development_pupa  = 'development_pupa'
 
 movement_larva = 'movement_larva'
 movement_adult = 'movement_adult'

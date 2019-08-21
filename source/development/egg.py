@@ -23,8 +23,6 @@ class Egg(object):
 
     development: hint.development_egg = None
 
-    behavior: str = keyword.development_egg
-
     @property
     def _use_development(self) -> bool:
         """Determine if we use the development model"""

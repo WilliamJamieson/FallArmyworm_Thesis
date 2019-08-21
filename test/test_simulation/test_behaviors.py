@@ -167,22 +167,16 @@ class TestBehaviors(ut.TestCase):
                               agent_develop_egg.Egg)
         self.assertEqual(self.Behavior.develop_egg.development,
                          kwargs[keyword.egg_development])
-        self.assertEqual(self.Behavior.develop_egg.behavior,
-                         keyword.development_egg)
 
         self.assertIsInstance(self.Behavior.develop_larva,
                               agent_develop_larva.Larva)
         self.assertEqual(self.Behavior.develop_larva.development,
                          kwargs[keyword.larva_development])
-        self.assertEqual(self.Behavior.develop_larva.behavior,
-                         keyword.development_larva)
 
         self.assertIsInstance(self.Behavior.develop_pupa,
                               agent_develop_pupa.Pupa)
         self.assertEqual(self.Behavior.develop_pupa.development,
                          kwargs[keyword.pupa_development])
-        self.assertEqual(self.Behavior.develop_pupa.behavior,
-                         keyword.development_pupa)
 
     def test_make_forage(self):
         """test make forage behaviors"""

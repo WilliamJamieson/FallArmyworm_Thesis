@@ -1,380 +1,176 @@
-# TODO: UPDATE THESE FOR NEW SYSTEMS
-
+import dataclasses  as dclass
 import numpy.random as rnd
 import scipy.stats  as stats
 
-import source.hints    as hints
-import source.keywords as keywords
+import source.hint    as hint
+import source.keyword as keyword
 
-import source.models.model as model
+import source.simulation.models as models
 
 
-class Egg(model.Model):
+@dclass.dataclass
+class Egg(models.Model):
     """
     Class to contain development model for egg
         USES CDF for Normal Distribution for probability
         Checks if minimum time has been achieved
 
     Variables:
-        _mu:      mean time for development
-        _sigma:   standard deviation in mean time
-        _minimum: minimum time to wait (optional)
+        mu:      mean time for development
+        sigma:   standard deviation in mean time
+        minimum: minimum time to wait
     """
 
-    keyword = keywords.egg_develop
+    model_key = keyword.egg_development
 
-    def __init__(self, mu:      hints.variable,
-                       sigma:   hints.variable,
-                       minimum: hints.variable):
-        self._mu      = mu
-        self._sigma   = sigma
-        self._minimum = minimum
+    mu:      float
+    sigma:   float
+    minimum: float
 
-    @property
-    def _use_minimum(self) -> bool:
-        """Determine if we use the minimum"""
-
-        return self._minimum is not None
-
-    def _min(self, time:      int,
-                   phenotype: str) -> bool:
-        """
-        Determine if min time has been achieved
-
-        Args:
-            time:      time egg has existed
-            phenotype: phenotype of the egg
-
-        Returns:
-            if min time has been achieved
-        """
-
-        if self._use_minimum:
-            return self._minimum(phenotype) <= time
-        else:
-            return True
-
-    def _cdf(self, time:      int,
-                   phenotype: str) -> float:
-        """
-        Evaluate the CDF for the normal distribution at current time
-
-        Args:
-            time:      time egg has existed
-            phenotype: phenotype of the egg
-
-        Returns:
-            a probability from normal
-        """
-
-        loc   = self._mu(phenotype)
-        scale = self._sigma(phenotype)
-
-        return stats.norm.cdf(time, loc=loc, scale=scale)
-
-    def _prob(self, time:      int,
-                    phenotype: str) -> float:
+    def _prob(self, age: int) -> float:
         """
         Get a probability to test against
 
         Args:
-            time:      time egg has existed
-            phenotype: phenotype of the egg
+            age: time egg has existed
 
         Returns:
             a probability of development
         """
 
-        if self._min(time, phenotype):
-            return self._cdf(time, phenotype)
+        if self.minimum <= age:
+            return stats.norm.cdf(age, loc=self.mu, scale=self.sigma)
         else:
             return 0
 
-    def __call__(self, mass:      float,
-                       time:      int,
-                       phenotype: str) -> bool:
+    def __call__(self, mass:     float,
+                       age:      int,
+                       genotype: str) -> bool:
         """
         Determine if an egg develops
 
         Args:
-            mass:      mass of egg
-            time:      time egg has existed
-            phenotype: phenotype of the egg
+            mass:     mass of egg
+            age:      time egg has existed
+            genotype: genotype of the egg
 
         Returns:
             if egg develops or not
         """
 
-        return rnd.random() <= self._prob(time, phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Egg':
-        """
-        Setup the model
-
-        Args:
-            *args:    args[0]=mu tuple, args[1]=sigma tuple,
-                      args[3]=minimum tuple (optional)
-            **kwargs: other args
-
-        Returns:
-            setup class
-        """
-
-        mu    = cls.setup_variable(*args[0], **kwargs)
-        sigma = cls.setup_variable(*args[1], **kwargs)
-
-        if len(args) > 2:
-            minimum = cls.setup_variable(*args[2], **kwargs)
-        else:
-            minimum = None
-
-        return cls(mu, sigma, minimum)
+        return rnd.random() <= self._prob(age)
 
 
-class Larva(model.Model):
+@dclass.dataclass
+class Larva(models.Model):
     """
     Class to contain development model for larva
         USES CDF for Normal Distribution for probability
         Checks if minimum time has been achieved
 
     Variables:
-        _mu:      mean mass for development
-        _sigma:   standard deviation in mean mass
-        _minimum: minimum time to wait (optional)
+        mu:      mean mass for development
+        sigma:   standard deviation in mean mass
+        minimum: minimum time to wait
     """
 
-    keyword = keywords.larva_develop
+    model_key = keyword.larva_development
 
-    def __init__(self, mu:      hints.variable,
-                       sigma:   hints.variable,
-                       minimum: hints.variable):
-        self._mu      = mu
-        self._sigma   = sigma
-        self._minimum = minimum
+    mu:      hint.variable
+    sigma:   hint.variable
+    minimum: hint.variable
 
-    @property
-    def _use_minimum(self) -> bool:
-        """Determine if we use the minimum"""
-
-        return self._minimum is not None
-
-    def _min(self, time:      int,
-                   phenotype: str) -> bool:
-        """
-        Determine if min time has been achieved
-
-        Args:
-            time:      time larva has existed
-            phenotype: phenotype of larva
-
-        Returns:
-            if min time has been achieved
-        """
-
-        if self._use_minimum:
-            return self._minimum(phenotype) <= time
-        else:
-            return True
-
-    def _cdf(self, mass:      float,
-                   phenotype: str) -> float:
-        """
-        Evaluate the CDF for the normal distribution at current mas
-
-        Args:
-            mass:      mass of larva
-            phenotype: phenotype of larva
-
-        Returns:
-            a probability from normal
-        """
-
-        loc   = self._mu(   phenotype)
-        scale = self._sigma(phenotype)
-
-        return stats.norm.cdf(mass, loc=loc, scale=scale)
-
-    def _prob(self, mass:      float,
-                    time:      int,
-                    phenotype: str) -> float:
+    def _prob(self, mass:     float,
+                    age:      int,
+                    genotype: str) -> float:
         """
         Get a probability to test against
 
         Args:
-            mass:      mass of larva
-            time:      time larva has existed
-            phenotype: phenotype of larva
+            mass:     mass of larva
+            age:      time larva has existed
+            genotype: genotype of larva
 
         Returns:
             a probability of development
         """
 
-        if self._min(time, phenotype):
-            return self._cdf(mass, phenotype)
+        minimum = self.minimum[genotype]
+
+        if minimum <= age:
+            mu    = self.mu[genotype]
+            sigma = self.sigma[genotype]
+
+            return stats.norm.cdf(mass, loc=mu, scale=sigma)
         else:
             return 0
 
-    def __call__(self, mass:      float,
-                       time:      int,
-                       phenotype: str) -> bool:
+    def __call__(self, mass:     float,
+                       age:      int,
+                       genotype: str) -> bool:
         """
-        Determine if an larva develops
+        Determine if a larva develops
 
         Args:
-            mass:      mass of larva
-            time:      time larva has existed
-            phenotype: phenotype of larva
+            mass:     mass of larva
+            age:      time larva has existed
+            genotype: genotype of the larva
 
         Returns:
-            if larva develops or not
+            if egg develops or not
         """
 
-        return rnd.random() <= self._prob(mass, time, phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Larva':
-        """
-        Setup the model
-
-        Args:
-            *args:    args[0]=mu tuple, args[1]=sigma tuple,
-                      args[3]=minimum tuple (optional)
-            **kwargs: other args
-
-        Returns:
-            setup class
-        """
-
-        mu    = cls.setup_variable(*args[0], **kwargs)
-        sigma = cls.setup_variable(*args[1], **kwargs)
-
-        if len(args) > 2:
-            minimum = cls.setup_variable(*args[2], **kwargs)
-        else:
-            minimum = None
-
-        return cls(mu, sigma, minimum)
+        return rnd.random() <= self._prob(mass, age, genotype)
 
 
-class Pupa(model.Model):
+@dclass.dataclass
+class Pupa(models.Model):
     """
     Class to contain development model for pupa
         USES CDF for Normal Distribution for probability
         Checks if minimum time has been achieved
 
     Variables:
-        _mu:      mean mass for development
-        _sigma:   standard deviation in mean mass
-        _minimum: minimum time to wait (optional)
+        mu:      mean time for development
+        sigma:   standard deviation in mean time
+        minimum: minimum time to wait
     """
 
-    keyword = keywords.pupa_develop
+    model_key = keyword.pupa_development
 
-    def __init__(self, mu:      hints.variable,
-                       sigma:   hints.variable,
-                       minimum: hints.variable):
-        self._mu      = mu
-        self._sigma   = sigma
-        self._minimum = minimum
+    mu:      float
+    sigma:   float
+    minimum: float
 
-    @property
-    def _use_minimum(self) -> bool:
-        """Determine if we use the minimum"""
-
-        return self._minimum is not None
-
-    def _min(self, time:      int,
-             phenotype: str) -> bool:
-        """
-        Determine if min time has been achieved
-
-        Args:
-            time:      time pupa has existed
-            phenotype: phenotype of pupa
-
-        Returns:
-            if min time has been achieved
-        """
-
-        if self._use_minimum:
-            return self._minimum(phenotype) <= time
-        else:
-            return True
-
-    def _cdf(self, time:      float,
-                   phenotype: str) -> float:
-        """
-        Evaluate the CDF for the normal distribution at current mas
-
-        Args:
-            time:      time pupa has existed
-            phenotype: phenotype of pupa
-
-        Returns:
-            a probability from normal
-        """
-
-        loc   = self._mu(   phenotype)
-        scale = self._sigma(phenotype)
-
-        return stats.norm.cdf(time, loc=loc, scale=scale)
-
-    def _prob(self, time:      int,
-                    phenotype: str) -> float:
+    def _prob(self, age: int) -> float:
         """
         Get a probability to test against
 
         Args:
-            time:      time pupa has existed
-            phenotype: phenotype of pupa
+            age: time pupa has existed
 
         Returns:
             a probability of development
         """
 
-        if self._min(time, phenotype):
-            return self._cdf(time, phenotype)
+        if self.minimum <= age:
+            return stats.norm.cdf(age, loc=self.mu, scale=self.sigma)
         else:
             return 0
 
-    def __call__(self, mass:      float,
-                       time:      int,
-                       phenotype: str) -> bool:
+    def __call__(self, mass:     float,
+                 age:      int,
+                 genotype: str) -> bool:
         """
         Determine if an pupa develops
 
         Args:
-            mass:      mass of pupa
-            time:      time pupa has existed
-            phenotype: phenotype of pupa
+            mass:     mass of pupa
+            age:      time pupa has existed
+            genotype: genotype of the pupa
 
         Returns:
             if pupa develops or not
         """
 
-        return rnd.random() <= self._prob(time, phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Pupa':
-        """
-        Setup the model
-
-        Args:
-            *args:    args[0]=mu tuple, args[1]=sigma tuple,
-                      args[3]=minimum tuple (optional)
-            **kwargs: other args
-
-        Returns:
-            setup class
-        """
-
-        mu    = cls.setup_variable(*args[0], **kwargs)
-        sigma = cls.setup_variable(*args[1], **kwargs)
-
-        if len(args) > 2:
-            minimum = cls.setup_variable(*args[2], **kwargs)
-        else:
-            minimum = None
-
-        return cls(mu, sigma, minimum)
+        return rnd.random() <= self._prob(age)

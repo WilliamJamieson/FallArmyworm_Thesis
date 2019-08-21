@@ -118,7 +118,7 @@ class TestInitNum(ut.TestCase):
 
         genotype = mk.MagicMock(spec=str)
 
-        with mk.patch.object(stats.poisson, 'rvs') as mkRVS:
+        with mk.patch.object(stats.poisson, 'rvs', autospec=True) as mkRVS:
             with mk.patch.object(model, 'int') as mkInt:
                 self.assertEqual(self.InitNum(genotype),
                                  mkInt.return_value)
@@ -198,7 +198,8 @@ class TestInitMass(ut.TestCase):
                              autospec=True) as mkLower:
             with mk.patch.object(model.InitMass, '_upper',
                                  autospec=True) as mkUpper:
-                with mk.patch.object(stats.truncnorm, 'rvs') as mkRVS:
+                with mk.patch.object(stats.truncnorm, 'rvs',
+                                     autospec=True) as mkRVS:
                     with mk.patch.object(model, 'float') as mkFloat:
                         self.assertEqual(self.InitMass(number, genotype),
                                          mkFloat.return_value)
@@ -305,7 +306,8 @@ class TestInitJuvenile(ut.TestCase):
                              autospec=True) as mkLower:
             with mk.patch.object(model.InitJuvenile, '_upper',
                                  autospec=True) as mkUpper:
-                with mk.patch.object(stats.truncnorm, 'rvs') as mkRVS:
+                with mk.patch.object(stats.truncnorm, 'rvs',
+                                     autospec=True) as mkRVS:
                     self.assertEqual(self.InitJuvenile.
                                         _total_mass(number, genotype),
                                      mkRVS.return_value)
@@ -420,7 +422,8 @@ class TestInitMature(ut.TestCase):
                              autospec=True) as mkLower:
             with mk.patch.object(model.InitMature, '_upper',
                                  autospec=True) as mkUpper:
-                with mk.patch.object(stats.truncnorm, 'rvs') as mkRVS:
+                with mk.patch.object(stats.truncnorm, 'rvs',
+                                     autospec=True) as mkRVS:
                     with mk.patch.object(model, 'float') as mkFloat:
                         self.assertEqual(self.InitMature(genotype),
                                          mkFloat.return_value)
@@ -507,7 +510,8 @@ class TestInitPlant(ut.TestCase):
                              autospec=True) as mkLower:
             with mk.patch.object(model.InitPlant, '_upper',
                                  autospec=True) as mkUpper:
-                with mk.patch.object(stats.truncnorm, 'rvs') as mkRVS:
+                with mk.patch.object(stats.truncnorm, 'rvs',
+                                     autospec=True) as mkRVS:
                     with mk.patch.object(model, 'float') as mkFloat:
                         self.assertEqual(self.InitPlant(bt),
                                          mkFloat.return_value)

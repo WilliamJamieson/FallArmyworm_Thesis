@@ -36,8 +36,6 @@ class TestEgg(ut.TestCase):
 
         self.assertEqual(self.Egg.development, self.development)
 
-        self.assertEqual(self.Egg.behavior, keyword.development_egg)
-
         self.assertTrue(dclass.is_dataclass(self.Egg))
 
     def test__use_development(self):
@@ -120,11 +118,9 @@ class TestEgg(ut.TestCase):
         self.Egg = development.Egg.setup(**kwargs)
         self.assertIsInstance(self.Egg, development.Egg)
         self.assertEqual(self.Egg.development, self.development)
-        self.assertEqual(self.Egg.behavior, keyword.development_egg)
 
         # Test if have the model
         kwargs = {}
         self.Egg = development.Egg.setup(**kwargs)
         self.assertIsInstance(self.Egg, development.Egg)
         self.assertEqual(self.Egg.development, None)
-        self.assertEqual(self.Egg.behavior, keyword.development_egg)

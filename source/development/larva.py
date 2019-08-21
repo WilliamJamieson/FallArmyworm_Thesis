@@ -23,8 +23,6 @@ class Larva(object):
 
     development: hint.development_larva = None
 
-    behavior: str = keyword.development_larva
-
     @property
     def _use_development(self) -> bool:
         """Determine if we use the development model"""

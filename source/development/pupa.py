@@ -23,8 +23,6 @@ class Pupa(object):
 
     development: hint.development_pupa = None
 
-    behavior: str = keyword.development_pupa
-
     @property
     def _use_development(self) -> bool:
         """Determine if we use the development model"""

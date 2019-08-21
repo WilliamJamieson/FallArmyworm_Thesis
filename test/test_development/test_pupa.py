@@ -36,8 +36,6 @@ class TestPupa(ut.TestCase):
 
         self.assertEqual(self.Pupa.development, self.development)
 
-        self.assertEqual(self.Pupa.behavior, keyword.development_pupa)
-
         self.assertTrue(dclass.is_dataclass(self.Pupa))
 
     def test__use_development(self):
@@ -120,11 +118,9 @@ class TestPupa(ut.TestCase):
         self.Pupa = development.Pupa.setup(**kwargs)
         self.assertIsInstance(self.Pupa, development.Pupa)
         self.assertEqual(self.Pupa.development, self.development)
-        self.assertEqual(self.Pupa.behavior, keyword.development_pupa)
 
         # Test if have the model
         kwargs = {}
         self.Pupa = development.Pupa.setup(**kwargs)
         self.assertIsInstance(self.Pupa, development.Pupa)
         self.assertEqual(self.Pupa.development, None)
-        self.assertEqual(self.Pupa.behavior, keyword.development_pupa)
