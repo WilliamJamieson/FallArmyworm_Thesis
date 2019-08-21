@@ -21,8 +21,6 @@ class Adult(object):
 
     survival: hint.survival_adult = None
 
-    behavior: str = keyword.survival_adult
-
     @property
     def _use_survival(self) -> bool:
         """Determine if we use the survival model"""

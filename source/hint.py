@@ -235,7 +235,8 @@ behaviors  = 'main_behaviors.Behaviors'
 init_pop  = typing.Tuple[int, int, int]
 init_pops = typing.Tuple[init_pop, init_pop, init_pop, init_pop, init_pop]
 
-variable = typing.Dict[str, float]
+variable    = typing.Dict[str, float]
+bt_variable = typing.Dict[str, variable]
 
 
 # Biomass Hints

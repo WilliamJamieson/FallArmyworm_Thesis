@@ -1,17 +1,17 @@
-# TODO: UPDATE THESE FOR NEW SYSTEMS
+import dataclasses   as dclass
+import numpy         as np
+import numpy.random  as rnd
 
-import numpy        as np
-import numpy.random as rnd
+import source.hint    as hint
+import source.keyword as keyword
 
-import source.hints    as hints
-import source.keywords as keywords
-
-import source.models.model as model
+import source.simulation.models as models
 
 
-class MassSurvive(model.Model):
+@dclass.dataclass
+class Larva(models.Model):
     """
-    Class to describe survival model which depends on mass
+    Class to describe survival model for larvae
         - assumes probability is a general logistic:
             P(m) = L + (U-L)/(1 + exp(-k(m-m0)))
 
@@ -19,305 +19,141 @@ class MassSurvive(model.Model):
             U  = maximum probability
             m0 = inflection point
             k  = steepness
+            m  = mass
 
 
     Variables:
-        _minimum:    minimum probability
-        _maximum:    maximum probability
-        _inflection: inflection point
-        _steepness:  steepness of transition
+        minimum:    minimum probability
+        maximum:    maximum probability
+        inflection: inflection point
+        steepness:  steepness of transition
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    def __init__(self, minimum:    hints.variable,
-                       maximum:    hints.variable,
-                       inflection: hints.variable,
-                       steepness:  hints.variable):
-        self._minimum    = minimum
-        self._maximum    = maximum
-        self._inflection = inflection
-        self._steepness  = steepness
+    model_key = keyword.larva_survival
 
-    def _logistic(self, mass:      float,
-                        phenotype: str) -> float:
+    minimum: hint.bt_variable
+    maximum: hint.bt_variable
+
+    inflection: hint.variable
+    steepness:  hint.variable
+
+    def _logistic(self, mass:     float,
+                        genotype: str,
+                        bt:       str) -> float:
         """
         Evaluate the generalized logistic function above
 
         Args:
-            mass:      insect mass
-            phenotype: insect phenotype
+            mass:     insect mass
+            genotype: larva's genotype
+            bt:       bt state of plant
 
         Returns:
             value of generalized logistic function described
         """
 
-        low = self._minimum(   phenotype)
-        up  = self._maximum(   phenotype)
-        m0  = self._inflection(phenotype)
-        k   = self._steepness( phenotype)
+        lower = self.minimum[bt][genotype]
+        upper = self.maximum[bt][genotype]
 
-        top = up - low
+        m0 = self.inflection[genotype]
+        k  = self.steepness[ genotype]
+
+        top = upper - lower
         bot = np.exp(-k*(mass - m0)) + 1
 
-        return low + top/bot
+        return lower + top/bot
 
-    def __call__(self, mass:      float,
-                       phenotype: str) -> bool:
+    def __call__(self, mass:     float,
+                       genotype: str,
+                       bt:       str) -> bool:
         """
         Run the survival model
+
         Args:
-            mass:      insect mass
-            phenotype: insect phenotype
+            mass:     insect mass
+            genotype: larva's genotype
+            bt:       bt state of plant
 
         Returns:
             result of flipping a coin weighted by logistic function's resulting
             probability
         """
 
-        return rnd.random() <= self._logistic(mass, phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'MassSurvive':
-        """
-        Correctly setup the class
-
-        Args:
-            *args: arg[0]=minimum, arg[1]=maximum, arg[2]=inflection,
-                   arg[3]=steepness
-            **kwargs: other args
-
-        Returns:
-            correctly initiated class
-        """
-
-        minimum    = cls.setup_variable(*args[0], **kwargs)
-        maximum    = cls.setup_variable(*args[1], **kwargs)
-        inflection = cls.setup_variable(*args[2], **kwargs)
-        steepness  = cls.setup_variable(*args[3], **kwargs)
-
-        return cls(minimum, maximum, inflection, steepness)
+        return rnd.random() <= self._logistic(mass, genotype, bt)
 
 
-class LarvaSurvive(model.Model):
+@dclass.dataclass
+class Fixed(models.Model):
     """
-    Class to describe survival model for larva, assumes on different types
-        of plant with different models
-
+    Class to describe a survival model with a fixed probability
 
     Variables:
-        _wild: wild type plant model (mass dependent)
-        _bt:   bt   type plant model (mass dependent)
+        prob: probability of survival
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.larva_survive
+    prob: float
 
-    def __init__(self, wild: MassSurvive,
-                       bt:   MassSurvive):
-        self._wild = wild
-        self._bt   = bt
-
-    def __call__(self, mass:      float,
-                       phenotype: str,
-                       bt:        str) -> bool:
+    def __call__(self, mass: float, *args) -> bool:
         """
-        Evaluate the model
+        Call the model to determine if the agent survives
 
         Args:
-            mass:      insect mass
-            phenotype: insect phenotype
-            bt:        plant type
-
-        Returns:
-            result of survival test
-        """
-
-        if bt == keywords.wild:
-            return self._wild(mass, phenotype)
-        elif bt == keywords.bt:
-            return self._bt(mass, phenotype)
-        else:
-            raise RuntimeError('Invalid plant type used')
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'LarvaSurvive':
-        """
-        Setup the class correctly
-
-        Args:
-            *args:    args[0]=wild tuple, args[1]=bt tuple
-            **kwargs: other args
-
-        Returns:
-            correctly setup instance of model
-        """
-
-        wild = MassSurvive.setup(*args[0], **kwargs)
-        bt   = MassSurvive.setup(*args[1], **kwargs)
-
-        return cls(wild, bt)
-
-
-class Egg(model.Model):
-    """
-    Class to describe the survival model for single egg
-
-    Variables:
-        _prob: probability of survival
-
-    Methods:
-        __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
-    """
-
-    keyword = keywords.egg_survive
-
-    def __init__(self, prob: hints.variable):
-        self._prob = prob
-
-    def __call__(self, mass:      float,
-                       bt:        str,
-                       phenotype: str) -> bool:
-        """
-        Call the model to determine if the egg survives
-
-        Args:
-            mass:      mass of of egg
-            bt:        bt state of plant
-            phenotype: phenotype of the egg
+            mass:  mass of agent
+            *args: genotype and bt (possibly)
 
         Returns:
             if egg survives
         """
 
-        return rnd.random() <= self._prob(phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Egg':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=prob
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        prob = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(prob)
+        return rnd.random() <= self.prob
 
 
-class Pupa(model.Model):
+@dclass.dataclass
+class Egg(Fixed):
+    """
+    Class to describe the survival model for single egg
+
+    Variables:
+        prob: probability of survival
+
+    Methods:
+        __call__: call the model
+    """
+
+    model_key = keyword.egg_survival
+
+
+@dclass.dataclass
+class Pupa(Fixed):
     """
     Class to describe the survival model for pupa
 
     Variables:
-        _prob: probability of survival
+        prob: probability of survival
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.pupa_survive
-
-    def __init__(self, prob: hints.variable):
-        self._prob = prob
-
-    def __call__(self, mass:      float,
-                       phenotype: str) -> bool:
-        """
-        Call the model to determine if the pupa survives
-
-        Args:
-            mass:      mass of of pupa
-            phenotype: phenotype of pupa
-
-        Returns:
-            if pupa survives
-        """
-
-        return rnd.random() <= self._prob(phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Pupa':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=prob
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        prob = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(prob)
+    model_key = keyword.pupa_survival
 
 
-class Adult(model.Model):
+@dclass.dataclass
+class Adult(Fixed):
     """
     Class to describe the survival model for adult
 
     Variables:
-        _prob: probability of survival
+        prob: probability of survival
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.adult_survive
-
-    def __init__(self, prob: hints.variable):
-        self._prob = prob
-
-    def __call__(self, mass:      float,
-                       phenotype: str) -> bool:
-        """
-        Call the model to determine if the adult survives
-
-        Args:
-            mass:      mass of of adult
-            phenotype: phenotype of adult
-
-        Returns:
-            if adult survives
-        """
-
-        return rnd.random() <= self._prob(phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Adult':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=prob
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        prob = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(prob)
+    model_key = keyword.adult_survival

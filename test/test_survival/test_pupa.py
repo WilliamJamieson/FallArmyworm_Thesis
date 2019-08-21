@@ -34,8 +34,6 @@ class TestPupa(ut.TestCase):
 
         self.assertEqual(self.Pupa.survival, self.survival)
 
-        self.assertEqual(self.Pupa.behavior, keyword.survival_pupa)
-
         self.assertTrue(dclass.is_dataclass(self.Pupa))
 
     def test__use_survival(self):
@@ -96,11 +94,9 @@ class TestPupa(ut.TestCase):
         self.Pupa = survival.Pupa.setup(**kwargs)
         self.assertIsInstance(self.Pupa, survival.Pupa)
         self.assertEqual(self.Pupa.survival, self.survival)
-        self.assertEqual(self.Pupa.behavior, keyword.survival_pupa)
 
         # Test if have the model
         kwargs = {}
         self.Pupa = survival.Pupa.setup(**kwargs)
         self.assertIsInstance(self.Pupa, survival.Pupa)
         self.assertEqual(self.Pupa.survival, None)
-        self.assertEqual(self.Pupa.behavior, keyword.survival_pupa)

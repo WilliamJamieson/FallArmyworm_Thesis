@@ -119,14 +119,3 @@ limited         = 'limited'
 
 required_inputs = [max_gut, growth, lifetime_male, lifetime_female, limited,
                    init_mass, init_mature, init_sex]
-
-# Behavior_keys
-survival_egg   = 'survival_egg'
-survival_larva = 'survival_larva'
-survival_pupa  = 'survival_pupa'
-survival_adult = 'survival_adult'
-
-cannibal = 'cannibal'
-
-lay_eggs = 'lay_eggs'
-mate     = 'mate'

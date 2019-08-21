@@ -21,8 +21,6 @@ class Egg(object):
 
     survival: hint.survival_egg = None
 
-    behavior: str = keyword.survival_egg
-
     @property
     def _use_survival(self) -> bool:
         """Determine if we use the survival model"""

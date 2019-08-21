@@ -34,8 +34,6 @@ class TestAdult(ut.TestCase):
 
         self.assertEqual(self.Adult.survival, self.survival)
 
-        self.assertEqual(self.Adult.behavior, keyword.survival_adult)
-
         self.assertTrue(dclass.is_dataclass(self.Adult))
 
     def test__use_survival(self):
@@ -96,11 +94,9 @@ class TestAdult(ut.TestCase):
         self.Adult = survival.Adult.setup(**kwargs)
         self.assertIsInstance(self.Adult, survival.Adult)
         self.assertEqual(self.Adult.survival, self.survival)
-        self.assertEqual(self.Adult.behavior, keyword.survival_adult)
 
         # Test if have the model
         kwargs = {}
         self.Adult = survival.Adult.setup(**kwargs)
         self.assertIsInstance(self.Adult, survival.Adult)
         self.assertEqual(self.Adult.survival, None)
-        self.assertEqual(self.Adult.behavior, keyword.survival_adult)

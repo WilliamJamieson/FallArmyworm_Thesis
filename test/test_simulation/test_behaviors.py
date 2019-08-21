@@ -311,29 +311,21 @@ class TestBehaviors(ut.TestCase):
                               agent_survive_adult.Adult)
         self.assertEqual(self.Behavior.survive_adult.survival,
                          kwargs[keyword.adult_survival])
-        self.assertEqual(self.Behavior.survive_adult.behavior,
-                         keyword.survival_adult)
 
         self.assertIsInstance(self.Behavior.survive_egg,
                               agent_survive_egg.Egg)
         self.assertEqual(self.Behavior.survive_egg.survival,
                          kwargs[keyword.egg_survival])
-        self.assertEqual(self.Behavior.survive_egg.behavior,
-                         keyword.survival_egg)
 
         self.assertIsInstance(self.Behavior.survive_larva,
                               agent_survive_larva.Larva)
         self.assertEqual(self.Behavior.survive_larva.survival,
                          kwargs[keyword.larva_survival])
-        self.assertEqual(self.Behavior.survive_larva.behavior,
-                         keyword.survival_larva)
 
         self.assertIsInstance(self.Behavior.survive_pupa,
                               agent_survive_pupa.Pupa)
         self.assertEqual(self.Behavior.survive_pupa.survival,
                          kwargs[keyword.pupa_survival])
-        self.assertEqual(self.Behavior.survive_pupa.behavior,
-                         keyword.survival_pupa)
 
     def test_setup(self):
         """test setup the class"""
