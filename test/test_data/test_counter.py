@@ -10,6 +10,12 @@ import source.agents.agent as main_agent
 import source.data.counter as counter
 
 
+class CountTest(counter.Count):
+    """Class to add dynamic values for agent tests"""
+
+    data_columns = mk.create_autospec(counter.DataColumns, spec_set=True)
+
+
 class TestDataColumn(ut.TestCase):
     """test the DataColumn class"""
 
@@ -98,6 +104,14 @@ class TestDataColumns(ut.TestCase):
             self.assertEqual(column.record.call_args_list,
                              [mk.call(count)])
 
+    def test_refresh(self):
+        """test refresh the data columns"""
+
+        self.DataColumns.refresh()
+        for column in self.data.values():
+            self.assertEqual(column.clear.call_args_list,
+                             [mk.call()])
+
     def test_columns(self):
         """test generate all the columns of data"""
 
@@ -172,6 +186,7 @@ class TestCount(ut.TestCase):
     def test_add(self):
         """test add agent to counter"""
 
+        # Call test
         agent = mk.create_autospec(main_agent.Agent, spec_set=True)
 
         with mk.patch.object(counter, 'getattr') as mkGet:
@@ -199,6 +214,32 @@ class TestCount(ut.TestCase):
             for value in self.counts.keys():
                 self.assertEqual(self.Count[value],
                                  self.counts[value].__add__.return_value)
+
+        # Practical test
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], True)
+        # noinspection PyTypeChecker
+        count = counter.Count.empty('alive', [True, False], False)
+        self.assertEqual(count[True], 0)
+        count.add(agent)
+        self.assertEqual(count[True], 1)
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], False)
+        self.assertEqual(count[False], 0)
+        count.add(agent)
+        self.assertEqual(count[False], 1)
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], True)
+        # noinspection PyTypeChecker
+        count = counter.Count.empty('alive', [True, False], True)
+        self.assertEqual(count[True], 0)
+        count.add(agent)
+        self.assertEqual(count[True], 0)
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], False)
+        self.assertEqual(count[False], 0)
+        count.add(agent)
+        self.assertEqual(count[False], 0)
 
     def test_sub(self):
         """test sub agent to counter"""
@@ -253,12 +294,49 @@ class TestCount(ut.TestCase):
                 self.assertEqual(self.Count[value],
                                  self.counts[value].__sub__.return_value)
 
+        # Practical test
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], True)
+        # noinspection PyTypeChecker
+        count = counter.Count.empty('alive', [True, False], False)
+        self.assertEqual(count[True], 0)
+        count.sub(agent)
+        self.assertEqual(count[True], -1)
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], False)
+        self.assertEqual(count[False], 0)
+        count.sub(agent)
+        self.assertEqual(count[False], -1)
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], True)
+        # noinspection PyTypeChecker
+        count = counter.Count.empty('alive', [True, False], True)
+        self.assertEqual(count[True], 0)
+        count.sub(agent)
+        self.assertEqual(count[True], 1)
+        # noinspection PyTypeChecker
+        agent = main_agent.Agent('test', 'test0', None, [0], False)
+        self.assertEqual(count[False], 0)
+        count.sub(agent)
+        self.assertEqual(count[False], 1)
+
     def test_record(self):
         """test record the counts"""
 
         self.Count.record()
         self.assertEqual(self.data_columns.record.call_args_list,
                          [mk.call(self.Count)])
+
+    def test_refresh(self):
+        """test refresh the stored values"""
+
+        master = mk.MagicMock()
+        master.attach_mock(self.data_columns, 'columns')
+
+        self.Count.refresh()
+        self.assertEqual(master.mock_calls,
+                         [mk.call.columns.refresh(),
+                          mk.call.columns.record(self.Count)])
 
     def test_empty(self):
         """test create empty class"""
@@ -289,12 +367,6 @@ class TestCount(ut.TestCase):
                                   counter.DataColumn)
             self.assertEqual(self.Count.data_columns[value].attr_value, value)
             self.assertEqual(self.Count.data_columns[value], [])
-
-
-class CountTest(counter.Count):
-    """Class to add dynamic values for agent tests"""
-
-    data_columns = mk.create_autospec(counter.DataColumns, spec_set=True)
 
             
 class TestCounts(ut.TestCase):
@@ -344,6 +416,14 @@ class TestCounts(ut.TestCase):
         self.Counts.record()
         for count in self.counts.values():
             self.assertEqual(count.record.call_args_list,
+                             [mk.call()])
+
+    def test_refresh(self):
+        """test refresh the stored data"""
+
+        self.Counts.refresh()
+        for count in self.counts.values():
+            self.assertEqual(count.refresh.call_args_list,
                              [mk.call()])
 
     def test_columns(self):

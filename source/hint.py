@@ -22,7 +22,9 @@ if typing.TYPE_CHECKING:
     import source.biomass.mass as main_mass
 
     # noinspection PyUnresolvedReferences
-    import source.data.counter as main_counter
+    import source.data.database as main_database
+    # noinspection PyUnresolvedReferences
+    import source.data.counter  as main_counter
 
     # noinspection PyUnresolvedReferences
     import source.development.egg   as main_egg_development
@@ -171,6 +173,9 @@ space = 'main_space.Space'
 
 
 # Data hints
+#       Database Hints
+database = 'main_database.Database'
+#       Counter Hints
 dataframe  = pd.DataFrame
 dataframes = typing.Dict[str, dataframe]
 

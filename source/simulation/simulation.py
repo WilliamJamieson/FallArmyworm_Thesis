@@ -11,25 +11,27 @@ import source.agents.larva    as larva
 import source.agents.pupa     as pupa
 
 
-
-
 @dclass.dataclass
 class Simulation(object):
     """
     Class to contain the whole simulation:
     """
 
-    space:     hint.space
-    agents:    hint.agents
-    schedule:  hint.schedule
-    models:    hint.models
-    behaviors: hint.behaviors
+    space:       hint.space
+    agents:      hint.agents
+    schedule:    hint.schedule
+    models:      hint.models
+    behaviors:   hint.behaviors
+    database:    hint.database
+    emigration:  hint.emigrations
+    immigration: hint.immigrations
+
+    timestep: int = 0
 
     def __post_init__(self):
         """Setup some helper systems"""
 
         self._id_count   = i_tools.count()
-        self._step_count = i_tools.count()
 
     def count_step(self) -> int:
         """
@@ -39,7 +41,9 @@ class Simulation(object):
             the step count
         """
 
-        return next(self._step_count)
+        self.timestep += 1
+
+        return self.timestep
 
     def new_unique_id(self) -> int:
         """

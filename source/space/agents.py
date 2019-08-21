@@ -97,6 +97,9 @@ class AgentsBin(collect.UserDict):
         activate:   add    agent to bin
         deactivate: remove agent from bin
         count:      add an attribute to count
+        record:     record the current counts
+        refresh:    refresh the stored counts
+        dataframes: create dictionary of all the dataframes
     """
 
     def __init__(self, agents:       hint.agent_bins,
@@ -144,9 +147,20 @@ class AgentsBin(collect.UserDict):
         for agent_bin in self.values():
             agent_bin.counts.record()
 
+    def refresh(self) -> None:
+        """
+        Refresh the stored counts
+
+        Effects:
+            Refresh all of the stored data
+        """
+
+        for agent_bin in self.values():
+            agent_bin.counts.refresh()
+
     def dataframes(self) -> hint.dataframes:
         """
-        Create a dictionary of a bunch of dataframes
+        Create a dictionary of all of dataframes for bin
 
         Returns:
             a dictionary of dataframes
@@ -253,6 +267,42 @@ class Agents(collect.UserDict):
         for index in range(1, location.depth + 1):
             location_key = location[:index].location_key
             self[location_key].deactivate(agent)
+
+    def record(self) -> None:
+        """
+        Record all the current counts
+
+        Effects:
+            records all of the current counts
+        """
+
+        for agents_bin in self.values():
+            agents_bin.record()
+
+    def refresh(self) -> None:
+        """
+        Refresh all of the stored counts
+
+        Effects:
+            refresh all the current counts
+        """
+
+        for agents_bin in self.values():
+            agents_bin.refresh()
+
+    def dataframes(self) -> hint.dataframes:
+        """
+        Create a dictionary of all of dataframes
+
+        Returns:
+            a dictionary of dataframes
+        """
+
+        dataframes = {}
+        for agents_bin in self.values():
+            dataframes.update(agents_bin.dataframes())
+
+        return dataframes
 
     @classmethod
     def empty(cls, locations:  hint.locations,

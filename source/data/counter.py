@@ -69,8 +69,9 @@ class DataColumns(collect.UserDict):
         attr: the attribute to be tracked
 
     Methods:
-        record:  record the value
-        columns: create a dict
+        record:   record the value
+        refresh:  reset the columns
+        columns:  create a dict
             key:   attr_attr_value
             value: DataColumn
 
@@ -97,6 +98,18 @@ class DataColumns(collect.UserDict):
 
         for column in self.values():
             column.record(count)
+
+    def refresh(self) -> None:
+        """
+        Reset all the data in columns to zero
+            - part of a data refresh system
+
+        Effects:
+            clear all the data to empty
+        """
+
+        for column in self.values():
+            column.clear()
 
     def columns(self) -> hint.data_column_dict:
         """
@@ -150,9 +163,10 @@ class Count(collect.UserDict):
         data_columns: data columns for system
 
     Methods:
-        add:    add agent to count
-        sub:    subtract agent from count
-        record: record the count in the data columns
+        add:     add agent to count
+        sub:     subtract agent from count
+        record:  record the count in the data columns
+        refresh: refresh the stored values in data columns
 
     Constructors:
         setup: create a counter
@@ -213,6 +227,18 @@ class Count(collect.UserDict):
 
         self.data_columns.record(self)
 
+    def refresh(self) -> None:
+        """
+        Refresh the data in the columns
+
+        Effects:
+            clears the columns
+            adds current count
+        """
+
+        self.data_columns.refresh()
+        self.data_columns.record(self)
+
     @classmethod
     def empty(cls, attr:    str,
                    values:  hint.attr_values,
@@ -245,9 +271,13 @@ class Counts(collect.UserDict):
             value: attribute counter
 
     Methods:
-        add:    add agent to count
-        sub:    subtract agent from count
-        record: record the count in the data columns
+        add:     add agent to count
+        sub:     subtract agent from count
+        record:  record the count in the data columns
+        refresh: refresh the stored values in data columns
+        columns: create the data columns for this set of counts
+
+        dataframe: create a dataframe for storage
 
     Constructors:
         setup: create a counter
@@ -294,6 +324,17 @@ class Counts(collect.UserDict):
 
         for counter in self.values():
             counter.record()
+
+    def refresh(self) -> None:
+        """
+        Refresh all the stored counts
+
+        Effects:
+            starts the stored data over
+        """
+
+        for counter in self.values():
+            counter.refresh()
 
     def columns(self) -> hint.data_column_dict:
         """

@@ -14,6 +14,11 @@ import source.agents.egg_mass as egg_mass
 import source.agents.larva    as larva
 import source.agents.pupa     as pupa
 
+import source.data.database as database
+
+import source.migration.emigration  as emigration
+import source.migration.immigration as immigration
+
 import source.simulation.behaviors  as behaviors
 import source.simulation.models     as models
 import source.simulation.simulation as simulation
@@ -28,28 +33,44 @@ class TestSimulation(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.space     = mk.create_autospec(space.Space, spec_set=True)
-        self.agents    = mk.create_autospec(agents.Agents, spec_set=True)
-        self.schedule  = mk.create_autospec(schedule.Schedule, spec_set=True)
-        self.models    = mk.create_autospec(models.Models, spec_set=True)
-        self.behaviors = mk.create_autospec(behaviors.Behaviors, spec_set=True)
+        self.space     = mk.create_autospec(space.Space,          spec_set=True)
+        self.agents    = mk.create_autospec(agents.Agents,        spec_set=True)
+        self.schedule  = mk.create_autospec(schedule.Schedule,    spec_set=True)
+        self.models    = mk.create_autospec(models.Models,        spec_set=True)
+        self.behaviors = mk.create_autospec(behaviors.Behaviors,  spec_set=True)
+        self.database  = mk.create_autospec(database.Database,    spec_set=True)
+
+        self.emigration = mk.create_autospec(emigration.Emigrations,
+                                             spec_set=True)
+        self.immigration = mk.create_autospec(immigration.Immigrations,
+                                              spec_set=True)
+
+        self.timestep = mk.MagicMock(spec=int)
 
         self.Simulation = simulation.Simulation(self.space,
                                                 self.agents,
                                                 self.schedule,
                                                 self.models,
-                                                self.behaviors)
+                                                self.behaviors,
+                                                self.database,
+                                                self.emigration,
+                                                self.immigration,
+                                                self.timestep)
 
     def test___init__(self):
         """test __init__ for class"""
 
         self.assertIsInstance(self.Simulation, simulation.Simulation)
 
-        self.assertEqual(self.Simulation.space,     self.space)
-        self.assertEqual(self.Simulation.agents,    self.agents)
-        self.assertEqual(self.Simulation.schedule,  self.schedule)
-        self.assertEqual(self.Simulation.models,    self.models)
-        self.assertEqual(self.Simulation.behaviors, self.behaviors)
+        self.assertEqual(self.Simulation.space,       self.space)
+        self.assertEqual(self.Simulation.agents,      self.agents)
+        self.assertEqual(self.Simulation.schedule,    self.schedule)
+        self.assertEqual(self.Simulation.models,      self.models)
+        self.assertEqual(self.Simulation.behaviors,   self.behaviors)
+        self.assertEqual(self.Simulation.database,    self.database)
+        self.assertEqual(self.Simulation.emigration,  self.emigration)
+        self.assertEqual(self.Simulation.immigration, self.immigration)
+        self.assertEqual(self.Simulation.timestep,    self.timestep)
 
         # noinspection PyTypeChecker
         self.assertIsInstance(self.Simulation._id_count, i_tools.count)
@@ -57,22 +78,17 @@ class TestSimulation(ut.TestCase):
         self.assertEqual(next(self.Simulation._id_count),
                          next(i_tools.count()))
 
-        # noinspection PyTypeChecker
-        self.assertIsInstance(self.Simulation._step_count, i_tools.count)
-        # noinspection PyTypeChecker
-        self.assertEqual(next(self.Simulation._step_count),
-                         next(i_tools.count()))
-
         self.assertTrue(dclass.is_dataclass(self.Simulation))
 
     def test_count_step(self):
         """test count a step"""
 
-        for index in range(10):
-            self.assertEqual(self.Simulation.count_step(), index)
-
-        self.assertEqual(next(self.Simulation._step_count), 10)
-        self.assertEqual(next(self.Simulation._id_count), 0)
+        self.assertEqual(self.Simulation.count_step(),
+                         self.timestep.__add__.return_value)
+        self.assertEqual(self.Simulation.timestep,
+                         self.timestep.__add__.return_value)
+        self.assertEqual(self.timestep.__add__.call_args_list,
+                         [mk.call(1)])
 
     def test_new_unique_id(self):
         """test get a new unique_id"""
@@ -81,8 +97,7 @@ class TestSimulation(ut.TestCase):
             self.assertEqual(self.Simulation.new_unique_id(), index)
 
         self.assertEqual(next(self.Simulation._id_count), 10)
-        self.assertEqual(next(self.Simulation._step_count), 0)
-        
+
     def test_populate_egg_masses(self):
         """test generate all new egg_masses"""
 

@@ -19,6 +19,12 @@ class AgentTest(main_agent.Agent):
     location  = mk.create_autospec(agent_location.Location, spec_set=True)
 
 
+class AgentBinTest(agents.AgentBin):
+    """Class to add dynamic values for agent_bin tests"""
+
+    counts = mk.create_autospec(counter.Counts, spec_set=True)
+
+
 class TestAgentBin(ut.TestCase):
     """test AgentBin class"""
 
@@ -123,12 +129,6 @@ class TestAgentBin(ut.TestCase):
                                  [])
 
 
-class AgentBinTest(agents.AgentBin):
-    """Class to add dynamic values for agent_bin tests"""
-
-    counts = mk.create_autospec(counter.Counts, spec_set=True)
-
-
 class TestAgentsBin(ut.TestCase):
     """test AgentsBin class"""
 
@@ -200,7 +200,18 @@ class TestAgentsBin(ut.TestCase):
         for agent_bin in self.AgentsBin.values():
             self.assertEqual(agent_bin.counts.record.call_args_list,
                              [mk.call()])
-            
+
+    def test_refresh(self):
+        """test refresh the stored data"""
+
+        for agent_bin in self.agents.values():
+            agent_bin.counts = mk.create_autospec(counter.Counts, spec_set=True)
+
+        self.AgentsBin.refresh()
+        for agent_bin in self.AgentsBin.values():
+            self.assertEqual(agent_bin.counts.refresh.call_args_list,
+                             [mk.call()])
+
     def test_dataframes(self):
         """test create a dictionary of dataframes"""
 
@@ -403,7 +414,40 @@ class TestAgents(ut.TestCase):
                 self.assertEqual(self.Agents[location_key].
                                  deactivate.call_args_list,
                                  [])
-                
+
+    def test_record(self):
+        """test record all the counts"""
+
+        self.Agents.record()
+        for agent_bin in self.agents.values():
+            self.assertEqual(agent_bin.record.call_args_list,
+                             [mk.call()])
+
+    def test_refresh(self):
+        """test refresh all the storage"""
+
+        self.Agents.refresh()
+        for agent_bin in self.agents.values():
+            self.assertEqual(agent_bin.refresh.call_args_list,
+                             [mk.call()])
+
+    def test_dataframes(self):
+        """test generate a dict of all dataframes"""
+
+        dataframes = {}
+        for agent_bin in self.agents.values():
+            data_dict = {mk.MagicMock(spec=str): mk.MagicMock()
+                         for _ in range(3)}
+            dataframes.update(data_dict)
+            agent_bin.dataframes.return_value = data_dict
+
+        self.assertEqual(len(dataframes), 12)
+
+        self.assertEqual(self.Agents.dataframes(), dataframes)
+        for agent_bin in self.agents.values():
+            self.assertEqual(agent_bin.dataframes.call_args_list,
+                             [mk.call()])
+
     def test_empty(self):
         """test create an empty agents system"""
 
