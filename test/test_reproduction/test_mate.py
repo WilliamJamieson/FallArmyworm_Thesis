@@ -40,8 +40,6 @@ class TestMate(ut.TestCase):
         self.assertEqual(self.Mate.mating, self.mating)
         self.assertEqual(self.Mate.radius, self.radius)
 
-        self.assertEqual(self.Mate.behavior, keyword.mate)
-
         self.assertTrue(dclass.is_dataclass(self.Mate))
 
     def test__use_mating(self):
@@ -194,7 +192,6 @@ class TestMate(ut.TestCase):
         self.assertIsInstance(self.Mate, mating.Mate)
         self.assertEqual(self.Mate.mating, self.mating)
         self.assertEqual(self.Mate.radius, self.radius)
-        self.assertEqual(self.Mate.behavior, keyword.mate)
 
         # Test if have no models
         kwargs = {}
@@ -202,4 +199,3 @@ class TestMate(ut.TestCase):
         self.assertIsInstance(self.Mate, mating.Mate)
         self.assertEqual(self.Mate.mating, None)
         self.assertEqual(self.Mate.radius, None)
-        self.assertEqual(self.Mate.behavior, keyword.mate)

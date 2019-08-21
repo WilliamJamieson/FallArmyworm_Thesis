@@ -24,8 +24,6 @@ class Mate(object):
     mating: hint.mating      = None
     radius: hint.mate_radius = None
 
-    behavior: str = keyword.mate
-
     @property
     def _use_mating(self) -> bool:
         """Determine if we can use mating"""

@@ -278,14 +278,12 @@ class TestBehaviors(ut.TestCase):
                          kwargs[keyword.fecundity])
         self.assertEqual(self.Behavior.lay.density,
                          kwargs[keyword.density])
-        self.assertEqual(self.Behavior.lay.behavior, keyword.lay_eggs)
 
         self.assertIsInstance(self.Behavior.mate, agent_mate.Mate)
         self.assertEqual(self.Behavior.mate.mating,
                          kwargs[keyword.mating])
         self.assertEqual(self.Behavior.mate.radius,
                          kwargs[keyword.mate_radius])
-        self.assertEqual(self.Behavior.mate.behavior, keyword.mate)
 
     def test_make_survival(self):
         """test make survival behaviors"""

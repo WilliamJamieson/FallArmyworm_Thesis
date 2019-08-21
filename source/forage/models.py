@@ -351,10 +351,10 @@ class Radius(models.Model):
 
     model_key = keyword.radius
 
-    radius: int
+    radius: float
 
     def __call__(self, mass:     float,
-                       genotype: str) -> int:
+                       genotype: str) -> float:
         """
         Call the model to get the encounter radius
 

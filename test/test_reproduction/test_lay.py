@@ -43,8 +43,6 @@ class TestLay(ut.TestCase):
         self.assertEqual(self.Lay.fecundity, self.fecundity)
         self.assertEqual(self.Lay.density,   self.density)
 
-        self.assertEqual(self.Lay.behavior, keyword.lay_eggs)
-
         self.assertTrue(dclass.is_dataclass(self.Lay))
 
     def test__use_fecundity(self):
@@ -291,7 +289,6 @@ class TestLay(ut.TestCase):
         self.assertEqual(self.Lay.trials,    self.trials)
         self.assertEqual(self.Lay.fecundity, self.fecundity)
         self.assertEqual(self.Lay.density,   self.density)
-        self.assertEqual(self.Lay.behavior, keyword.lay_eggs)
 
         # Test if have no models
         kwargs = {}
@@ -300,4 +297,3 @@ class TestLay(ut.TestCase):
         self.assertEqual(self.Lay.trials,    0)
         self.assertEqual(self.Lay.fecundity, None)
         self.assertEqual(self.Lay.density,   None)
-        self.assertEqual(self.Lay.behavior, keyword.lay_eggs)

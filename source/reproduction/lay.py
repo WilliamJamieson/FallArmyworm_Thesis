@@ -29,8 +29,6 @@ class Lay(object):
     fecundity: hint.fecundity = None
     density:   hint.density   = None
 
-    behavior: str = keyword.lay_eggs
-
     @property
     def _use_fecundity(self) -> bool:
         """Determine if we have a fecundity model"""
