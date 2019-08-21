@@ -51,8 +51,6 @@ class TestCannibalism(ut.TestCase):
         self.assertEqual(self.Cannibalism.encounter, self.encounter)
         self.assertEqual(self.Cannibalism.radius,    self.radius)
 
-        self.assertEqual(self.Cannibalism.behavior, keyword.cannibal)
-
         self.assertTrue(dclass.is_dataclass(self.Cannibalism))
 
     def test__use_fight(self):
@@ -397,7 +395,6 @@ class TestCannibalism(ut.TestCase):
         self.assertEqual(self.Cannibalism.fight,     self.fight)
         self.assertEqual(self.Cannibalism.encounter, self.encounter)
         self.assertEqual(self.Cannibalism.radius,    self.radius)
-        self.assertEqual(self.Cannibalism.behavior, keyword.cannibal)
 
         # Test if have no models
         kwargs = {}
@@ -406,4 +403,3 @@ class TestCannibalism(ut.TestCase):
         self.assertEqual(self.Cannibalism.fight,     None)
         self.assertEqual(self.Cannibalism.encounter, None)
         self.assertEqual(self.Cannibalism.radius,    None)
-        self.assertEqual(self.Cannibalism.behavior, keyword.cannibal)

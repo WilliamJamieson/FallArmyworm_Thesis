@@ -21,8 +21,6 @@ class Egg(object):
 
     forage: hint.forage_egg = None
 
-    behavior: str = keyword.forage_egg
-
     @property
     def _use_forage(self) -> bool:
         """Determine if we use the forage model"""

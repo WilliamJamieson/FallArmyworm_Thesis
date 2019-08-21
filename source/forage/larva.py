@@ -21,8 +21,6 @@ class Larva(object):
 
     forage: hint.forage_larva = None
 
-    behavior: str = keyword.forage_larva
-
     @property
     def _use_forage(self) -> bool:
         """Determine if we use the forage model"""

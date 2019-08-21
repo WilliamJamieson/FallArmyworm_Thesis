@@ -210,27 +210,21 @@ class TestBehaviors(ut.TestCase):
                          kwargs[keyword.encounter])
         self.assertEqual(self.Behavior.cannibalism.radius,
                          kwargs[keyword.radius])
-        self.assertEqual(self.Behavior.cannibalism.behavior, keyword.cannibal)
 
         self.assertIsInstance(self.Behavior.forage_egg,
                               agent_forage_egg.Egg)
         self.assertEqual(self.Behavior.forage_egg.forage,
                          kwargs[keyword.egg_forage])
-        self.assertEqual(self.Behavior.forage_egg.behavior, keyword.forage_egg)
 
         self.assertIsInstance(self.Behavior.forage_larva,
                               agent_forage_larva.Larva)
         self.assertEqual(self.Behavior.forage_larva.forage,
                          kwargs[keyword.larva_forage])
-        self.assertEqual(self.Behavior.forage_larva.behavior,
-                         keyword.forage_larva)
 
         self.assertIsInstance(self.Behavior.forage_plant,
                               agent_forage_plant.Plant)
         self.assertEqual(self.Behavior.forage_plant.forage,
                          kwargs[keyword.plant_forage])
-        self.assertEqual(self.Behavior.forage_plant.behavior,
-                         keyword.forage_plant)
 
     def test_make_movement(self):
         """test make movement behaviors"""

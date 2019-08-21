@@ -1,38 +1,38 @@
-# TODO: UPDATE THESE FOR NEW SYSTEMS
-
+import dataclasses   as dclass
 import scipy.stats   as stats
 import scipy.special as spcl
 import numpy         as np
 import numpy.random  as rnd
 
-import source.hints    as hints
-import source.keywords as keywords
+import source.hint    as hint
+import source.keyword as keyword
 
-import source.models.model as model
+import source.simulation.models as models
 
 
-class LeafBase(model.Model):
+@dclass.dataclass
+class PlantBase(models.Model):
     """
-    Base class for leaf forage models
+    Base class for Plant forage models
 
     Methods:
         __call__: call the model
     """
 
-    keyword = keywords.leaf_forage
+    model_key = keyword.plant_forage
 
-    def __call__(self, mass:      float,
-                       leaf:      float,
-                       bt:        str,
-                       phenotype: str) -> float:
+    def __call__(self, mass:     float,
+                       plant:    float,
+                       genotype: str,
+                       bt:       str) -> float:
         """
         Call the model
 
         Args:
-            mass:      mass of larva
-            leaf:      mass of leaf
-            bt:        plant type
-            phenotype: larva phenotype
+            mass:     mass of larva
+            plant:    mass of plant
+            genotype: larva genotype
+            bt:       plant type
 
         Returns:
             biomass which can be foraged
@@ -41,7 +41,8 @@ class LeafBase(model.Model):
         pass
 
 
-class LeafAdLibitum(LeafBase):
+@dclass.dataclass
+class PlantAdLibitum(PlantBase):
     """
     Class for larvae consuming leaf ad libitum:
         - ignores leaf mass present
@@ -50,181 +51,116 @@ class LeafAdLibitum(LeafBase):
         Outputs 5 time maximum amount of food which can be consumed
 
     Variables:
-        _max_gut: the maximum gut model
+        max_gut: the maximum gut model
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    def __init__(self, max_gut: hints.max_gut):
-        self._max_gut = max_gut
+    max_gut: hint.max_gut
 
-    def __call__(self, mass:      float,
-                       leaf:      float,
-                       bt:        str,
-                       phenotype: str) -> float:
+    def __call__(self, mass:     float,
+                       plant:     float,
+                       genotype: str,
+                       bt:       str) -> float:
         """
         Call the model
 
         Args:
-            mass:      mass of larva
-            leaf:      mass of leaf
-            bt:        plant type
-            phenotype: larva phenotype
+            mass:     mass of larva
+            plant:    mass of plant
+            genotype: larva genotype
+            bt:       plant type
 
         Returns:
             biomass which can be foraged
         """
 
-        return self._max_gut(mass)*5
+        return self.max_gut(mass)*5
 
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'LeafAdLibitum':
-        """
-        Correctly setup class
 
-        Args:
-            *args:    arg[0]=max_gut model
-            **kwargs: place holder
-        Returns:
-            setup class
-        """
-
-        max_gut = kwargs[keywords.max_gut]
-
-        return cls(max_gut)
-    
-
-class LeafGutStarve(LeafAdLibitum):
+@dclass.dataclass
+class PlantStarve(PlantBase):
     """
     Class for larvae consuming leaf with a normal distribution describing
         starvation
-        - ignores leaf mass present
-        - assumes leaf mass does not change (no recovery model)
 
-        takes maximum amount of consumed food and multiplies it by a factor
+        takes maximum amount of consumed food available and multiplies it by
+            a factor
         drawn from a normal distribution
 
     Variables:
-        _max_gut: the maximum gut model
-        _mu:      mean
-        _sigma:   standard deviation
+        mu:    mean factor in product
+        sigma: standard deviation
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    def __init__(self, max_gut: hints.max_gut,
-                       mu:      hints.variable,
-                       sigma:   hints.variable):
-        super().__init__(max_gut)
+    mu:    float
+    sigma: float
 
-        self._mu    = mu
-        self._sigma = sigma
-
-    def _lower(self, phenotype: str) -> float:
+    def _lower(self) -> float:
         """
         Get lower bound on distribution
-
-        Args:
-            phenotype: larva phenotype
 
         Returns:
             lower bound on distribution
         """
 
-        mu    = self._mu(   phenotype)
-        sigma = self._sigma(phenotype)
+        return (-self.mu)/self.sigma
 
-        return (0 - mu)/sigma
-
-    def _upper(self, phenotype: str) -> float:
+    def _upper(self) -> float:
         """
         Get upper bound on distribution
-
-        Args:
-            phenotype: larva phenotype
 
         Returns:
             upper bound on distribution
         """
 
-        mu    = self._mu(   phenotype)
-        sigma = self._sigma(phenotype)
+        return (1 - self.mu)/self.sigma
 
-        return (1 - mu)/sigma
-
-    def _sample(self, phenotype: str) -> float:
+    def _sample(self) -> float:
         """
         Sample from the distribution
-
-        Args:
-            phenotype: larva phenotype
 
         Returns:
             sample from the distribution
         """
 
-        a = self._lower(phenotype)
-        b = self._upper(phenotype)
+        lower = self._lower()
+        upper = self._upper()
 
-        mu    = self._mu(   phenotype)
-        sigma = self._sigma(phenotype)
+        return stats.truncnorm.rvs(lower, upper, loc=self.mu, scale=self.sigma)
 
-        return stats.truncnorm.rvs(a, b, loc=mu, scale=sigma)
-
-    def __call__(self, mass:      float,
-                       leaf:      float,
-                       bt:        str,
-                       phenotype: str) -> float:
+    def __call__(self, mass:     float,
+                       plant:    float,
+                       genotype: str,
+                       bt:       str) -> float:
         """
         Call the model
 
         Args:
-            mass:      mass of larva
-            leaf:      mass of leaf
-            bt:        plant type
-            phenotype: larva phenotype
+            mass:     mass of larva
+            plant:    mass of plant
+            genotype: larva genotype
+            bt:       plant type
 
         Returns:
             biomass which can be foraged
         """
 
-        return self._sample(phenotype)*self._max_gut(mass)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'LeafGutStarve':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=mu, arg[1]=sigma
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        max_gut = kwargs[keywords.max_gut]
-        mu      = cls.setup_variable(*args[0], **kwargs)
-        sigma   = cls.setup_variable(*args[1], **kwargs)
-
-        return cls(max_gut, mu, sigma)
+        return float(self._sample()*plant)
 
 
-class Egg(model.Model):
+@dclass.dataclass
+class Egg(models.Model):
     """
     Class for describing the amount of food a larva can eat from an egg_mass
-
         amount = factor*mass
 
     Variables:
-        _factor: the scale factor
+        factor: the scale factor
 
     Methods:
         __call__: call the model
@@ -233,97 +169,66 @@ class Egg(model.Model):
         setup: setup the mathematical model
     """
 
-    keyword = keywords.egg_forage
+    model_key = keyword.egg_forage
 
-    def __init__(self, factor: hints.variable):
-        self._factor = factor
+    factor: float
 
-    def __call__(self, mass:      float,
-                       phenotype: str) -> float:
+    def __call__(self, egg_mass: float,
+                       mass:     float,
+                       genotype: str) -> float:
         """
         Call the model
 
         Args:
-            mass:      mass of larva to eat
-            phenotype: phenotype of consumer
+            egg_mass: mass of egg_mass
+            mass:     mass of larva
+            genotype: genotype of consumer
 
         Returns:
             amount of larva to eat
         """
 
-        return self._factor(phenotype)*mass
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Egg':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=factor
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        factor = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(factor)
+        return self.factor*egg_mass
 
 
-class Larva(model.Model):
+@dclass.dataclass
+class Larva(models.Model):
     """
     Class for describing the amount of food a larva can eat from another larva
 
         amount = factor*mass
 
     Variables:
-        _factor: the scale factor
+        factor: the scale factor
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.larva_forage
+    model_key = keyword.larva_forage
 
-    def __init__(self, factor: hints.variable):
-        self._factor = factor
+    factor: float
 
-    def __call__(self, mass:      float,
-                       phenotype: str) -> float:
+    def __call__(self, target_mass: float,
+                       mass:        float,
+                       genotype:    str) -> float:
         """
         Call the model
 
         Args:
-            mass:      mass of larva to eat
-            phenotype: phenotype of consumer
+            target_mass: mass of target larva
+            mass:        mass of larva
+            genotype:    genotype of consumer
 
         Returns:
             amount of larva to eat
         """
 
-        return self._factor(phenotype)*mass
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Larva':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=factor
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        factor = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(factor)
+        return self.factor*target_mass
 
 
-class Fight(model.Model):
+@dclass.dataclass
+class Fight(models.Model):
     """
     Class for describing results of a larva cannibalistic fight
 
@@ -335,38 +240,18 @@ class Fight(model.Model):
               m0 << m1, p(d)->0
 
     Variables:
-        _slope: the steepness of the model's transition
+        slope: the steepness of the model's transition
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.fight
+    model_key = keyword.fight
 
-    def __init__(self, slope: hints.variable):
-        self._slope = slope
+    slope: float
 
-    @staticmethod
-    def _diff(mass0: float,
-              mass1: float) -> float:
-        """
-        Find the mass difference between mass0 and mass1 from mass0:
-            mass0 - mass1
-
-        Args:
-            mass0: mass of larva running fight
-            mass1: mass of target larva
-
-        Returns:
-            mass difference
-        """
-
-        return mass0 - mass1
-
-    def _prob(self, mass0: float, mass1: float) -> float:
+    def _prob(self, mass0: float,
+                    mass1: float) -> float:
         """
         Evaluate the logistic model for probability
 
@@ -378,14 +263,13 @@ class Fight(model.Model):
             result of logistic evaluation
         """
 
-        slope = self._slope()
-        value = self._diff(mass0, mass1)
+        x = self.slope*(mass0 - mass1)
 
-        x = slope*value
+        # noinspection PyTypeChecker
+        return spcl.expit(x)
 
-        return float(spcl.expit(x))
-
-    def __call__(self, mass0: float, mass1: float) -> bool:
+    def __call__(self, mass0: float,
+                       mass1: float) -> bool:
         """
         Call the mathematical model to make decision
 
@@ -399,25 +283,9 @@ class Fight(model.Model):
 
         return rnd.random() <= self._prob(mass0, mass1)
 
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Fight':
-        """
-        Setup the model
 
-        Args:
-            *args:    arg[0]= value of slope
-            **kwargs: other args
-
-        Returns:
-            the setup model
-        """
-
-        slope = cls.setup_variable(*args[0])
-
-        return cls(slope)
-
-
-class Encounter(model.Model):
+@dclass.dataclass
+class Encounter(models.Model):
     """
     Class to contain encounter model for cannibalism
 
@@ -426,117 +294,76 @@ class Encounter(model.Model):
         where n is the number of other individuals and k is the scale factor
 
     Variables:
-        _factor: scale factor for encounters
+        factor: scale factor for encounters
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.encounter
+    model_key = keyword.encounter
 
-    def __init__(self, factor: hints.variable):
-        self._factor = factor
+    factor: float
 
-    def _prob(self, number:    int,
-                    phenotype: str) -> float:
+    def _prob(self, number: int) -> float:
         """
         Get the probability for an encounter
 
         Args:
-            number:    number of other individuals
-            phenotype: phenotype of consumer
+            number: number of other individuals
 
         Returns:
             probability of an encounter
         """
 
-        exp = -self._factor(phenotype)*number
+        exp = -self.factor*number
 
         return 1 - np.exp(exp)
 
-    def __call__(self, number:    int,
-                       mass:      float,
-                       phenotype: str) -> bool:
+    def __call__(self, number:   int,
+                       mass:     float,
+                       genotype: str) -> bool:
         """
         Make an encounter decision
 
         Args:
-            number:    number of other individuals
-            mass:      mass of consumer
-            phenotype: phenotype of consumer
+            number:   number of other individuals
+            mass:     mass of consumer
+            genotype: genotype of consumer
 
         Returns:
             if an encounter occurs
         """
 
-        return rnd.random() <= self._prob(number, phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Encounter':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=factor
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        factor = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(factor)
+        return rnd.random() <= self._prob(number)
 
 
-class Radius(model.Model):
+@dclass.dataclass
+class Radius(models.Model):
     """
     Class to contain encounter radius model for cannibalism
 
     Variables:
-        _radius: the radius for encounters
+        radius: the radius for encounters
 
     Methods:
         __call__: call the model
-
-    Constructors:
-        setup: setup the mathematical model
     """
 
-    keyword = keywords.encounter_radius
+    model_key = keyword.radius
 
-    def __init__(self, radius: hints.variable):
-        self._radius = radius
+    radius: int
 
-    def __call__(self, mass:      float,
-                       phenotype: str) -> int:
+    def __call__(self, mass:     float,
+                       genotype: str) -> int:
         """
         Call the model to get the encounter radius
 
         Args:
-            mass:      mass of larva
-            phenotype: phenotype of larva
+            mass:     mass of larva
+            genotype: genotype of larva
 
         Returns:
             the radius of encounters
         """
 
-        return self._radius(phenotype)
-
-    @classmethod
-    def setup(cls, *args, **kwargs) -> 'Radius':
-        """
-        Correctly setup class
-
-        Args:
-            *args:    arg[0]=radius
-            **kwargs: other arguments
-        Returns:
-            setup class
-        """
-
-        radius = cls.setup_variable(*args[0], **kwargs)
-
-        return cls(radius)
+        return self.radius

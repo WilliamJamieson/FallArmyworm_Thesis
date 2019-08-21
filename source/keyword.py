@@ -90,14 +90,6 @@ egg_development   = 'egg_development'
 larva_development = 'larva_development'
 pupa_development  = 'pupa_development'
 
-egg_survival   = 'egg_survival'
-larva_survival = 'larva_survival'
-pupa_survival  = 'pupa_survival'
-adult_survival = 'adult_survival'
-
-larva_movement = 'larva_movement'
-adult_movement = 'adult_movement'
-
 egg_forage   = 'egg_forage'
 larva_forage = 'larva_forage'
 plant_forage = 'plant_forage'
@@ -105,6 +97,14 @@ plant_forage = 'plant_forage'
 fight     = 'fight'
 encounter = 'encounter'
 radius    = 'radius'
+
+egg_survival   = 'egg_survival'
+larva_survival = 'larva_survival'
+pupa_survival  = 'pupa_survival'
+adult_survival = 'adult_survival'
+
+larva_movement = 'larva_movement'
+adult_movement = 'adult_movement'
 
 trials    = 'trials'
 fecundity = 'fecundity'
@@ -128,10 +128,6 @@ survival_adult = 'survival_adult'
 
 movement_larva = 'movement_larva'
 movement_adult = 'movement_adult'
-
-forage_egg   = 'forage_egg'
-forage_larva = 'forage_larva'
-forage_plant = 'forage_plant'
 
 cannibal = 'cannibal'
 

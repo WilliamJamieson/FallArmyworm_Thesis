@@ -27,8 +27,6 @@ class Cannibalism(object):
     encounter: hint.encounter = None
     radius:    hint.radius    = None
 
-    behavior: str = keyword.cannibal
-
     @property
     def _use_fight(self) -> bool:
         """Determine if we use the fight model"""

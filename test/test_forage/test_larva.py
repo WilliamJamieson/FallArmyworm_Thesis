@@ -34,8 +34,6 @@ class TestLarva(ut.TestCase):
 
         self.assertEqual(self.Larva.forage, self.forage)
 
-        self.assertEqual(self.Larva.behavior, keyword.forage_larva)
-
         self.assertTrue(dclass.is_dataclass(self.Larva))
 
     def test__use_forage(self):
@@ -108,11 +106,9 @@ class TestLarva(ut.TestCase):
         self.Larva = forage.Larva.setup(**kwargs)
         self.assertIsInstance(self.Larva, forage.Larva)
         self.assertEqual(self.Larva.forage, self.forage)
-        self.assertEqual(self.Larva.behavior, keyword.forage_larva)
 
         # Test if have the model
         kwargs = {}
         self.Larva = forage.Larva.setup(**kwargs)
         self.assertIsInstance(self.Larva, forage.Larva)
         self.assertEqual(self.Larva.forage, None)
-        self.assertEqual(self.Larva.behavior, keyword.forage_larva)
