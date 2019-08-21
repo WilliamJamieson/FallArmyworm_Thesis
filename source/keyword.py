@@ -98,13 +98,13 @@ fight     = 'fight'
 encounter = 'encounter'
 radius    = 'radius'
 
+larva_movement = 'larva_movement'
+adult_movement = 'adult_movement'
+
 egg_survival   = 'egg_survival'
 larva_survival = 'larva_survival'
 pupa_survival  = 'pupa_survival'
 adult_survival = 'adult_survival'
-
-larva_movement = 'larva_movement'
-adult_movement = 'adult_movement'
 
 trials    = 'trials'
 fecundity = 'fecundity'
@@ -125,9 +125,6 @@ survival_egg   = 'survival_egg'
 survival_larva = 'survival_larva'
 survival_pupa  = 'survival_pupa'
 survival_adult = 'survival_adult'
-
-movement_larva = 'movement_larva'
-movement_adult = 'movement_adult'
 
 cannibal = 'cannibal'
 

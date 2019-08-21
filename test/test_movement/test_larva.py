@@ -35,8 +35,6 @@ class TestLarva(ut.TestCase):
 
         self.assertEqual(self.Larva.movement, self.movement)
 
-        self.assertEqual(self.Larva.behavior, keyword.movement_larva)
-
         self.assertTrue(dclass.is_dataclass(self.Larva))
 
     def test__use_movement(self):
@@ -112,11 +110,9 @@ class TestLarva(ut.TestCase):
         self.Larva = movement.Larva.setup(**kwargs)
         self.assertIsInstance(self.Larva, movement.Larva)
         self.assertEqual(self.Larva.movement, self.movement)
-        self.assertEqual(self.Larva.behavior, keyword.movement_larva)
 
         # Test if have the model
         kwargs = {}
         self.Larva = movement.Larva.setup(**kwargs)
         self.assertIsInstance(self.Larva, movement.Larva)
         self.assertEqual(self.Larva.movement, None)
-        self.assertEqual(self.Larva.behavior, keyword.movement_larva)

@@ -22,8 +22,6 @@ class Adult(object):
 
     movement: hint.movement_adult = None
 
-    behavior: str = keyword.movement_adult
-
     @property
     def _use_movement(self) -> bool:
         """Determine if we use the move model"""

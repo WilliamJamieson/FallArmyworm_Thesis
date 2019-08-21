@@ -9,7 +9,58 @@ import source.simulation.models as models
 
 
 @dclass.dataclass
-class Egg(models.Model):
+class BaseTime(models.Model):
+    """
+    Class to contain development model based on time
+        USES CDF for Normal Distribution for probability
+        Checks if minimum time has been achieved
+
+    Variables:
+        mu:      mean time for development
+        sigma:   standard deviation in mean time
+        minimum: minimum time to wait
+    """
+
+    mu:      float
+    sigma:   float
+    minimum: float
+
+    def _prob(self, age: int) -> float:
+        """
+        Get a probability to test against
+
+        Args:
+            age: time agent has existed
+
+        Returns:
+            a probability of development
+        """
+
+        if self.minimum <= age:
+            return stats.norm.cdf(age, loc=self.mu, scale=self.sigma)
+        else:
+            return 0
+
+    def __call__(self, mass:     float,
+                 age:      int,
+                 genotype: str) -> bool:
+        """
+        Determine if an agent develops
+
+        Args:
+            mass:     mass of agent
+            age:      time agent has existed
+            genotype: genotype of the agent
+
+        Returns:
+            if egg develops or not
+        """
+
+        return rnd.random() <= self._prob(age)
+
+
+@dclass.dataclass
+class Egg(BaseTime):
     """
     Class to contain development model for egg
         USES CDF for Normal Distribution for probability
@@ -23,42 +74,21 @@ class Egg(models.Model):
 
     model_key = keyword.egg_development
 
-    mu:      float
-    sigma:   float
-    minimum: float
 
-    def _prob(self, age: int) -> float:
-        """
-        Get a probability to test against
+@dclass.dataclass
+class Pupa(BaseTime):
+    """
+    Class to contain development model for pupa
+        USES CDF for Normal Distribution for probability
+        Checks if minimum time has been achieved
 
-        Args:
-            age: time egg has existed
+    Variables:
+        mu:      mean time for development
+        sigma:   standard deviation in mean time
+        minimum: minimum time to wait
+    """
 
-        Returns:
-            a probability of development
-        """
-
-        if self.minimum <= age:
-            return stats.norm.cdf(age, loc=self.mu, scale=self.sigma)
-        else:
-            return 0
-
-    def __call__(self, mass:     float,
-                       age:      int,
-                       genotype: str) -> bool:
-        """
-        Determine if an egg develops
-
-        Args:
-            mass:     mass of egg
-            age:      time egg has existed
-            genotype: genotype of the egg
-
-        Returns:
-            if egg develops or not
-        """
-
-        return rnd.random() <= self._prob(age)
+    model_key = keyword.pupa_development
 
 
 @dclass.dataclass
@@ -121,56 +151,3 @@ class Larva(models.Model):
         """
 
         return rnd.random() <= self._prob(mass, age, genotype)
-
-
-@dclass.dataclass
-class Pupa(models.Model):
-    """
-    Class to contain development model for pupa
-        USES CDF for Normal Distribution for probability
-        Checks if minimum time has been achieved
-
-    Variables:
-        mu:      mean time for development
-        sigma:   standard deviation in mean time
-        minimum: minimum time to wait
-    """
-
-    model_key = keyword.pupa_development
-
-    mu:      float
-    sigma:   float
-    minimum: float
-
-    def _prob(self, age: int) -> float:
-        """
-        Get a probability to test against
-
-        Args:
-            age: time pupa has existed
-
-        Returns:
-            a probability of development
-        """
-
-        if self.minimum <= age:
-            return stats.norm.cdf(age, loc=self.mu, scale=self.sigma)
-        else:
-            return 0
-
-    def __call__(self, mass:     float,
-                 age:      int,
-                 genotype: str) -> bool:
-        """
-        Determine if an pupa develops
-
-        Args:
-            mass:     mass of pupa
-            age:      time pupa has existed
-            genotype: genotype of the pupa
-
-        Returns:
-            if pupa develops or not
-        """
-
-        return rnd.random() <= self._prob(age)

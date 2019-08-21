@@ -22,8 +22,6 @@ class Larva(object):
 
     movement: hint.movement_larva = None
 
-    behavior: str = keyword.movement_larva
-
     @property
     def _use_movement(self) -> bool:
         """Determine if we use the move model"""

@@ -246,15 +246,11 @@ class TestBehaviors(ut.TestCase):
                               agent_move_adult.Adult)
         self.assertEqual(self.Behavior.move_adult.movement,
                          kwargs[keyword.adult_movement])
-        self.assertEqual(self.Behavior.move_adult.behavior,
-                         keyword.movement_adult)
 
         self.assertIsInstance(self.Behavior.move_larva,
                               agent_move_larva.Larva)
         self.assertEqual(self.Behavior.move_larva.movement,
                          kwargs[keyword.larva_movement])
-        self.assertEqual(self.Behavior.move_larva.behavior,
-                         keyword.movement_larva)
 
     def test_make_reproduction(self):
         """test make reproduction behaviors"""

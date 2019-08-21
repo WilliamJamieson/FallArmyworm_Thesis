@@ -35,8 +35,6 @@ class TestAdult(ut.TestCase):
 
         self.assertEqual(self.Adult.movement, self.movement)
 
-        self.assertEqual(self.Adult.behavior, keyword.movement_adult)
-
         self.assertTrue(dclass.is_dataclass(self.Adult))
 
     def test__use_movement(self):
@@ -112,11 +110,9 @@ class TestAdult(ut.TestCase):
         self.Adult = movement.Adult.setup(**kwargs)
         self.assertIsInstance(self.Adult, movement.Adult)
         self.assertEqual(self.Adult.movement, self.movement)
-        self.assertEqual(self.Adult.behavior, keyword.movement_adult)
 
         # Test if have the model
         kwargs = {}
         self.Adult = movement.Adult.setup(**kwargs)
         self.assertIsInstance(self.Adult, movement.Adult)
         self.assertEqual(self.Adult.movement, None)
-        self.assertEqual(self.Adult.behavior, keyword.movement_adult)
