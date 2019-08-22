@@ -135,6 +135,34 @@ class Space(collect.UserList):
 
         return attrs_loc
 
+    def make_environment(self, proportion: float) -> hint.environment_dict:
+        """
+        Create an initialization dict for environment
+
+        Args:
+            proportion: proportion that is bt
+
+        Returns:
+            environment initialization dict
+        """
+
+        level = keyword.plant_level
+
+        location_keys = self.location_keys[level]
+        num           = self[level].adjacnecy.num
+
+        cut_off = num * proportion
+
+        environment_dict = {keyword.bt:     [],
+                             keyword.not_bt: []}
+        for location_key in location_keys:
+            if location_key[-1] < cut_off:
+                environment_dict[keyword.bt].append(location_key)
+            else:
+                environment_dict[keyword.not_bt].append(location_key)
+
+        return environment_dict
+
     def _make_locations(self, locations: hint.locations,
                          level:     int) -> hint.location_pairs:
         """

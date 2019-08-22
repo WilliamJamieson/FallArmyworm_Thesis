@@ -5,6 +5,8 @@ import collections  as collect
 import itertools    as i_tools
 import numpy.random as rnd
 
+import source.keyword as keyword
+
 import source.agents.agent as main_agent
 
 import source.schedule.actions as agent_actions
@@ -270,8 +272,9 @@ class TestStep(ut.TestCase):
 
         locs = locations.copy()
         locs.append(location.Location([0]))
-        agent_keys = ['test0', 'test1', 'test2']
-        agents     = main_agents.Agents.empty(locs, agent_keys, {})
+        agent_keys  = ['test0', 'test1', 'test2']
+        environment = ({keyword.bt: [], keyword.not_bt: []}, mk.MagicMock())
+        agents     = main_agents.Agents.empty(locs, agent_keys, {}, environment)
 
         unique_id = 0
         for loc in locations:

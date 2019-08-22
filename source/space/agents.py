@@ -1,8 +1,11 @@
 import collections as collect
 
-import source.hint as hint
+import source.hint    as hint
+import source.keyword as keyword
 
 import source.data.counter as count
+
+import source.space.environment as agent_environment
 
 
 class AgentBin(collect.UserList):
@@ -104,7 +107,7 @@ class AgentsBin(collect.UserDict):
 
     def __init__(self, agents:       hint.agent_bins,
                        location_key: hint.location_key,
-                       environment:  dict):
+                       environment:  hint.environment):
         super().__init__(agents)
 
         self.location_key = location_key
@@ -176,14 +179,16 @@ class AgentsBin(collect.UserDict):
     @classmethod
     def empty(cls, agent_keys:   hint.agent_keys,
                    location_key: hint.location_key,
-                   attrs:        hint.attrs_dict)  -> 'AgentsBin':
+                   attrs:        hint.attrs_dict,
+                   environment:  hint.environment_tuple)  -> 'AgentsBin':
         """
         Setup an empty agent bin
 
         Args:
             agent_keys:   keys for the agents
             location_key: key for the location
-            attrs:         tracking attributes
+            attrs:        tracking attributes
+            environment:  environment inputs
 
         Returns:
             a setup class
@@ -197,10 +202,18 @@ class AgentsBin(collect.UserDict):
                 attr = {}
 
             agents[agent_key] = AgentBin.empty(agent_key, attr)
-            
-        new = cls(agents, location_key, {})
 
-        return new
+        environment_dict, init_plant = environment
+        if location_key in environment_dict[keyword.bt]:
+            environ = agent_environment.Environment.setup(keyword.bt,
+                                                          init_plant)
+        elif location_key in environment_dict[keyword.not_bt]:
+            environ = agent_environment.Environment.setup(keyword.not_bt,
+                                                          init_plant)
+        else:
+            environ = agent_environment.Environment()
+
+        return cls(agents, location_key, environ)
 
 
 class Agents(collect.UserDict):
@@ -305,16 +318,18 @@ class Agents(collect.UserDict):
         return dataframes
 
     @classmethod
-    def empty(cls, locations:  hint.locations,
-                   agent_keys: hint.agent_keys,
-                   attrs:      hint.attrs_loc) -> 'Agents':
+    def empty(cls, locations:   hint.locations,
+                   agent_keys:  hint.agent_keys,
+                   attrs:       hint.attrs_loc,
+                   environment: hint.environment_tuple) -> 'Agents':
         """
         Setup an empty agent bin
 
         Args:
-            locations:  keys for the location
-            agent_keys: keys for the agents
-            attrs:      tracking attributes
+            locations:   keys for the location
+            agent_keys:  keys for the agents
+            attrs:       tracking attributes
+            environment: the arguments to generate an environment
 
         Returns:
             a setup class
@@ -330,6 +345,6 @@ class Agents(collect.UserDict):
                 attr = {}
 
             agents[location_key] = AgentsBin.empty(agent_keys, location_key,
-                                                   attr)
+                                                   attr, environment)
 
         return cls(agents)

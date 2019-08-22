@@ -72,13 +72,15 @@ if typing.TYPE_CHECKING:
     import source.simulation.simulation as main_simulation
 
     # noinspection PyUnresolvedReferences
-    import source.space.location as main_location
+    import source.space.agents      as main_agents
     # noinspection PyUnresolvedReferences
-    import source.space.agents   as main_agents
+    import source.space.environment as main_environment
     # noinspection PyUnresolvedReferences
-    import source.space.graph    as main_graph
+    import source.space.graph       as main_graph
     # noinspection PyUnresolvedReferences
-    import source.space.space    as main_space
+    import source.space.location    as main_location
+    # noinspection PyUnresolvedReferences
+    import source.space.space       as main_space
 
     # noinspection PyUnresolvedReferences
     import source.survival.adult as main_adult_survival
@@ -125,6 +127,13 @@ locations = typing.List[location]
 
 location_pairs = typing.Tuple[locations, location_keys]
 location_data  = typing.Tuple[locations, locations_key]
+
+#       Environment hints
+init_plant  = typing.Callable[[str], float]
+environment = 'main_environment.Environment'
+
+environment_dict  = typing.Dict[str, location_keys]
+environment_tuple = typing.Tuple[environment_dict, init_plant]
 
 #       Agents hints
 agent_keys  = typing.List[str]
