@@ -182,7 +182,10 @@ space = 'main_space.Space'
 
 # Data hints
 #       Database Hints
-database = 'main_database.Database'
+database   = 'main_database.Database'
+data_tuple_spacing = typing.Tuple[int]
+data_tuple_name    = typing.Tuple[int, str]
+data_tuple         = typing.Union[data_tuple_spacing, data_tuple_name]
 #       Counter Hints
 dataframe  = pd.DataFrame
 dataframes = typing.Dict[str, dataframe]

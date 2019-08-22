@@ -259,7 +259,7 @@ class TestAgentsBin(ut.TestCase):
         self.assertEqual(environ.bt,    None)
         self.assertEqual(environ.plant, None)
         self.assertEqual(location.depth.__eq__.call_args_list,
-                         [mk.call(keyword.plant_depth)])
+                         [mk.call(keyword.bt_depth)])
 
         location.reset_mock()
         # Test correct depth, bt
@@ -271,7 +271,7 @@ class TestAgentsBin(ut.TestCase):
         self.assertEqual(init_plant.call_args_list,
                          [mk.call(keyword.bt)])
         self.assertEqual(location.depth.__eq__.call_args_list,
-                         [mk.call(keyword.plant_depth)])
+                         [mk.call(keyword.bt_depth)])
         self.assertEqual(location.__getitem__.return_value.
                             __lt__.call_args_list,
                          [mk.call(cutoff)])
@@ -289,7 +289,7 @@ class TestAgentsBin(ut.TestCase):
         self.assertEqual(init_plant.call_args_list,
                          [mk.call(keyword.not_bt)])
         self.assertEqual(location.depth.__eq__.call_args_list,
-                         [mk.call(keyword.plant_depth)])
+                         [mk.call(keyword.bt_depth)])
         self.assertEqual(location.__getitem__.return_value.
                          __lt__.call_args_list,
                          [mk.call(cutoff)])

@@ -88,3 +88,17 @@ class Database(object):
 
         if simulation.timestep == self.next_dump:
             self.dump(simulation)
+
+    @classmethod
+    def setup(cls, data_tuple: hint.data_tuple) -> 'Database':
+        """
+        Setup the class
+
+        Args:
+            data_tuple: database arguments
+
+        Returns:
+            a setup class
+        """
+
+        return cls(*data_tuple)

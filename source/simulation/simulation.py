@@ -11,6 +11,19 @@ import source.agents.egg_mass as egg_mass
 import source.agents.larva    as larva
 import source.agents.pupa     as pupa
 
+import source.data.database as main_database
+
+import source.migration.emigration  as main_emigration
+import source.migration.immigration as main_immigration
+
+import source.schedule.schedule as main_schedule
+
+import source.simulation.behaviors as main_behaviors
+import source.simulation.models    as main_models
+
+import source.space.agents as main_agents
+import source.space.space  as main_space
+
 
 @dclass.dataclass
 class Simulation(object):
@@ -209,3 +222,53 @@ class Simulation(object):
 
         with open(filename, 'wb') as sim_dump:
             pk.dump(self, sim_dump, protocol=pk.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def setup(cls, nums:               hint.init_pops,
+                   grid_generators:    hint.grid_generators,
+                   attrs:              hint.attrs_depth,
+                   data_tuple:         hint.data_tuple,
+                   bt_prop:            float,
+                   step_tuples:        hint.step_tuples,
+                   emigration_tuples:  hint.emigration_tuples,
+                   immigration_tuples: hint.immigration_tuples,
+                   *args, **kwargs) -> 'Simulation':
+        """
+        Setup the full model
+
+        Args:
+            nums:               initial populations
+            grid_generators:    space generation arguments
+            attrs:              data tracking arguments
+            data_tuple:         save data arguments
+            bt_prop:            proportion of bt in environment
+            step_tuples:        schedule order arguments
+            emigration_tuples:  emigration setup
+            immigration_tuples: immigration setup
+            *args:              input models
+            **kwargs:           input values
+
+        Returns:
+            A fully initialized model
+        """
+
+        models      = main_models.Models.setup(*args, **kwargs)
+        behaviors   = main_behaviors.Behaviors.setup(**models)
+        schedule    = main_schedule.Schedule.setup(step_tuples)
+        database    = main_database.Database.setup(data_tuple)
+        emigration  = main_emigration.Emigrations.setup(emigration_tuples)
+        immigration = main_immigration.Immigrations.setup(immigration_tuples)
+
+        space   = main_space.Space.setup(grid_generators)
+        cutoff  = bt_prop * space[keyword.bt_level].adjacency.num
+        environ = (cutoff, models[keyword.init_plant])
+        agents  = main_agents.Agents.empty(space,
+                                           keyword.agent_keys,
+                                           attrs, environ)
+
+        new = cls(space, agents, schedule, models, behaviors, database,
+                  emigration, immigration)
+        new.populate(nums)
+        new.agents.record()
+
+        return new

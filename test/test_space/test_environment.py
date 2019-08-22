@@ -1,9 +1,7 @@
 import unittest      as ut
 import unittest.mock as mk
 
-import dataclasses  as dclass
-
-import source.keyword as keyword
+import dataclasses as dclass
 
 import source.space.environment as environment
 

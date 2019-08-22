@@ -25,7 +25,14 @@ import source.simulation.models     as models
 import source.simulation.simulation as simulation
 
 import source.space.agents as agents
+import source.space.graph  as main_graph
 import source.space.space  as space
+
+
+class GraphTest(main_graph.Graph):
+    """Class to add dynamic values for tests"""
+
+    adjacency = mk.create_autospec(main_graph.Adjacency, spec_seth=True)
 
 
 class TestSimulation(ut.TestCase):
@@ -314,3 +321,114 @@ class TestSimulation(ut.TestCase):
                                           protocol=pk.HIGHEST_PROTOCOL)])
                 self.assertEqual(mkOpen.call_args_list,
                                  [mk.call(filename, 'wb')])
+
+    def test_setup(self):
+        """test setup the class"""
+
+        graph = mk.create_autospec(GraphTest, spec_set=True)
+        graph.adjacency = mk.create_autospec(main_graph.Adjacency,
+                                             spec_set=True)
+        self.space.__getitem__.return_value = graph
+
+        nums = mk.MagicMock(spec=tuple)
+        grid_generators = [mk.MagicMock(spec=tuple) for _ in range(3)]
+        attrs = mk.MagicMock(spec=dict)
+        data_tuple = mk.MagicMock(spec=tuple)
+        bt_prop = mk.MagicMock(spec=float)
+        step_tuples = [mk.MagicMock(spec=tuple) for _ in range(3)]
+        emigration_tuples = [mk.MagicMock(spec=tuple) for _ in range(3)]
+        immigration_tuples = [mk.MagicMock(spec=tuple) for _ in range(3)]
+        args   = tuple([mk.MagicMock() for _ in range(3)])
+        kwargs = {'test{}'.format(index): mk.MagicMock() for index in range(3)}
+
+        cutoff = mk.MagicMock(spec=float)
+        bt_prop.__mul__.return_value = cutoff
+
+        init_plant  = mk.MagicMock(spec=callable)
+        test_models = {keyword.init_plant: init_plant}
+
+        with mk.patch.object(models.Models,
+                             'setup') as mkModels:
+            with mk.patch.object(behaviors.Behaviors,
+                                 'setup') as mkBehaviors:
+                with mk.patch.object(schedule.Schedule,
+                                     'setup') as mkSchedule:
+                    with mk.patch.object(database.Database,
+                                         'setup') as mkDatabase:
+                        with mk.patch.object(emigration.Emigrations,
+                                             'setup') as mkEmigration:
+                            with mk.patch.object(immigration.Immigrations,
+                                                 'setup') as mkImmigration:
+                                with mk.patch.object(space.Space,
+                                                     'setup') as mkSpace:
+                                    with mk.patch.object(agents.Agents,
+                                                         'empty') as mkAgents:
+                                        with mk.patch.object(simulation.
+                                                                     Simulation,
+                                                             'populate') \
+                                                as mkPop:
+                                            mkModels.return_value = test_models
+                                            mkBehaviors.return_value = \
+                                                self.behaviors
+                                            mkSchedule.return_value = \
+                                                self.schedule
+                                            mkDatabase.return_value = \
+                                                self.database
+                                            mkEmigration.return_value = \
+                                                self.emigration
+                                            mkImmigration.return_value = \
+                                                self.immigration
+                                            mkSpace.return_value = self.space
+                                            mkAgents.return_value = self.agents
+
+                                            sim = \
+                                                simulation.Simulation.\
+                                                    setup(nums,
+                                                          grid_generators,
+                                                          attrs,
+                                                          data_tuple,
+                                                          bt_prop,
+                                                          step_tuples,
+                                                          emigration_tuples,
+                                                          immigration_tuples,
+                                                          *args, **kwargs)
+
+        self.assertEqual(mkModels.call_args_list,
+                         [mk.call(*args, **kwargs)])
+        self.assertEqual(mkBehaviors.call_args_list,
+                         [mk.call(**test_models)])
+        self.assertEqual(mkSchedule.call_args_list,
+                         [mk.call(step_tuples)])
+        self.assertEqual(mkDatabase.call_args_list,
+                         [mk.call(data_tuple)])
+        self.assertEqual(mkEmigration.call_args_list,
+                         [mk.call(emigration_tuples)])
+        self.assertEqual(mkImmigration.call_args_list,
+                         [mk.call(immigration_tuples)])
+        self.assertEqual(mkSpace.call_args_list,
+                         [mk.call(grid_generators)])
+        self.assertEqual(mkAgents.call_args_list,
+                         [mk.call(self.space,
+                                  keyword.agent_keys,
+                                  attrs, (cutoff, init_plant))])
+        self.assertEqual(bt_prop.__mul__.call_args_list,
+                         [mk.call(self.space.
+                                    __getitem__.return_value.adjacency.num)])
+        self.assertEqual(self.space.__getitem__.call_args_list,
+                         [mk.call(keyword.bt_level)])
+        self.assertEqual(mkPop.call_args_list,
+                         [mk.call(nums)])
+        self.assertEqual(self.agents.record.call_args_list,
+                         [mk.call()])
+
+        self.assertIsInstance(sim, simulation.Simulation)
+
+        self.assertEqual(sim.space,       self.space)
+        self.assertEqual(sim.agents,      self.agents)
+        self.assertEqual(sim.schedule,    self.schedule)
+        self.assertEqual(sim.models,      test_models)
+        self.assertEqual(sim.behaviors,   self.behaviors)
+        self.assertEqual(sim.database,    self.database)
+        self.assertEqual(sim.emigration,  self.emigration)
+        self.assertEqual(sim.immigration, self.immigration)
+        self.assertEqual(sim.timestep,    0)

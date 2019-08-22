@@ -146,3 +146,31 @@ class TestDatabase(ut.TestCase):
                              [mk.call(self.Database, simulation)])
             self.assertEqual(simulation.timestep.__eq__.call_args_list,
                              [mk.call(self.Database.next_dump)])
+            
+    def test_setup(self):
+        """test save the class"""
+
+        # Just spacing
+        data_tuple = (self.spacing,)
+        self.Database = database.Database.setup(data_tuple)
+        self.assertIsInstance(self.Database, database.Database)
+        self.assertEqual(self.Database.spacing,   self.spacing)
+        self.assertEqual(self.Database.file_name, ':memory:')
+        self.assertEqual(self.Database.prev_dump, 0)
+        self.assertEqual(self.Database.next_dump,
+                         self.spacing.__radd__.return_value)
+        self.assertEqual(self.spacing.__radd__.call_args_list,
+                         [mk.call(0)])
+
+        self.spacing.reset_mock()
+        # Spacing and file name
+        data_tuple = (self.spacing, self.file_name)
+        self.Database = database.Database.setup(data_tuple)
+        self.assertIsInstance(self.Database, database.Database)
+        self.assertEqual(self.Database.spacing,   self.spacing)
+        self.assertEqual(self.Database.file_name, self.file_name)
+        self.assertEqual(self.Database.prev_dump, 0)
+        self.assertEqual(self.Database.next_dump,
+                         self.spacing.__radd__.return_value)
+        self.assertEqual(self.spacing.__radd__.call_args_list,
+                         [mk.call(0)])

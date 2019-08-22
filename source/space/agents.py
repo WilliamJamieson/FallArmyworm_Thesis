@@ -192,7 +192,7 @@ class AgentsBin(collect.UserDict):
 
         cutoff, init_plant = environment
 
-        if location.depth == keyword.plant_depth:
+        if location.depth == keyword.bt_depth:
             if location[-1] < cutoff:
                 return agent_environment.Environment.setup(keyword.bt,
                                                            init_plant)
