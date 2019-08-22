@@ -26,6 +26,7 @@ class ActionsTest(agent_actions.Actions):
 class SpaceTest(agent_space.Space):
     """Class to add dynamic values for tests"""
 
+    locations     = mk.MagicMock(spec=list)
     location_keys = mk.MagicMock(spec=dict)
 
 
@@ -263,6 +264,8 @@ class TestStep(ut.TestCase):
     def test__perform_parallel_step(self):
         """test perform a parallel step"""
 
+        space = mk.create_autospec(SpaceTest, spec_set=True)
+
         locations     = []
         location_keys = []
         for index in range(40):
@@ -272,9 +275,12 @@ class TestStep(ut.TestCase):
 
         locs = locations.copy()
         locs.append(location.Location([0]))
+        space.locations = locs
+
         agent_keys  = ['test0', 'test1', 'test2']
-        environment = ({keyword.bt: [], keyword.not_bt: []}, mk.MagicMock())
-        agents     = main_agents.Agents.empty(locs, agent_keys, {}, environment)
+        environment = (0, mk.MagicMock())
+        agents     = main_agents.Agents.empty(space, agent_keys,
+                                              {}, environment)
 
         unique_id = 0
         for loc in locations:

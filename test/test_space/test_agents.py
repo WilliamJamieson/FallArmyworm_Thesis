@@ -12,6 +12,7 @@ import source.data.counter as counter
 import source.space.agents      as agents
 import source.space.environment as agent_environment
 import source.space.location    as agent_location
+import source.space.space       as agent_space
 
 
 class AgentTest(main_agent.Agent):
@@ -23,9 +24,16 @@ class AgentTest(main_agent.Agent):
 
 
 class AgentBinTest(agents.AgentBin):
-    """Class to add dynamic values for agent_bin tests"""
+    """Class to add dynamic values for tests"""
 
     counts = mk.create_autospec(counter.Counts, spec_set=True)
+
+
+class SpaceTest(agent_space.Space):
+    """Class to add dynamic values for tests"""
+
+    locations = [mk.create_autospec(agent_location.Location, spec_set=True)
+                 for _ in range(3)]
 
 
 class TestAgentBin(ut.TestCase):
@@ -233,8 +241,63 @@ class TestAgentsBin(ut.TestCase):
             self.assertEqual(agent_bin.counts.dataframe.call_args_list,
                              [mk.call()])
 
-    def test_empty(self):
-        """test create an empty class"""
+    def test_make_environment(self):
+        """test make the environment"""
+
+        location = mk.create_autospec(agent_location.Location, spec_set=True)
+        location.depth.__eq__.side_effect = [False, True, True]
+
+        location.__getitem__.return_value.__lt__.side_effect = [True, False]
+
+        cutoff      = mk.MagicMock(spec=float)
+        init_plant  = mk.MagicMock(spec=callable)
+        environment = (cutoff, init_plant)
+
+        # Test incorrect depth
+        environ = self.AgentsBin.make_environment(location, environment)
+        self.assertIsInstance(environ, agent_environment.Environment)
+        self.assertEqual(environ.bt,    None)
+        self.assertEqual(environ.plant, None)
+        self.assertEqual(location.depth.__eq__.call_args_list,
+                         [mk.call(keyword.plant_depth)])
+
+        location.reset_mock()
+        # Test correct depth, bt
+        environ = self.AgentsBin.make_environment(location, environment)
+        self.assertIsInstance(environ, agent_environment.Environment)
+        self.assertEqual(environ.bt,    keyword.bt)
+        self.assertEqual(environ.plant,
+                         init_plant.return_value)
+        self.assertEqual(init_plant.call_args_list,
+                         [mk.call(keyword.bt)])
+        self.assertEqual(location.depth.__eq__.call_args_list,
+                         [mk.call(keyword.plant_depth)])
+        self.assertEqual(location.__getitem__.return_value.
+                            __lt__.call_args_list,
+                         [mk.call(cutoff)])
+        self.assertEqual(location.__getitem__.call_args_list,
+                         [mk.call(-1)])
+
+        location.reset_mock()
+        init_plant.reset_mock()
+        # Test correct depth, not_bt
+        environ = self.AgentsBin.make_environment(location, environment)
+        self.assertIsInstance(environ, agent_environment.Environment)
+        self.assertEqual(environ.bt,    keyword.not_bt)
+        self.assertEqual(environ.plant,
+                         init_plant.return_value)
+        self.assertEqual(init_plant.call_args_list,
+                         [mk.call(keyword.not_bt)])
+        self.assertEqual(location.depth.__eq__.call_args_list,
+                         [mk.call(keyword.plant_depth)])
+        self.assertEqual(location.__getitem__.return_value.
+                         __lt__.call_args_list,
+                         [mk.call(cutoff)])
+        self.assertEqual(location.__getitem__.call_args_list,
+                         [mk.call(-1)])
+
+    def test_make_bins(self):
+        """test make the bins"""
 
         agent_keys = []
         attrs      = {}
@@ -244,149 +307,40 @@ class TestAgentsBin(ut.TestCase):
                 values = [mk.MagicMock(spec=str) for _ in range(3)]
                 removal = mk.MagicMock(spec=bool)
                 attr[mk.MagicMock(spec=str)] = (values, removal)
-                
+
             agent_key = mk.MagicMock(spec=int)
             agent_keys.append(agent_key)
             attrs[agent_key] = attr
 
-        bt_list          = mk.MagicMock(spec=list)
-        not_bt_list      = mk.MagicMock(spec=list)
-        environment_dict = {keyword.bt:     bt_list,
-                            keyword.not_bt: not_bt_list}
-        init_plant       = mk.MagicMock(spec=callable)
-
-        environment = (environment_dict, init_plant)
-
-        # Environment is not at right level
-        #       Has attrs for agent keys
-        self.AgentsBin = agents.AgentsBin.empty(agent_keys,
-                                                self.location_key,
-                                                attrs,
-                                                environment)
-        self.assertIsInstance(self.AgentsBin, agents.AgentsBin)
-        self.assertEqual(self.AgentsBin.location_key, self.location_key)
-
-        self.assertIsInstance(self.AgentsBin.environment,
-                              agent_environment.Environment)
-        self.assertEqual(self.AgentsBin.environment.bt,    None)
-        self.assertEqual(self.AgentsBin.environment.plant, None)
-
+        # with attrs
+        agent_bins = self.AgentsBin.make_bins(agent_keys, attrs)
         for agent_key in agent_keys:
-            self.assertIsInstance(self.AgentsBin[agent_key], agents.AgentBin)
-            self.assertEqual(self.AgentsBin[agent_key], [])
-            self.assertEqual(self.AgentsBin[agent_key].agent_key, agent_key)
-            self.assertIsInstance(self.AgentsBin[agent_key].counts,
+            self.assertIn(agent_key, agent_bins)
+            self.assertIsInstance(agent_bins[agent_key], agents.AgentBin)
+            self.assertEqual(agent_bins[agent_key].agent_key, agent_key)
+            self.assertIsInstance(agent_bins[agent_key].counts,
                                   counter.Counts)
             for attr, things in attrs[agent_key].items():
                 values, removal = things
-                self.assertIsInstance(self.AgentsBin[agent_key].counts[attr],
+                self.assertIsInstance(agent_bins[agent_key].counts[attr],
                                       counter.Count)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].attr,
-                                 attr)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].removal,
+                self.assertEqual(agent_bins[agent_key].counts[attr].attr, attr)
+                self.assertEqual(agent_bins[agent_key].counts[attr].removal,
                                  removal)
-                for key, value in \
-                        self.AgentsBin[agent_key].counts[attr].items():
+                for key, value in agent_bins[agent_key].counts[attr].items():
                     self.assertIn(key, values)
                     self.assertEqual(value, 0)
                 for value in values:
-                    self.assertIn(value, self.AgentsBin[agent_key].counts[attr])
-                    self.assertEqual(self.AgentsBin[agent_key].
-                                     counts[attr][value],
+                    self.assertIn(value, agent_bins[agent_key].counts[attr])
+                    self.assertEqual(agent_bins[agent_key].counts[attr][value],
                                      0)
-                self.assertIsInstance(self.AgentsBin[agent_key].
-                                      counts[attr].data_columns,
-                                      counter.DataColumns)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                 data_columns.attr,
-                                 attr)
-                for key, column in self.AgentsBin[agent_key].counts[attr]. \
-                        data_columns.items():
-                    self.assertIn(key, values)
-                    self.assertIsInstance(column, counter.DataColumn)
-                    self.assertEqual(column.attr_value, key)
-                    self.assertEqual(column, [])
-                for value in values:
-                    self.assertIn(value,
-                                  self.AgentsBin[agent_key].counts[attr].
-                                  data_columns)
-                    self.assertIsInstance(self.AgentsBin[agent_key].
-                                          counts[attr].data_columns[value],
-                                          counter.DataColumn)
-                    self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                     data_columns[value].attr_value,
-                                     value)
-                    self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                     data_columns[value],
-                                     [])
-
-        #       No attrs
-        self.AgentsBin = agents.AgentsBin.empty(agent_keys,
-                                                self.location_key,
-                                                {},
-                                                environment)
-        self.assertIsInstance(self.AgentsBin, agents.AgentsBin)
-        self.assertEqual(self.AgentsBin.location_key, self.location_key)
-        self.assertEqual(self.AgentsBin.environment.bt,    None)
-        self.assertEqual(self.AgentsBin.environment.plant, None)
-
-        for agent_key in agent_keys:
-            self.assertIsInstance(self.AgentsBin[agent_key], agents.AgentBin)
-            self.assertEqual(self.AgentsBin[agent_key], [])
-            self.assertEqual(self.AgentsBin[agent_key].agent_key, agent_key)
-            self.assertIsInstance(self.AgentsBin[agent_key].counts,
-                                  counter.Counts)
-            self.assertEqual(self.AgentsBin[agent_key].counts, {})
-
-        # Environment is bt
-        bt_list.__contains__.return_value = True
-        #       Has attrs for agent keys
-        self.AgentsBin = agents.AgentsBin.empty(agent_keys,
-                                                self.location_key,
-                                                attrs,
-                                                environment)
-        self.assertIsInstance(self.AgentsBin, agents.AgentsBin)
-        self.assertEqual(self.AgentsBin.location_key, self.location_key)
-
-        self.assertIsInstance(self.AgentsBin.environment,
-                              agent_environment.Environment)
-        self.assertEqual(self.AgentsBin.environment.bt, keyword.bt)
-        self.assertEqual(self.AgentsBin.environment.plant,
-                         init_plant.return_value)
-        self.assertEqual(init_plant.call_args_list,
-                         [mk.call(keyword.bt)])
-        init_plant.reset_mock()
-
-        for agent_key in agent_keys:
-            self.assertIsInstance(self.AgentsBin[agent_key], agents.AgentBin)
-            self.assertEqual(self.AgentsBin[agent_key], [])
-            self.assertEqual(self.AgentsBin[agent_key].agent_key, agent_key)
-            self.assertIsInstance(self.AgentsBin[agent_key].counts,
-                                  counter.Counts)
-            for attr, things in attrs[agent_key].items():
-                values, removal = things
-                self.assertIsInstance(self.AgentsBin[agent_key].counts[attr],
-                                      counter.Count)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].attr,
-                                 attr)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].removal,
-                                 removal)
-                for key, value in \
-                        self.AgentsBin[agent_key].counts[attr].items():
-                    self.assertIn(key, values)
-                    self.assertEqual(value, 0)
-                for value in values:
-                    self.assertIn(value, self.AgentsBin[agent_key].counts[attr])
-                    self.assertEqual(self.AgentsBin[agent_key].
-                                        counts[attr][value],
-                                     0)
-                self.assertIsInstance(self.AgentsBin[agent_key].
+                self.assertEqual(len(agent_bins[agent_key].counts[attr]), 3)
+                self.assertIsInstance(agent_bins[agent_key].
                                         counts[attr].data_columns,
                                       counter.DataColumns)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                    data_columns.attr,
-                                 attr)
-                for key, column in self.AgentsBin[agent_key].counts[attr].\
+                self.assertEqual(agent_bins[agent_key].
+                                    counts[attr].data_columns.attr, attr)
+                for key, column in agent_bins[agent_key].counts[attr].\
                         data_columns.items():
                     self.assertIn(key, values)
                     self.assertIsInstance(column, counter.DataColumn)
@@ -394,130 +348,89 @@ class TestAgentsBin(ut.TestCase):
                     self.assertEqual(column, [])
                 for value in values:
                     self.assertIn(value,
-                                  self.AgentsBin[agent_key].counts[attr].
+                                  agent_bins[agent_key].counts[attr].
                                     data_columns)
-                    self.assertIsInstance(self.AgentsBin[agent_key].
-                                            counts[attr].data_columns[value],
+                    self.assertIsInstance(agent_bins[agent_key].counts[attr].
+                                            data_columns[value],
                                           counter.DataColumn)
-                    self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                        data_columns[value].attr_value,
+                    self.assertEqual(agent_bins[agent_key].counts[attr].
+                                         data_columns[value].attr_value,
                                      value)
-                    self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                        data_columns[value],
-                                     [])
+                    self.assertEqual(agent_bins[agent_key].counts[attr].
+                                     data_columns[value], [])
+                self.assertEqual(len(agent_bins[agent_key].counts[attr].
+                                        data_columns), 3)
+            self.assertEqual(len(agent_bins[agent_key].counts), 3)
+        self.assertEqual(len(agent_bins), 3)
 
-        #       No attrs
-        self.AgentsBin = agents.AgentsBin.empty(agent_keys,
-                                                self.location_key,
-                                                {},
-                                                environment)
-        self.assertIsInstance(self.AgentsBin, agents.AgentsBin)
-        self.assertEqual(self.AgentsBin.location_key, self.location_key)
-        self.assertEqual(self.AgentsBin.environment.bt, keyword.bt)
-        self.assertEqual(self.AgentsBin.environment.plant,
-                         init_plant.return_value)
-        self.assertEqual(init_plant.call_args_list,
-                         [mk.call(keyword.bt)])
-        init_plant.reset_mock()
-
+        # no attrs
+        agent_bins = self.AgentsBin.make_bins(agent_keys, {})
         for agent_key in agent_keys:
-            self.assertIsInstance(self.AgentsBin[agent_key], agents.AgentBin)
-            self.assertEqual(self.AgentsBin[agent_key], [])
-            self.assertEqual(self.AgentsBin[agent_key].agent_key, agent_key)
-            self.assertIsInstance(self.AgentsBin[agent_key].counts,
-                                  counter.Counts)
-            self.assertEqual(self.AgentsBin[agent_key].counts, {})
+            self.assertIsInstance(agent_bins[agent_key], agents.AgentBin)
+            self.assertEqual(agent_bins[agent_key], [])
+            self.assertEqual(agent_bins[agent_key].agent_key, agent_key)
+            self.assertIsInstance(agent_bins[agent_key].counts, counter.Counts)
+            self.assertEqual(agent_bins[agent_key].counts, {})
+        self.assertEqual(len(agent_bins), 3)
 
-        # Environment is not bt
-        bt_list.    __contains__.return_value = False
-        not_bt_list.__contains__.return_value = True
-        #       Has attrs for agent keys
-        self.AgentsBin = agents.AgentsBin.empty(agent_keys,
-                                                self.location_key,
-                                                attrs,
-                                                environment)
-        self.assertIsInstance(self.AgentsBin, agents.AgentsBin)
-        self.assertEqual(self.AgentsBin.location_key, self.location_key)
+    def test_get_attrs(self):
+        """test get the correct attrs system"""
 
-        self.assertIsInstance(self.AgentsBin.environment,
-                              agent_environment.Environment)
-        self.assertEqual(self.AgentsBin.environment.bt, keyword.not_bt)
-        self.assertEqual(self.AgentsBin.environment.plant,
-                         init_plant.return_value)
-        self.assertEqual(init_plant.call_args_list,
-                         [mk.call(keyword.not_bt)])
-        init_plant.reset_mock()
+        location = mk.create_autospec(agent_location.Location, spec_set=True)
 
-        for agent_key in agent_keys:
-            self.assertIsInstance(self.AgentsBin[agent_key], agents.AgentBin)
-            self.assertEqual(self.AgentsBin[agent_key], [])
-            self.assertEqual(self.AgentsBin[agent_key].agent_key, agent_key)
-            self.assertIsInstance(self.AgentsBin[agent_key].counts,
-                                  counter.Counts)
-            for attr, things in attrs[agent_key].items():
-                values, removal = things
-                self.assertIsInstance(self.AgentsBin[agent_key].counts[attr],
-                                      counter.Count)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].attr,
-                                 attr)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].removal,
-                                 removal)
-                for key, value in \
-                        self.AgentsBin[agent_key].counts[attr].items():
-                    self.assertIn(key, values)
-                    self.assertEqual(value, 0)
-                for value in values:
-                    self.assertIn(value, self.AgentsBin[agent_key].counts[attr])
-                    self.assertEqual(self.AgentsBin[agent_key].
-                                     counts[attr][value],
-                                     0)
-                self.assertIsInstance(self.AgentsBin[agent_key].
-                                      counts[attr].data_columns,
-                                      counter.DataColumns)
-                self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                 data_columns.attr,
-                                 attr)
-                for key, column in self.AgentsBin[agent_key].counts[attr]. \
-                        data_columns.items():
-                    self.assertIn(key, values)
-                    self.assertIsInstance(column, counter.DataColumn)
-                    self.assertEqual(column.attr_value, key)
-                    self.assertEqual(column, [])
-                for value in values:
-                    self.assertIn(value,
-                                  self.AgentsBin[agent_key].counts[attr].
-                                  data_columns)
-                    self.assertIsInstance(self.AgentsBin[agent_key].
-                                          counts[attr].data_columns[value],
-                                          counter.DataColumn)
-                    self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                     data_columns[value].attr_value,
-                                     value)
-                    self.assertEqual(self.AgentsBin[agent_key].counts[attr].
-                                     data_columns[value],
-                                     [])
+        attrs = mk.MagicMock(spec=dict)
+        attrs.__contains__.side_effect = [False, True]
 
-        #       No attrs
-        self.AgentsBin = agents.AgentsBin.empty(agent_keys,
-                                                self.location_key,
-                                                {},
-                                                environment)
-        self.assertIsInstance(self.AgentsBin, agents.AgentsBin)
-        self.assertEqual(self.AgentsBin.location_key, self.location_key)
-        self.assertEqual(self.AgentsBin.environment.bt, keyword.not_bt)
-        self.assertEqual(self.AgentsBin.environment.plant,
-                         init_plant.return_value)
-        self.assertEqual(init_plant.call_args_list,
-                         [mk.call(keyword.not_bt)])
-        init_plant.reset_mock()
+        # Test incorrect level
+        self.assertEqual(self.AgentsBin.get_attrs(location, attrs), {})
+        self.assertEqual(attrs.__contains__.call_args_list,
+                         [mk.call(location.level)])
 
-        for agent_key in agent_keys:
-            self.assertIsInstance(self.AgentsBin[agent_key], agents.AgentBin)
-            self.assertEqual(self.AgentsBin[agent_key], [])
-            self.assertEqual(self.AgentsBin[agent_key].agent_key, agent_key)
-            self.assertIsInstance(self.AgentsBin[agent_key].counts,
-                                  counter.Counts)
-            self.assertEqual(self.AgentsBin[agent_key].counts, {})
+        attrs.reset_mock()
+        # Test incorrect level
+        self.assertEqual(self.AgentsBin.get_attrs(location, attrs),
+                         attrs.__getitem__.return_value)
+        self.assertEqual(attrs.__getitem__.call_args_list,
+                         [mk.call(location.level)])
+        self.assertEqual(attrs.__contains__.call_args_list,
+                         [mk.call(location.level)])
+        
+    def test_empty(self):
+        """test create an empty class"""
+
+        agent_keys  = mk.MagicMock(spec=list)
+        location    = mk.create_autospec(agent_location.Location, spec_set=True)
+        attrs       = mk.MagicMock(spec=dict)
+        environment = mk.MagicMock(spec=tuple)
+
+        with mk.patch.object(agents.AgentsBin, 'get_attrs',
+                             autospec=True) as mkAttrs:
+            with mk.patch.object(agents.AgentsBin, 'make_bins',
+                                 autospec=True) as mkBins:
+                with mk.patch.object(agents.AgentsBin, 'make_environment',
+                                     autospec=True) as mkEnvironment:
+                    mkBins.return_value        = self.agents
+                    mkEnvironment.return_value = self.environment
+
+                    self.AgentsBin = agents.AgentsBin.empty(agent_keys,
+                                                            location,
+                                                            attrs,
+                                                            environment)
+                    self.assertIsInstance(self.AgentsBin, agents.AgentsBin)
+                    self.assertEqual(self.AgentsBin.location_key,
+                                     location.location_key)
+                    self.assertEqual(self.AgentsBin.environment,
+                                     self.environment)
+                    self.assertEqual(self.AgentsBin,      self.agents)
+                    self.assertEqual(self.AgentsBin.data, self.agents)
+
+                    self.assertEqual(mkEnvironment.call_args_list,
+                                     [mk.call(location, environment)])
+                    self.assertEqual(mkBins.call_args_list,
+                                     [mk.call(agent_keys,
+                                              mkAttrs.return_value)])
+                    self.assertEqual(mkAttrs.call_args_list,
+                                     [mk.call(location, attrs)])
 
 
 class TestAgents(ut.TestCase):
@@ -654,377 +567,36 @@ class TestAgents(ut.TestCase):
 
         locations  = [mk.create_autospec(agent_location.Location, spec_set=True)
                       for _ in range(3)]
-        agent_keys = [mk.MagicMock(spec=str)   for _ in range(3)]
+        space = mk.create_autospec(SpaceTest, spec_set=True)
+        space.locations = locations
 
-        attrs = {}
-        for location in locations:
-            location_key = location.location_key
-            agent_attrs = {}
-            for agent_key in agent_keys:
-                attr = {}
-                for _ in range(3):
-                    values = [mk.MagicMock(spec=str) for _ in range(3)]
-                    removal = mk.MagicMock(spec=bool)
+        agent_keys  = mk.MagicMock(spec=list)
+        attrs       = mk.MagicMock(spec=dict)
+        environment = mk.MagicMock(spec=tuple)
 
-                    attr[mk.MagicMock(spec=str)] = (values, removal)
-                agent_attrs[agent_key] = attr
-            attrs[location_key] = agent_attrs
+        agent_bins = [mk.create_autospec(agents.AgentsBin, spec_set=True)
+                      for _ in range(3)]
 
-        bt_list          = mk.MagicMock(spec=list)
-        not_bt_list      = mk.MagicMock(spec=list)
-        environment_dict = {keyword.bt:     bt_list,
-                            keyword.not_bt: not_bt_list}
-        init_plant       = mk.MagicMock(spec=callable)
+        with mk.patch.object(agents.AgentsBin, 'empty',
+                             autospec=True) as mkEmpty:
+            mkEmpty.side_effect = agent_bins
 
-        environment = (environment_dict, init_plant)
+            self.Agents = agents.Agents.empty(space, agent_keys,
+                                              attrs, environment)
+            self.assertIsInstance(self.Agents, agents.Agents)
 
-        # Environment is at wrong level
-        #       Has attrs for location keys
-        self.Agents = agents.Agents.empty(locations,
-                                          agent_keys,
-                                          attrs,
-                                          environment)
-        self.assertIsInstance(self.Agents, agents.Agents)
-
-        for location in locations:
-            location_key = location.location_key
-            self.assertIsInstance(self.Agents[location_key], agents.AgentsBin)
-            self.assertEqual(self.Agents[location_key].location_key,
-                             location_key)
-
-            self.assertIsInstance(self.Agents[location_key].environment,
-                                  agent_environment.Environment)
-            self.assertEqual(self.Agents[location_key].environment.bt, None)
-            self.assertEqual(self.Agents[location_key].environment.plant, None)
-
-            for agent_key in agent_keys:
-                self.assertIsInstance(self.Agents[location_key][agent_key],
-                                      agents.AgentBin)
-                self.assertEqual(self.Agents[location_key][agent_key], [])
-                self.assertEqual(self.Agents[location_key][agent_key].agent_key,
-                                 agent_key)
-                self.assertIsInstance(self.Agents[location_key][agent_key].
-                                        counts,
-                                      counter.Counts)
-                for attr, things in attrs[location_key][agent_key].items():
-                    values, removal = things
-                    self.assertIsInstance(self.Agents[location_key][agent_key].
-                                            counts[attr],
-                                          counter.Count)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                        counts[attr].attr,
-                                     attr)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                     counts[attr].removal,
-                                     removal)
-                    for key, value in self.Agents[location_key][agent_key].\
-                            counts[attr].items():
-                        self.assertIn(key, values)
-                        self.assertEqual(value, 0)
-                    for value in values:
-                        self.assertIn(value,
-                                      self.Agents[location_key][agent_key].
-                                        counts[attr])
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                            counts[attr][value],
-                                         0)
-                    self.assertIsInstance(self.Agents[location_key][agent_key].
-                                            counts[attr].data_columns,
-                                          counter.DataColumns)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                        counts[attr].data_columns.attr,
-                                     attr)
-                    for key, column in self.Agents[location_key][agent_key].\
-                            counts[attr].data_columns.items():
-                        self.assertIn(key, values)
-                        self.assertIsInstance(column, counter.DataColumn)
-                        self.assertEqual(column.attr_value, key)
-                        self.assertEqual(column, [])
-                    for value in values:
-                        self.assertIn(value,
-                                      self.Agents[location_key][agent_key].
-                                        counts[attr].data_columns)
-                        self.assertIsInstance(self.Agents[location_key]
-                                                [agent_key].counts[attr].
-                                                data_columns[value],
-                                              counter.DataColumn)
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                            counts[attr].data_columns[value].
-                                            attr_value,
-                                         value)
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                            counts[attr].data_columns[value],
-                                         [])
-        #       No attrs
-        self.Agents = agents.Agents.empty(locations,
-                                          agent_keys,
-                                          {},
-                                          environment)
-        self.assertIsInstance(self.Agents, agents.Agents)
-
-        for location in locations:
-            location_key = location.location_key
-            self.assertIsInstance(self.Agents[location_key], agents.AgentsBin)
-            self.assertEqual(self.Agents[location_key].location_key,
-                             location_key)
-
-            self.assertIsInstance(self.Agents[location_key].environment,
-                                  agent_environment.Environment)
-            self.assertEqual(self.Agents[location_key].environment.bt, None)
-            self.assertEqual(self.Agents[location_key].environment.plant, None)
-
-            for agent_key in agent_keys:
-                self.assertIsInstance(self.Agents[location_key][agent_key],
-                                      agents.AgentBin)
-                self.assertEqual(self.Agents[location_key][agent_key], [])
-                self.assertEqual(self.Agents[location_key][agent_key].agent_key,
-                                 agent_key)
-                self.assertIsInstance(self.Agents[location_key][agent_key].
-                                      counts,
-                                      counter.Counts)
-                self.assertEqual(self.Agents[location_key][agent_key].counts,
-                                 {})
-
-        # Environment is bt
-        bt_list.__contains__.return_value = True
-        #       Has attrs for location keys
-        self.Agents = agents.Agents.empty(locations,
-                                          agent_keys,
-                                          attrs,
-                                          environment)
-        self.assertIsInstance(self.Agents, agents.Agents)
-
-        for location in locations:
-            location_key = location.location_key
-            self.assertIsInstance(self.Agents[location_key], agents.AgentsBin)
-            self.assertEqual(self.Agents[location_key].location_key,
-                             location_key)
-
-            self.assertIsInstance(self.Agents[location_key].environment,
-                                  agent_environment.Environment)
-            self.assertEqual(self.Agents[location_key].environment.bt,
-                             keyword.bt)
-            self.assertEqual(self.Agents[location_key].environment.plant,
-                             init_plant.return_value)
-            self.assertEqual(init_plant.call_args_list,
-                             [mk.call(keyword.bt),
-                              mk.call(keyword.bt),
-                              mk.call(keyword.bt)])
-
-            for agent_key in agent_keys:
-                self.assertIsInstance(self.Agents[location_key][agent_key],
-                                      agents.AgentBin)
-                self.assertEqual(self.Agents[location_key][agent_key], [])
-                self.assertEqual(self.Agents[location_key][agent_key].agent_key,
-                                 agent_key)
-                self.assertIsInstance(self.Agents[location_key][agent_key].
-                                      counts,
-                                      counter.Counts)
-                for attr, things in attrs[location_key][agent_key].items():
-                    values, removal = things
-                    self.assertIsInstance(self.Agents[location_key][agent_key].
-                                          counts[attr],
-                                          counter.Count)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                     counts[attr].attr,
-                                     attr)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                     counts[attr].removal,
-                                     removal)
-                    for key, value in self.Agents[location_key][agent_key]. \
-                            counts[attr].items():
-                        self.assertIn(key, values)
-                        self.assertEqual(value, 0)
-                    for value in values:
-                        self.assertIn(value,
-                                      self.Agents[location_key][agent_key].
-                                      counts[attr])
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                         counts[attr][value],
-                                         0)
-                    self.assertIsInstance(self.Agents[location_key][agent_key].
-                                          counts[attr].data_columns,
-                                          counter.DataColumns)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                     counts[attr].data_columns.attr,
-                                     attr)
-                    for key, column in self.Agents[location_key][agent_key]. \
-                            counts[attr].data_columns.items():
-                        self.assertIn(key, values)
-                        self.assertIsInstance(column, counter.DataColumn)
-                        self.assertEqual(column.attr_value, key)
-                        self.assertEqual(column, [])
-                    for value in values:
-                        self.assertIn(value,
-                                      self.Agents[location_key][agent_key].
-                                      counts[attr].data_columns)
-                        self.assertIsInstance(self.Agents[location_key]
-                                              [agent_key].counts[attr].
-                                              data_columns[value],
-                                              counter.DataColumn)
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                         counts[attr].data_columns[value].
-                                         attr_value,
-                                         value)
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                         counts[attr].data_columns[value],
-                                         [])
-        init_plant.reset_mock()
-        #       No attrs
-        self.Agents = agents.Agents.empty(locations,
-                                          agent_keys,
-                                          {},
-                                          environment)
-        self.assertIsInstance(self.Agents, agents.Agents)
-
-        for location in locations:
-            location_key = location.location_key
-            self.assertIsInstance(self.Agents[location_key], agents.AgentsBin)
-            self.assertEqual(self.Agents[location_key].location_key,
-                             location_key)
-
-            self.assertIsInstance(self.Agents[location_key].environment,
-                                  agent_environment.Environment)
-            self.assertEqual(self.Agents[location_key].environment.bt,
-                             keyword.bt)
-            self.assertEqual(self.Agents[location_key].environment.plant,
-                             init_plant.return_value)
-            self.assertEqual(init_plant.call_args_list,
-                             [mk.call(keyword.bt),
-                              mk.call(keyword.bt),
-                              mk.call(keyword.bt)])
-
-            for agent_key in agent_keys:
-                self.assertIsInstance(self.Agents[location_key][agent_key],
-                                      agents.AgentBin)
-                self.assertEqual(self.Agents[location_key][agent_key], [])
-                self.assertEqual(self.Agents[location_key][agent_key].agent_key,
-                                 agent_key)
-                self.assertIsInstance(self.Agents[location_key][agent_key].
-                                      counts,
-                                      counter.Counts)
-                self.assertEqual(self.Agents[location_key][agent_key].counts,
-                                 {})
-
-        init_plant.reset_mock()
-        # Environment is not bt
-        bt_list.__contains__.return_value = False
-        not_bt_list.__contains__.return_value = True
-        #       Has attrs for location keys
-        self.Agents = agents.Agents.empty(locations,
-                                          agent_keys,
-                                          attrs,
-                                          environment)
-        self.assertIsInstance(self.Agents, agents.Agents)
-
-        for location in locations:
-            location_key = location.location_key
-            self.assertIsInstance(self.Agents[location_key], agents.AgentsBin)
-            self.assertEqual(self.Agents[location_key].location_key,
-                             location_key)
-
-            self.assertIsInstance(self.Agents[location_key].environment,
-                                  agent_environment.Environment)
-            self.assertEqual(self.Agents[location_key].environment.bt,
-                             keyword.not_bt)
-            self.assertEqual(self.Agents[location_key].environment.plant,
-                             init_plant.return_value)
-            self.assertEqual(init_plant.call_args_list,
-                             [mk.call(keyword.not_bt),
-                              mk.call(keyword.not_bt),
-                              mk.call(keyword.not_bt)])
-
-            for agent_key in agent_keys:
-                self.assertIsInstance(self.Agents[location_key][agent_key],
-                                      agents.AgentBin)
-                self.assertEqual(self.Agents[location_key][agent_key], [])
-                self.assertEqual(self.Agents[location_key][agent_key].agent_key,
-                                 agent_key)
-                self.assertIsInstance(self.Agents[location_key][agent_key].
-                                      counts,
-                                      counter.Counts)
-                for attr, things in attrs[location_key][agent_key].items():
-                    values, removal = things
-                    self.assertIsInstance(self.Agents[location_key][agent_key].
-                                          counts[attr],
-                                          counter.Count)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                     counts[attr].attr,
-                                     attr)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                     counts[attr].removal,
-                                     removal)
-                    for key, value in self.Agents[location_key][agent_key]. \
-                            counts[attr].items():
-                        self.assertIn(key, values)
-                        self.assertEqual(value, 0)
-                    for value in values:
-                        self.assertIn(value,
-                                      self.Agents[location_key][agent_key].
-                                      counts[attr])
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                         counts[attr][value],
-                                         0)
-                    self.assertIsInstance(self.Agents[location_key][agent_key].
-                                          counts[attr].data_columns,
-                                          counter.DataColumns)
-                    self.assertEqual(self.Agents[location_key][agent_key].
-                                     counts[attr].data_columns.attr,
-                                     attr)
-                    for key, column in self.Agents[location_key][agent_key]. \
-                            counts[attr].data_columns.items():
-                        self.assertIn(key, values)
-                        self.assertIsInstance(column, counter.DataColumn)
-                        self.assertEqual(column.attr_value, key)
-                        self.assertEqual(column, [])
-                    for value in values:
-                        self.assertIn(value,
-                                      self.Agents[location_key][agent_key].
-                                      counts[attr].data_columns)
-                        self.assertIsInstance(self.Agents[location_key]
-                                              [agent_key].counts[attr].
-                                              data_columns[value],
-                                              counter.DataColumn)
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                         counts[attr].data_columns[value].
-                                         attr_value,
-                                         value)
-                        self.assertEqual(self.Agents[location_key][agent_key].
-                                         counts[attr].data_columns[value],
-                                         [])
-        init_plant.reset_mock()
-        #       No attrs
-        self.Agents = agents.Agents.empty(locations,
-                                          agent_keys,
-                                          {},
-                                          environment)
-        self.assertIsInstance(self.Agents, agents.Agents)
-
-        for location in locations:
-            location_key = location.location_key
-            self.assertIsInstance(self.Agents[location_key], agents.AgentsBin)
-            self.assertEqual(self.Agents[location_key].location_key,
-                             location_key)
-
-            self.assertIsInstance(self.Agents[location_key].environment,
-                                  agent_environment.Environment)
-            self.assertEqual(self.Agents[location_key].environment.bt,
-                             keyword.not_bt)
-            self.assertEqual(self.Agents[location_key].environment.plant,
-                             init_plant.return_value)
-            self.assertEqual(init_plant.call_args_list,
-                             [mk.call(keyword.not_bt),
-                              mk.call(keyword.not_bt),
-                              mk.call(keyword.not_bt)])
-
-            for agent_key in agent_keys:
-                self.assertIsInstance(self.Agents[location_key][agent_key],
-                                      agents.AgentBin)
-                self.assertEqual(self.Agents[location_key][agent_key], [])
-                self.assertEqual(self.Agents[location_key][agent_key].agent_key,
-                                 agent_key)
-                self.assertIsInstance(self.Agents[location_key][agent_key].
-                                      counts,
-                                      counter.Counts)
-                self.assertEqual(self.Agents[location_key][agent_key].counts,
-                                 {})
+            for index, location in enumerate(locations):
+                location_key = location.location_key
+                self.assertIn(location_key, self.Agents)
+                self.assertEqual(self.Agents[location_key], agent_bins[index])
+                self.assertEqual(mkEmpty.call_args_list[index],
+                                 mk.call(agent_keys, location,
+                                         attrs, environment))
+            for index, things in enumerate(self.Agents.items()):
+                location_key, agent_bin = things
+                self.assertEqual(location_key, locations[index].location_key)
+                self.assertEqual(agent_bin, agent_bins[index])
+                self.assertEqual(mkEmpty.call_args_list[index],
+                                 mk.call(agent_keys, locations[index],
+                                         attrs, environment))
+            self.assertEqual(len(self.Agents), 3)

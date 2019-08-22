@@ -162,50 +162,6 @@ class TestSpace(ut.TestCase):
 
                 self.assertEqual(len(self.graphs), 3)
 
-    def test__make_attrs(self):
-        """test make the attrs for a specific depth"""
-
-        attrs = mk.MagicMock(spec=dict)
-
-        for depth, location_keys in self.location_keys.items():
-            attrs_loc = self.Space._make_attrs(attrs, depth)
-            self.assertIsInstance(attrs_loc, dict)
-            for location_key in location_keys:
-                self.assertIn(location_key, attrs_loc)
-                self.assertEqual(attrs_loc[location_key], attrs)
-            self.assertEqual(len(attrs_loc), 3)
-
-    def test_make_attrs(self):
-        """test make all the attrs"""
-
-        attrs      = {}
-        attrs_loc  = {}
-        make_attrs = []
-        for _ in range(3):
-            depth     = mk.MagicMock(spec=int)
-            attr      = mk.MagicMock(spec=dict)
-            make_attr = {}
-            for _ in range(3):
-                loc_key = mk.MagicMock(spec=tuple)
-                make_attr[loc_key] = attr
-                attrs_loc[loc_key] = attr
-
-            attrs[depth] = attr
-            make_attrs.append(make_attr)
-
-        with mk.patch.object(space.Space, '_make_attrs',
-                             autospec=True) as mkMake:
-            mkMake.side_effect = make_attrs
-
-            self.assertEqual(self.Space.make_attrs(attrs),
-                             attrs_loc)
-            for index, thing in enumerate(attrs.items()):
-                depth, attr = thing
-                self.assertEqual(mkMake.call_args_list[index],
-                                 mk.call(self.Space, attr, depth))
-            self.assertEqual(len(attrs), len(mkMake.call_args_list))
-            self.assertEqual(len(mkMake.call_args_list), 3)
-
     def test__make_locations(self):
         """test generate location data for a specific level"""
 

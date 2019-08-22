@@ -132,8 +132,7 @@ location_data  = typing.Tuple[locations, locations_key]
 init_plant  = typing.Callable[[str], float]
 environment = 'main_environment.Environment'
 
-environment_dict  = typing.Dict[str, location_keys]
-environment_tuple = typing.Tuple[environment_dict, init_plant]
+environment_tuple = typing.Tuple[float, init_plant]
 
 #       Agents hints
 agent_keys  = typing.List[str]
@@ -201,7 +200,6 @@ counter_dict = typing.Dict[str, counter]
 counts       = 'main_counter.Counts'
 
 attrs_dict  = typing.Dict[str, attrs]
-attrs_loc   = typing.Dict[location_key, attrs_dict]
 attrs_depth = typing.Dict[int, attrs_dict]
 
 

@@ -95,76 +95,8 @@ class Space(collect.UserList):
 
         return agent_location.Location(locs)
 
-    def _make_attrs(self, attrs: hint.attrs_dict,
-                          depth: int) -> hint.attrs_loc:
-        """
-        Create an attrs tracking dictionary for locations at depth
-
-        Args:
-            attrs: the attrs dict for each agent
-            depth: depth of the locations
-
-        Returns:
-            a it extended to locations with correct depth
-        """
-
-        location_keys = self.location_keys[depth]
-
-        attrs_loc = {}
-        for location_key in location_keys:
-            attrs_loc[location_key] = attrs
-
-        return attrs_loc
-
-    def make_attrs(self, attrs: hint.attrs_depth) -> hint.attrs_loc:
-        """
-        Create a complete attrs initializer for the agents storage
-
-        Args:
-            attrs: dict
-                key:  depth
-                value: attrs dict for each agent
-
-        Returns:
-            attrs initializer
-        """
-
-        attrs_loc = {}
-        for depth, attrs_dict in attrs.items():
-            attrs_loc.update(self._make_attrs(attrs_dict, depth))
-
-        return attrs_loc
-
-    def make_environment(self, proportion: float) -> hint.environment_dict:
-        """
-        Create an initialization dict for environment
-
-        Args:
-            proportion: proportion that is bt
-
-        Returns:
-            environment initialization dict
-        """
-
-        level = keyword.plant_level
-
-        location_keys = self.location_keys[level]
-        num           = self[level].adjacnecy.num
-
-        cut_off = num * proportion
-
-        environment_dict = {keyword.bt:     [],
-                             keyword.not_bt: []}
-        for location_key in location_keys:
-            if location_key[-1] < cut_off:
-                environment_dict[keyword.bt].append(location_key)
-            else:
-                environment_dict[keyword.not_bt].append(location_key)
-
-        return environment_dict
-
     def _make_locations(self, locations: hint.locations,
-                         level:     int) -> hint.location_pairs:
+                              level:     int) -> hint.location_pairs:
         """
         Extend the location keys out to level
 
