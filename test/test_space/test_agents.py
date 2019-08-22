@@ -308,7 +308,7 @@ class TestAgentsBin(ut.TestCase):
                 removal = mk.MagicMock(spec=bool)
                 attr[mk.MagicMock(spec=str)] = (values, removal)
 
-            agent_key = mk.MagicMock(spec=int)
+            agent_key = mk.MagicMock(spec=str)
             agent_keys.append(agent_key)
             attrs[agent_key] = attr
 

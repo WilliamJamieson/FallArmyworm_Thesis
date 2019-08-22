@@ -34,7 +34,7 @@ class AgentBin(collect.UserList):
                        agent_key: str):
         super().__init__(agents)
 
-        self.counts   = counts
+        self.counts    = counts
         self.agent_key = agent_key
 
     def activate(self, agent: hint.agent) -> None:

@@ -4,13 +4,16 @@ import unittest.mock as mk
 import collections  as collect
 import numpy.random as rnd
 
-
 import source.keyword as keyword
 
-import source.space.graph    as main_graph
-import source.space.grid     as grid
-import source.space.location as agent_location
-import source.space.space    as space
+import source.data.counter as data_counter
+
+import source.space.agents      as main_agents
+import source.space.environment as environ
+import source.space.graph       as main_graph
+import source.space.grid        as grid
+import source.space.location    as agent_location
+import source.space.space       as space
 
 
 class GraphTest(main_graph.Graph):
@@ -646,3 +649,95 @@ class TestSpace(ut.TestCase):
         self.assertIsInstance(graph.adjacency,
                               main_graph.Adjacency)
         self.assertEqual(graph.adjacency.tolist(), space_2_adj)
+
+        # Test construct the agents system from a real space
+
+        agent_keys = [mk.MagicMock(spec=str) for _ in range(3)]
+        attrs_dict = {}
+        for index in range(3):
+            attrs      = {}
+            for agent_key in agent_keys:
+                attr = {}
+                for _ in range(3):
+                    values = [mk.MagicMock(spec=str) for _ in range(3)]
+                    removal = mk.MagicMock(spec=bool)
+                    attr[mk.MagicMock(spec=str)] = (values, removal)
+                attrs[agent_key] = attr
+            attrs_dict[index] = attrs
+
+        cutoff     = 1
+        init_plant = mk.MagicMock(spec=callable)
+        environment = (cutoff, init_plant)
+
+        agents = main_agents.Agents.empty(self.Space,
+                                          agent_keys,
+                                          attrs_dict,
+                                          environment)
+        self.assertIsInstance(agents, main_agents.Agents)
+
+        plant_count = 0
+        for location in self.Space.locations:
+            level        = location.level
+            location_key = location.location_key
+            self.assertIn(location_key, agents)
+            agents_bin = agents[location_key]
+            self.assertIsInstance(agents_bin, main_agents.AgentsBin)
+            self.assertEqual(agents_bin.location_key, location_key)
+
+            self.assertIsInstance(agents_bin.environment,
+                                  environ.Environment)
+            if location.depth == keyword.plant_depth:
+                self.assertEqual(agents_bin.environment.plant,
+                                 init_plant.return_value)
+                if location[-1] == 0:
+                    self.assertEqual(agents_bin.environment.bt,
+                                     keyword.bt)
+                    self.assertEqual(init_plant.call_args_list[plant_count],
+                                     mk.call(keyword.bt))
+                else:
+                    self.assertEqual(agents_bin.environment.bt,
+                                     keyword.not_bt)
+                    self.assertEqual(init_plant.call_args_list[plant_count],
+                                     mk.call(keyword.not_bt))
+                plant_count += 1
+            else:
+                self.assertEqual(agents_bin.environment.bt,    None)
+                self.assertEqual(agents_bin.environment.plant, None)
+
+            for agent_key in agent_keys:
+                self.assertIn(agent_key, agents_bin)
+                agent_bin = agents_bin[agent_key]
+                self.assertIsInstance(agent_bin, main_agents.AgentBin)
+                self.assertEqual(agent_bin.agent_key, agent_key)
+
+                counts = agent_bin.counts
+                self.assertIsInstance(counts, data_counter.Counts)
+                for attr, attr_tuple in attrs_dict[level][agent_key].items():
+                    values, removal = attr_tuple
+
+                    self.assertIn(attr, counts)
+                    count = counts[attr]
+                    self.assertIsInstance(count, data_counter.Count)
+                    self.assertEqual(count.attr,    attr)
+                    self.assertEqual(count.removal, removal)
+                    for value in values:
+                        self.assertIn(value, count)
+                        self.assertEqual(count[value], 0)
+                    self.assertEqual(len(count), 3)
+                    data_columns = count.data_columns
+                    self.assertIsInstance(data_columns,
+                                          data_counter.DataColumns)
+                    self.assertEqual(data_columns.attr, attr)
+                    for value in values:
+                        self.assertIn(value, data_columns)
+                        data_column = data_columns[value]
+                        self.assertIsInstance(data_column,
+                                              data_counter.DataColumn)
+                        self.assertEqual(data_column.attr_value, value)
+                        self.assertEqual(data_column, [])
+                    self.assertEqual(len(data_columns), 3)
+                self.assertEqual(len(counts), 3)
+            self.assertEqual(len(agents_bin), 3)
+        self.assertEqual(len(agents), 46)
+
+        self.assertEqual(plant_count, 9)
