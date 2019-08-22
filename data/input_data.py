@@ -159,5 +159,14 @@ limited         = True
 #   emigration
 mean_adult  = 300
 sigma_adult = 10
+mean_larva  = 300
+sigma_larva = 10
+mean_pupa   = 300
+sigma_pupa  = 10
+mean_egg    = 300
+sigma_egg   = 10
 #   immigration
 lambda_adult = 3
+lambda_larva = 3
+lambda_pupa  = 3
+lambda_egg   = 3
