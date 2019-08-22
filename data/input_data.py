@@ -151,8 +151,9 @@ fecundity_decay   = 0.01
 density_eta   = 0.45
 density_gamma = 2
 
-lifetime = True
-limited  = True
+lifetime_female = True
+lifetime_male   = False
+limited         = True
 
 # Migration
 #   emigration
