@@ -21,6 +21,11 @@ upper = 'upper'
 lower = 'lower'
 
 
+# attributes
+genotype = 'genotype'
+death    = 'death'
+
+
 # Genotype Keywords
 homo_r = 'resistant'
 hetero = 'heterozygous'
@@ -74,6 +79,7 @@ emigrate    = 'emigrate'
 survival    = 'survival'
 starve      = 'starve'
 alive       = 'alive'
+death_keys  = [cannibalism, emigrate, survival, starve, alive]
 
 # mathematical model keys
 max_gut = 'max_gut'
