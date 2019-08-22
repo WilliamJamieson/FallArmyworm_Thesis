@@ -4,6 +4,7 @@ import unittest.mock as mk
 import dataclasses  as dclass
 import itertools    as i_tools
 import numpy.random as rnd
+import pickle       as pk
 
 import source.keyword as keyword
 
@@ -281,3 +282,35 @@ class TestSimulation(ut.TestCase):
                             self.assertEqual(mkPregnant.call_args_list,
                                              [mk.call(self.Simulation,
                                                       nums[4])])
+
+    def test_step(self):
+        """test advance the model by one step"""
+
+        master = mk.MagicMock()
+        master.attach_mock(self.schedule.perform,        'perform')
+        master.attach_mock(self.immigration.immigration, 'immigration')
+        master.attach_mock(self.emigration.emigration,   'emigration')
+        master.attach_mock(self.agents.record,           'record')
+        master.attach_mock(self.database.save,           'save')
+
+        self.Simulation.step()
+        self.assertEqual(master.mock_calls,
+                         [mk.call.perform(self.space, self.agents),
+                          mk.call.immigration(self.Simulation),
+                          mk.call.emigration(self.agents),
+                          mk.call.record(),
+                          mk.call.save(self.Simulation)])
+
+    def test_save(self):
+        """test save to file"""
+
+        filename = mk.MagicMock(spec=str)
+
+        with mk.patch('builtins.open', mk.mock_open()) as mkOpen:
+            with mk.patch.object(pk, 'dump') as mkDump:
+                self.Simulation.save(filename)
+                self.assertEqual(mkDump.call_args_list,
+                                 [mk.call(self.Simulation, mkOpen.return_value,
+                                          protocol=pk.HIGHEST_PROTOCOL)])
+                self.assertEqual(mkOpen.call_args_list,
+                                 [mk.call(filename, 'wb')])

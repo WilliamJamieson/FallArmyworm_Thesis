@@ -1,6 +1,7 @@
 import dataclasses  as dclass
 import itertools    as i_tools
 import numpy.random as rnd
+import pickle       as pk
 
 import source.hint    as hint
 import source.keyword as keyword
@@ -178,3 +179,33 @@ class Simulation(object):
         self.populate_pupae(     nums[2])
         self.populate_adults(    nums[3])
         self.populate_pregnant(  nums[4])
+
+    def step(self) -> None:
+        """
+        Advance the simulation forward one step
+
+        Effect:
+            advance simulation forward by 1
+        """
+
+        self.count_step()
+
+        self.schedule.   perform(    self.space, self.agents)
+        self.immigration.immigration(self)
+        self.emigration. emigration( self.agents)
+        self.agents.     record()
+        self.database.   save(self)
+
+    def save(self, filename: str) -> None:
+        """
+        Pickle the simulation to a file for reuse
+
+        Args:
+            filename: name of pickle file
+
+        Effects:
+            write entire simulation to a file
+        """
+
+        with open(filename, 'wb') as sim_dump:
+            pk.dump(self, sim_dump, protocol=pk.HIGHEST_PROTOCOL)
