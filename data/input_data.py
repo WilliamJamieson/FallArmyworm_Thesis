@@ -97,7 +97,8 @@ larva_bt_upper_s = 0.8
 larva_bt_lower_r = 0.9
 larva_bt_upper_r = 0.95
 
-larva_sur_steep = 4
+larva_sur_steep_s = 4
+larva_sur_steep_r = 4
 
 egg_survive_prob = 0.95
 egg_lifetime     = 3
