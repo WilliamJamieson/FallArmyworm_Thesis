@@ -39,7 +39,7 @@ class Insect(agent.Agent):
 
         loc = self.location[:keyword.bt_depth]
 
-        return self.simulation.agents[loc.location_key].environment[keyword.bt]
+        return self.simulation.agents[loc.location_key].environment.bt
 
     @property
     def plant(self) -> float:
@@ -47,8 +47,7 @@ class Insect(agent.Agent):
 
         loc = self.location[:keyword.plant_depth]
 
-        return self.simulation.agents[loc.location_key].\
-            environment[keyword.plant]
+        return self.simulation.agents[loc.location_key].environment.plant
 
     def advance_age(self) -> hint.agent_list:
         """

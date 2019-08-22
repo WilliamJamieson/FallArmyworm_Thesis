@@ -11,8 +11,9 @@ import source.agents.insect as insect
 
 import source.simulation.simulation as simulation
 
-import source.space.agents   as agents
-import source.space.location as location
+import source.space.agents      as agents
+import source.space.environment as environment
+import source.space.location    as location
 
 
 class SimulationTest(simulation.Simulation):
@@ -21,10 +22,17 @@ class SimulationTest(simulation.Simulation):
     agents = mk.create_autospec(agents.Agents, spec_set=True)
 
 
+class EnvironmentTest(environment.Environment):
+    """Class to add dynamic values for tests"""
+
+    bt    = mk.MagicMock(spec=str)
+    plant = mk.MagicMock(spec=float)
+
+
 class AgentsBinTest(agents.AgentsBin):
     """Class to add dynamic values for tests"""
 
-    environment = mk.MagicMock(spec=dict)
+    environment = mk.create_autospec(EnvironmentTest, spec_set=True)
 
 
 class TestInsect(ut.TestCase):
@@ -88,15 +96,14 @@ class TestInsect(ut.TestCase):
                                                     spec_set=True)
         self.simulation.agents.__getitem__.return_value = \
             mk.create_autospec(AgentsBinTest, spec_set=True)
+        self.simulation.agents.__getitem__.return_value.environment = \
+            mk.create_autospec(EnvironmentTest, spec_set=True)
         self.location.__getitem__.return_value = \
             mk.create_autospec(location.Location, spec_set=True)
 
         self.assertEqual(self.Insect.bt,
                          self.simulation.agents.__getitem__.return_value.
-                            environment.__getitem__.return_value)
-        self.assertEqual(self.simulation.agents.__getitem__.return_value.
-                             environment.__getitem__.call_args_list,
-                         [mk.call(keyword.bt)])
+                            environment.bt)
         self.assertEqual(self.simulation.agents.__getitem__.call_args_list,
                          [mk.call(self.location.__getitem__.return_value.
                                     location_key)])
@@ -110,15 +117,14 @@ class TestInsect(ut.TestCase):
                                                     spec_set=True)
         self.simulation.agents.__getitem__.return_value = \
             mk.create_autospec(AgentsBinTest, spec_set=True)
+        self.simulation.agents.__getitem__.return_value.environment = \
+            mk.create_autospec(EnvironmentTest, spec_set=True)
         self.location.__getitem__.return_value = \
             mk.create_autospec(location.Location, spec_set=True)
 
         self.assertEqual(self.Insect.plant,
                          self.simulation.agents.__getitem__.return_value.
-                         environment.__getitem__.return_value)
-        self.assertEqual(self.simulation.agents.__getitem__.return_value.
-                         environment.__getitem__.call_args_list,
-                         [mk.call(keyword.plant)])
+                         environment.plant)
         self.assertEqual(self.simulation.agents.__getitem__.call_args_list,
                          [mk.call(self.location.__getitem__.return_value.
                                   location_key)])
