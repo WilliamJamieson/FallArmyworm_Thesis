@@ -12,7 +12,8 @@ starve_mu    = input_data.starvation_mu
 starve_sigma = input_data.starvation_sigma
 
 starve = models.PlantStarve(starve_mu,
-                            starve_sigma)
+                            starve_sigma,
+                            biomass.max_gut)
 #       egg_forage
 egg_factor = input_data.egg_factor
 

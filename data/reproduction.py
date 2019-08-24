@@ -36,5 +36,6 @@ density = models.Density(eta,
 
 #      fixed value inputs
 values = {keyword.trials:          input_data.trials,
+          keyword.limited:         input_data.limited,
           keyword.lifetime_male:   input_data.lifetime_male,
           keyword.lifetime_female: input_data.lifetime_female}

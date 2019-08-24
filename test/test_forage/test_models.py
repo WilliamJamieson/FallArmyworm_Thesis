@@ -7,7 +7,6 @@ import scipy.special as spcl
 import numpy         as np
 import numpy.random  as rnd
 
-import source.hint    as hint
 import source.keyword as keyword
 
 import source.biomass.models as biomass
@@ -91,11 +90,13 @@ class TestPlantStarve(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.mu    = mk.MagicMock(spec=float)
-        self.sigma = mk.MagicMock(spec=float)
+        self.mu      = mk.MagicMock(spec=float)
+        self.sigma   = mk.MagicMock(spec=float)
+        self.max_gut = mk.MagicMock(spec=biomass.MaxGut)
 
         self.PlantStarve = model.PlantStarve(self.mu,
-                                             self.sigma)
+                                             self.sigma,
+                                             self.max_gut)
 
     def test___init__(self):
         """test __init__ for class"""
@@ -104,8 +105,9 @@ class TestPlantStarve(ut.TestCase):
         self.assertIsInstance(self.PlantStarve, model.PlantBase)
         self.assertIsInstance(self.PlantStarve, model.PlantStarve)
 
-        self.assertEqual(self.PlantStarve.mu,    self.mu)
-        self.assertEqual(self.PlantStarve.sigma, self.sigma)
+        self.assertEqual(self.PlantStarve.mu,      self.mu)
+        self.assertEqual(self.PlantStarve.sigma,   self.sigma)
+        self.assertEqual(self.PlantStarve.max_gut, self.max_gut)
 
         self.assertEqual(self.PlantStarve.model_key, keyword.plant_forage)
 
@@ -162,18 +164,46 @@ class TestPlantStarve(ut.TestCase):
         genotype = mk.MagicMock(spec=str)
         bt       = mk.MagicMock(spec=str)
 
+        gut_mass = mk.MagicMock(spec=float)
+        self.max_gut.return_value = gut_mass
+
+        gut_mass.__le__.side_effect = [True, False]
+
         with mk.patch.object(model.PlantStarve, '_sample',
                              autospec=True) as mkSample:
             with mk.patch.object(model, 'float') as mkFloat:
+                # Test return gut mass
                 self.assertEqual(self.PlantStarve(mass, plant, genotype, bt),
                                  mkFloat.return_value)
                 self.assertEqual(mkFloat.call_args_list,
                                  [mk.call(mkSample.return_value.
                                             __mul__.return_value)])
                 self.assertEqual(mkSample.return_value.__mul__.call_args_list,
+                                 [mk.call(gut_mass)])
+                self.assertEqual(mkSample.call_args_list,
+                                 [mk.call(self.PlantStarve)])
+                self.assertEqual(self.max_gut.call_args_list,
+                                 [mk.call(mass)])
+                self.assertEqual(gut_mass.__le__.call_args_list,
+                                 [mk.call(plant)])
+
+                mkFloat.reset_mock()
+                mkSample.reset_mock()
+                self.max_gut.reset_mock()
+                # Test return plant
+                self.assertEqual(self.PlantStarve(mass, plant, genotype, bt),
+                                 mkFloat.return_value)
+                self.assertEqual(mkFloat.call_args_list,
+                                 [mk.call(mkSample.return_value.
+                                          __mul__.return_value)])
+                self.assertEqual(mkSample.return_value.__mul__.call_args_list,
                                  [mk.call(plant)])
                 self.assertEqual(mkSample.call_args_list,
                                  [mk.call(self.PlantStarve)])
+                self.assertEqual(self.max_gut.call_args_list,
+                                 [mk.call(mass)])
+                self.assertEqual(gut_mass.__le__.call_args_list,
+                                 [mk.call(plant)])
 
 
 class TestEgg(ut.TestCase):

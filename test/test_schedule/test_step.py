@@ -5,8 +5,6 @@ import collections  as collect
 import itertools    as i_tools
 import numpy.random as rnd
 
-import source.keyword as keyword
-
 import source.agents.agent as main_agent
 
 import source.schedule.actions as agent_actions
@@ -65,15 +63,17 @@ class TestStep(ut.TestCase):
         self.actions = [mk.create_autospec(ActionsTest, spec_set=True)
                         for _ in range(3)]
 
-        self.number       = mk.MagicMock(spec=int)
-        self.shuffle      = mk.MagicMock(spec=bool)
-        self.parallel_reg = mk.MagicMock(spec=bool)
-        self.parallel_loc = mk.MagicMock(spec=bool)
-        self.level        = mk.MagicMock(spec=int)
+        self.number          = mk.MagicMock(spec=int)
+        self.shuffle_agents  = mk.MagicMock(spec=bool)
+        self.shuffle_actions = mk.MagicMock(spec=bool)
+        self.parallel_reg    = mk.MagicMock(spec=bool)
+        self.parallel_loc    = mk.MagicMock(spec=bool)
+        self.level            = mk.MagicMock(spec=int)
 
         self.Step = step.Step(self.actions,
                               self.number,
-                              self.shuffle,
+                              self.shuffle_agents,
+                              self.shuffle_actions,
                               self.parallel_reg,
                               self.parallel_loc,
                               self.level)
@@ -84,11 +84,12 @@ class TestStep(ut.TestCase):
         self.assertIsInstance(self.Step, collect.UserList)
         self.assertIsInstance(self.Step, step.Step)
 
-        self.assertEqual(self.Step.number,       self.number)
-        self.assertEqual(self.Step.shuffle,      self.shuffle)
-        self.assertEqual(self.Step.parallel_reg, self.parallel_reg)
-        self.assertEqual(self.Step.parallel_loc, self.parallel_loc)
-        self.assertEqual(self.Step.level,        self.level)
+        self.assertEqual(self.Step.number,          self.number)
+        self.assertEqual(self.Step.shuffle_agents,  self.shuffle_agents)
+        self.assertEqual(self.Step.shuffle_actions, self.shuffle_actions)
+        self.assertEqual(self.Step.parallel_reg,    self.parallel_reg)
+        self.assertEqual(self.Step.parallel_loc,    self.parallel_loc)
+        self.assertEqual(self.Step.level,           self.level)
 
         self.assertEqual(self.Step,      self.actions)
         self.assertEqual(self.Step.data, self.actions)
@@ -166,7 +167,9 @@ class TestStep(ut.TestCase):
                                  '_perform_agent_action_regular') as mkRegular:
                 with mk.patch.object(rnd, 'shuffle') as mkRnd:
                     # Test run parallel
-                    self.Step.parallel_reg = True
+                    #      Test with shuffle
+                    self.Step.shuffle_agents = True
+                    self.Step.parallel_reg   = True
                     self.assertEqual(self.Step._perform_agent_action(action,
                                                                      agent_bin),
                                      mkParallel.return_value)
@@ -181,8 +184,25 @@ class TestStep(ut.TestCase):
                     mkRnd.reset_mock()
                     mkParallel.reset_mock()
                     agent_bin.reset_mock()
+                    #      Test without shuffle
+                    self.Step.shuffle_agents = False
+                    self.Step.parallel_reg   = True
+                    self.assertEqual(self.Step._perform_agent_action(action,
+                                                                     agent_bin),
+                                     mkParallel.return_value)
+                    self.assertEqual(mkParallel.call_args_list,
+                                     [mk.call(self.Step, action, agents)])
+                    self.assertEqual(mkRegular.call_args_list, [])
+                    self.assertEqual(agent_bin.__getitem__.call_args_list,
+                                     [mk.call(action.agent_key)])
+                    self.assertEqual(mkRnd.call_args_list, [])
+
+                    mkParallel.reset_mock()
+                    agent_bin.reset_mock()
                     # Test run regular
-                    self.Step.parallel_reg = False
+                    #      Test with shuffle
+                    self.Step.shuffle_agents = True
+                    self.Step.parallel_reg   = False
                     self.assertEqual(self.Step._perform_agent_action(action,
                                                                      agent_bin),
                                      mkRegular.return_value)
@@ -193,7 +213,23 @@ class TestStep(ut.TestCase):
                                      [mk.call(action.agent_key)])
                     self.assertEqual(mkRnd.call_args_list,
                                      [mk.call(agents)])
-                    
+
+                    mkRnd.reset_mock()
+                    mkRegular.reset_mock()
+                    agent_bin.reset_mock()
+                    #      Test with shuffle
+                    self.Step.shuffle_agents = False
+                    self.Step.parallel_reg   = False
+                    self.assertEqual(self.Step._perform_agent_action(action,
+                                                                     agent_bin),
+                                     mkRegular.return_value)
+                    self.assertEqual(mkRegular.call_args_list,
+                                     [mk.call(action, agents)])
+                    self.assertEqual(mkParallel.call_args_list, [])
+                    self.assertEqual(agent_bin.__getitem__.call_args_list,
+                                     [mk.call(action.agent_key)])
+                    self.assertEqual(mkRnd.call_args_list, [])
+
     def test__perform_actions_step(self):
         """test perform actions at each location"""
 
@@ -329,8 +365,8 @@ class TestStep(ut.TestCase):
                                  autospec=True) as mkRegular:
                 with mk.patch.object(rnd, 'shuffle') as mkRnd:
                     # Parallel No shuffle
-                    self.Step.shuffle      = False
-                    self.Step.parallel_loc = True
+                    self.Step.shuffle_actions = False
+                    self.Step.parallel_loc    = True
                     self.assertEqual(self.Step._perform_step(space, agents),
                                      mkParallel.return_value)
                     self.assertEqual(mkParallel.call_args_list,
@@ -345,8 +381,8 @@ class TestStep(ut.TestCase):
                     mkParallel.reset_mock()
                     space.location_keys.__getitem__.reset_mock()
                     # Parallel With  shuffle
-                    self.Step.shuffle      = True
-                    self.Step.parallel_loc = True
+                    self.Step.shuffle_actions = True
+                    self.Step.parallel_loc    = True
                     self.assertEqual(self.Step._perform_step(space, agents),
                                      mkParallel.return_value)
                     self.assertEqual(mkParallel.call_args_list,
@@ -363,8 +399,8 @@ class TestStep(ut.TestCase):
                     space.location_keys.__getitem__.reset_mock()
                     mkRnd.reset_mock()
                     # No Parallel No shuffle
-                    self.Step.shuffle      = False
-                    self.Step.parallel_loc = False
+                    self.Step.shuffle_actions = False
+                    self.Step.parallel_loc    = False
                     self.assertEqual(self.Step._perform_step(space, agents),
                                      mkRegular.return_value)
                     self.assertEqual(mkRegular.call_args_list,
@@ -379,8 +415,8 @@ class TestStep(ut.TestCase):
                     mkRegular.reset_mock()
                     space.location_keys.__getitem__.reset_mock()
                     # No Parallel With  shuffle
-                    self.Step.shuffle      = True
-                    self.Step.parallel_loc = False
+                    self.Step.shuffle_actions = True
+                    self.Step.parallel_loc    = False
                     self.assertEqual(self.Step._perform_step(space, agents),
                                      mkRegular.return_value)
                     self.assertEqual(mkRegular.call_args_list,
@@ -434,11 +470,12 @@ class TestStep(ut.TestCase):
         # Test default
         self.Step = step.Step.setup(actions)
         self.assertIsInstance(self.Step, step.Step)
-        self.assertEqual(self.Step.number,       1)
-        self.assertEqual(self.Step.shuffle,      False)
-        self.assertEqual(self.Step.parallel_reg, False)
-        self.assertEqual(self.Step.parallel_loc, False)
-        self.assertEqual(self.Step.level,        0)
+        self.assertEqual(self.Step.number,          1)
+        self.assertEqual(self.Step.shuffle_agents,  False)
+        self.assertEqual(self.Step.shuffle_actions, False)
+        self.assertEqual(self.Step.parallel_reg,    False)
+        self.assertEqual(self.Step.parallel_loc,    False)
+        self.assertEqual(self.Step.level,           0)
 
         for index_i, thing in enumerate(actions.items()):
             agent_key, action_keys = thing
@@ -458,16 +495,18 @@ class TestStep(ut.TestCase):
         # Test Not Default
         self.Step = step.Step.setup(actions,
                                     self.number,
-                                    self.shuffle,
+                                    self.shuffle_agents,
+                                    self.shuffle_actions,
                                     self.parallel_reg,
                                     False,
                                     self.level)
         self.assertIsInstance(self.Step, step.Step)
-        self.assertEqual(self.Step.number,       self.number)
-        self.assertEqual(self.Step.shuffle,      self.shuffle)
-        self.assertEqual(self.Step.parallel_reg, self.parallel_reg)
-        self.assertEqual(self.Step.parallel_loc, False)
-        self.assertEqual(self.Step.level,        self.level)
+        self.assertEqual(self.Step.number,          self.number)
+        self.assertEqual(self.Step.shuffle_agents,  self.shuffle_agents)
+        self.assertEqual(self.Step.shuffle_actions, self.shuffle_actions)
+        self.assertEqual(self.Step.parallel_reg,    self.parallel_reg)
+        self.assertEqual(self.Step.parallel_loc,    False)
+        self.assertEqual(self.Step.level,           self.level)
 
         for index_i, thing in enumerate(actions.items()):
             agent_key, action_keys = thing
@@ -487,16 +526,18 @@ class TestStep(ut.TestCase):
         # Test Not Default
         self.Step = step.Step.setup(actions,
                                     self.number,
-                                    self.shuffle,
+                                    self.shuffle_agents,
+                                    self.shuffle_actions,
                                     False,
                                     self.parallel_loc,
                                     self.level)
         self.assertIsInstance(self.Step, step.Step)
-        self.assertEqual(self.Step.number,       self.number)
-        self.assertEqual(self.Step.shuffle,      self.shuffle)
-        self.assertEqual(self.Step.parallel_reg, False)
-        self.assertEqual(self.Step.parallel_loc, self.parallel_loc)
-        self.assertEqual(self.Step.level,        self.level)
+        self.assertEqual(self.Step.number,          self.number)
+        self.assertEqual(self.Step.shuffle_agents,  self.shuffle_agents)
+        self.assertEqual(self.Step.shuffle_actions, self.shuffle_actions)
+        self.assertEqual(self.Step.parallel_reg,    False)
+        self.assertEqual(self.Step.parallel_loc,    self.parallel_loc)
+        self.assertEqual(self.Step.level,           self.level)
 
         for index_i, thing in enumerate(actions.items()):
             agent_key, action_keys = thing
@@ -519,7 +560,8 @@ class TestStep(ut.TestCase):
                                     'parallel'):
             self.Step = step.Step.setup(actions,
                                         self.number,
-                                        self.shuffle,
+                                        self.shuffle_agents,
+                                        self.shuffle_actions,
                                         True,
                                         True,
                                         self.level)

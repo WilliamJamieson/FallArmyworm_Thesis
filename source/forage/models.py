@@ -99,6 +99,7 @@ class PlantStarve(PlantBase):
 
     mu:    float
     sigma: float
+    max_gut: hint.max_gut
 
     def _lower(self) -> float:
         """
@@ -150,7 +151,14 @@ class PlantStarve(PlantBase):
             biomass which can be foraged
         """
 
-        return float(self._sample()*plant)
+        gut_mass = self.max_gut(mass)
+
+        if gut_mass <= plant:
+            food = gut_mass
+        else:
+            food = plant
+
+        return float(self._sample() * food)
 
 
 @dclass.dataclass

@@ -17,23 +17,27 @@ class Step(collect.UserList):
     Variables:
         - list: list of actions to perform
 
-        number:       number of times to repeat the actions in list
-        shuffle:      if we can shuffle the actions in list
-        parallel_reg: if we perform actions in parallel by agents
-        parallel_loc: if we perform actions in parallel via locations
-        level:        level we group agents by
+        number:          number of times to repeat the actions in list
+        shuffle_agents:  if we shuffle the agents
+        shuffle_actions: if we can shuffle the actions in list
+        parallel_reg:    if we perform actions in parallel by agents
+        parallel_loc:    if we perform actions in parallel via locations
+        level:           level we group agents by
     """
 
-    def __init__(self, actions:      hint.actions_list,
-                       number:       int  = 1,
-                       shuffle:      bool = False,
-                       parallel_reg: bool = False,
-                       parallel_loc: bool = False,
-                       level:        int  = 0):
+    def __init__(self, actions:         hint.actions_list,
+                       number:          int  = 1,
+                       shuffle_agents:  bool = False,
+                       shuffle_actions: bool = False,
+                       parallel_reg:    bool = False,
+                       parallel_loc:    bool = False,
+                       level:           int  = 0):
         super().__init__(actions)
 
-        self.number  = number
-        self.shuffle = shuffle
+        self.number = number
+
+        self.shuffle_agents  = shuffle_agents
+        self.shuffle_actions = shuffle_actions
 
         self.parallel_reg = parallel_reg
         self.parallel_loc = parallel_loc
@@ -111,7 +115,8 @@ class Step(collect.UserList):
         """
 
         agents: hint.agent_list = agent_bin[action.agent_key]
-        rnd.shuffle(agents)
+        if self.shuffle_agents:
+            rnd.shuffle(agents)
 
         if self.parallel_reg:
             return self._perform_agent_action_parallel(action, agents)
@@ -208,7 +213,7 @@ class Step(collect.UserList):
             list of agents to add in
         """
 
-        if self.shuffle:
+        if self.shuffle_actions:
             rnd.shuffle(self)
 
         location_keys = space.location_keys[self.level]
@@ -238,22 +243,24 @@ class Step(collect.UserList):
         return results
 
     @classmethod
-    def setup(cls, actions:      hint.actions_dict,
-                   number:       int  = 1,
-                   shuffle:      bool = False,
-                   parallel_reg: bool = False,
-                   parallel_loc: bool = False,
-                   level:        int  = 0) -> 'Step':
+    def setup(cls, actions:         hint.actions_dict,
+                   number:          int  = 1,
+                   shuffle_agents:  bool = False,
+                   shuffle_actions: bool = False,
+                   parallel_reg:    bool = False,
+                   parallel_loc:    bool = False,
+                   level:           int  = 0) -> 'Step':
         """
         Setup the entire step
 
         Args:
-            actions:      dict of actions for each agent type
-            number:       number of steps to perform at once
-            shuffle:      if the actions can be shuffled
-            parallel_reg: if we parallelize on agents
-            parallel_loc: if we parallelize on locations
-            level:        locations to split across
+            actions:         dict of actions for each agent type
+            number:          number of steps to perform at once
+            shuffle_agents:  if we shuffle agents
+            shuffle_actions: if the actions can be shuffled
+            parallel_reg:    if we parallelize on agents
+            parallel_loc:    if we parallelize on locations
+            level:           locations to split across
 
         Returns:
             A setup simulation step
@@ -268,5 +275,5 @@ class Step(collect.UserList):
             new_action = agent_actions.Actions.setup(agent_key, action_keys)
             actions_list.append(new_action)
 
-        return cls(actions_list, number, shuffle,
+        return cls(actions_list, number, shuffle_agents, shuffle_actions,
                    parallel_reg, parallel_loc, level)

@@ -451,7 +451,25 @@ class TestEggMass(ut.TestCase):
         self.EggMass.remove(egg)
         self.assertEqual(self.eggs.remove.call_args_list,
                          [mk.call(egg)])
-        
+
+    def test_reset(self):
+        """test reset the egg_mass"""
+
+        with mk.patch.object(egg_mass.EggMass, 'inactive',
+                             autospec=True) as mkInactive:
+            with mk.patch.object(egg_mass.EggMass, 'deactivate',
+                                 autospec=True) as mkDeactivate:
+                mkInactive.__get__ = mk.MagicMock(side_effect=[False, True])
+
+                # Active
+                self.EggMass.reset()
+                self.assertEqual(mkDeactivate.call_args_list, [])
+
+                # Inactive
+                self.EggMass.reset()
+                self.assertEqual(mkDeactivate.call_args_list,
+                                 [mk.call(self.EggMass)])
+
     def test_new_unique_id(self):
         """test generate a new unique_id"""
 

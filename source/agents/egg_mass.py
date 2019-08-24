@@ -211,7 +211,7 @@ class EggMass(agent.Agent):
 
         self.eggs.remove(egg)
 
-    def reset(self) -> None:
+    def reset(self) -> hint.agent_list:
         """
         Reset the agent
 
@@ -221,6 +221,8 @@ class EggMass(agent.Agent):
 
         if self.inactive:
             self.deactivate()
+
+        return []
 
     def new_unique_id(self) -> str:
         """

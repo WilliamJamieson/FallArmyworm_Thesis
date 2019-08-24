@@ -26,6 +26,17 @@ genotype = 'genotype'
 death    = 'death'
 
 
+# action_keys
+advance_age = 'advance_age'
+reset       = 'reset'
+grow        = 'grow'
+survive     = 'survive'
+develop     = 'develop'
+move        = 'move'
+consume     = 'consume'
+reproduce   = 'reproduce'
+
+
 # Genotype Keywords
 homo_r = 'resistant'
 hetero = 'heterozygous'
@@ -123,5 +134,6 @@ lifetime_male   = 'lifetime_male'
 lifetime_female = 'lifetime_female'
 limited         = 'limited'
 
-required_inputs = [max_gut, growth, lifetime_male, lifetime_female, limited,
-                   init_mass, init_mature, init_sex]
+required_inputs = [max_gut, growth, init_num, init_mass, init_juvenile,
+                   init_mature, init_plant, init_sex,
+                   lifetime_female, lifetime_male, limited]

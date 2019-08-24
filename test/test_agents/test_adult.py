@@ -378,7 +378,7 @@ class TestAdult(ut.TestCase):
         with mk.patch.object(adult.Adult, 'transition',
                              autospec=True) as mkTransition:
             # Not female or mated
-            self.Adult.reset()
+            self.assertEqual(self.Adult.reset(), [])
             self.assertEqual(self.Adult.mate, self.mate)
             self.assertEqual(self.Adult.num_eggs, self.num_eggs)
             self.assertEqual(self.lay.reset.call_args_list, [])
@@ -389,7 +389,7 @@ class TestAdult(ut.TestCase):
             # Is female
             self.Adult.agent_key = keyword.female
             #       Female lifetime mate
-            self.Adult.reset()
+            self.assertEqual(self.Adult.reset(), [])
             self.assertEqual(self.Adult.mate, self.mate)
             self.assertEqual(self.Adult.num_eggs,
                              self.lay.reset.return_value)
@@ -403,7 +403,7 @@ class TestAdult(ut.TestCase):
             self.Adult.num_eggs = self.num_eggs
             self.simulation.models.reset_mock()
             self.lay.reset_mock()
-            self.Adult.reset()
+            self.assertEqual(self.Adult.reset(), [])
             self.assertEqual(self.Adult.mate, None)
             self.assertEqual(self.Adult.num_eggs,
                              self.lay.reset.return_value)
@@ -420,7 +420,7 @@ class TestAdult(ut.TestCase):
             self.lay.reset_mock()
             # Is mated
             self.Adult.agent_key = keyword.mated
-            self.Adult.reset()
+            self.assertEqual(self.Adult.reset(), [])
             self.assertEqual(self.Adult.mate, self.mate)
             self.assertEqual(self.Adult.num_eggs, self.num_eggs)
             self.assertEqual(self.lay.reset.call_args_list, [])

@@ -220,17 +220,20 @@ actions_dict = typing.Dict[str, action_keys]
 step  = 'main_step.Step'
 steps = typing.List[step]
 
-step_tuple_basic   = typing.Tuple[actions_dict]
-step_tuple_repeat  = typing.Tuple[actions_dict, int]
-step_tuple_shuffle = typing.Tuple[actions_dict, int, bool]
-step_tuple_reg     = typing.Tuple[actions_dict, int, bool, bool]
-step_tuple_loc     = typing.Tuple[actions_dict, int, bool, bool, bool, int]
-step_tuple         = typing.Union[step_tuple_basic,
-                                  step_tuple_repeat,
-                                  step_tuple_shuffle,
-                                  step_tuple_reg,
-                                  step_tuple_loc]
-step_tuples         = typing.List[step_tuple]
+step_tuple_basic     = typing.Tuple[actions_dict]
+step_tuple_repeat    = typing.Tuple[actions_dict, int]
+step_tuple_shuffle_0 = typing.Tuple[actions_dict, int, bool]
+step_tuple_shuffle_1 = typing.Tuple[actions_dict, int, bool, bool]
+step_tuple_reg       = typing.Tuple[actions_dict, int, bool, bool, bool]
+step_tuple_loc       = typing.Tuple[actions_dict, int, bool, bool, bool,
+                                    bool, int]
+step_tuple           = typing.Union[step_tuple_basic,
+                                    step_tuple_repeat,
+                                    step_tuple_shuffle_0,
+                                    step_tuple_shuffle_1,
+                                    step_tuple_reg,
+                                    step_tuple_loc]
+step_tuples           = typing.List[step_tuple]
 
 #       Schedule hints
 schedule = 'main_schedule.Schedule'

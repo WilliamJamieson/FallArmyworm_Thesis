@@ -69,13 +69,21 @@ class TestSchedule(ut.TestCase):
             repeat_actions[agent_key] = action_keys
         tuple_repeat = (repeat_actions, 10)
 
-        shuffle_actions = {}
+        shuffle_actions_0 = {}
         for _ in range(3):
             agent_key   = mk.MagicMock(spec=str)
             action_keys = [mk.MagicMock(spec=str) for _ in range(3)]
 
-            shuffle_actions[agent_key] = action_keys
-        tuple_shuffle = (shuffle_actions, 10, True)
+            shuffle_actions_0[agent_key] = action_keys
+        tuple_shuffle_0 = (shuffle_actions_0, 10, True)
+
+        shuffle_actions_1 = {}
+        for _ in range(3):
+            agent_key   = mk.MagicMock(spec=str)
+            action_keys = [mk.MagicMock(spec=str) for _ in range(3)]
+
+            shuffle_actions_1[agent_key] = action_keys
+        tuple_shuffle_1 = (shuffle_actions_1, 10, True, True)
 
         reg_actions = {}
         for _ in range(3):
@@ -83,7 +91,7 @@ class TestSchedule(ut.TestCase):
             action_keys = [mk.MagicMock(spec=str) for _ in range(3)]
 
             reg_actions[agent_key] = action_keys
-        tuple_reg = (reg_actions, 10, True, True)
+        tuple_reg = (reg_actions, 10, True, True, True)
 
         loc_actions = {}
         for _ in range(3):
@@ -91,26 +99,28 @@ class TestSchedule(ut.TestCase):
             action_keys = [mk.MagicMock(spec=str) for _ in range(3)]
 
             loc_actions[agent_key] = action_keys
-        tuple_loc = (loc_actions, 10, True, False, True, 1)
+        tuple_loc = (loc_actions, 10, True, True, False, True, 1)
 
         step_tuples = [tuple_basic,
                        tuple_repeat,
-                       tuple_shuffle,
+                       tuple_shuffle_0,
+                       tuple_shuffle_1,
                        tuple_reg,
                        tuple_loc]
 
         self.Schedule = schedule.Schedule.setup(step_tuples)
         self.assertIsInstance(self.Schedule, schedule.Schedule)
 
-        self.assertEqual(len(self.Schedule), 5)
+        self.assertEqual(len(self.Schedule), 6)
 
         # basic tuple
         self.assertIsInstance(self.Schedule[0], agent_step.Step)
-        self.assertEqual(self.Schedule[0].number,       1)
-        self.assertEqual(self.Schedule[0].shuffle,      False)
-        self.assertEqual(self.Schedule[0].parallel_reg, False)
-        self.assertEqual(self.Schedule[0].parallel_loc, False)
-        self.assertEqual(self.Schedule[0].level,        0)
+        self.assertEqual(self.Schedule[0].number,          1)
+        self.assertEqual(self.Schedule[0].shuffle_agents,  False)
+        self.assertEqual(self.Schedule[0].shuffle_actions, False)
+        self.assertEqual(self.Schedule[0].parallel_reg,    False)
+        self.assertEqual(self.Schedule[0].parallel_loc,    False)
+        self.assertEqual(self.Schedule[0].level,           0)
         for index_i, thing in enumerate(basic_actions.items()):
             agent_key, action_keys = thing
             self.assertIsInstance(self.Schedule[0][index_i],
@@ -129,11 +139,12 @@ class TestSchedule(ut.TestCase):
 
         # repeat tuple
         self.assertIsInstance(self.Schedule[1], agent_step.Step)
-        self.assertEqual(self.Schedule[1].number,       10)
-        self.assertEqual(self.Schedule[1].shuffle,      False)
-        self.assertEqual(self.Schedule[1].parallel_reg, False)
-        self.assertEqual(self.Schedule[1].parallel_loc, False)
-        self.assertEqual(self.Schedule[1].level,        0)
+        self.assertEqual(self.Schedule[1].number,          10)
+        self.assertEqual(self.Schedule[1].shuffle_agents,  False)
+        self.assertEqual(self.Schedule[1].shuffle_actions, False)
+        self.assertEqual(self.Schedule[1].parallel_reg,    False)
+        self.assertEqual(self.Schedule[1].parallel_loc,    False)
+        self.assertEqual(self.Schedule[1].level,           0)
         for index_i, thing in enumerate(repeat_actions.items()):
             agent_key, action_keys = thing
             self.assertIsInstance(self.Schedule[1][index_i],
@@ -150,14 +161,15 @@ class TestSchedule(ut.TestCase):
             self.assertEqual(len(self.Schedule[1][index_i]), 3)
         self.assertEqual(len(self.Schedule[1]), 3)
 
-        # shuffle tuple
+        # shuffle tuple 0
         self.assertIsInstance(self.Schedule[2], agent_step.Step)
-        self.assertEqual(self.Schedule[2].number,       10)
-        self.assertEqual(self.Schedule[2].shuffle,      True)
-        self.assertEqual(self.Schedule[2].parallel_reg, False)
-        self.assertEqual(self.Schedule[2].parallel_loc, False)
-        self.assertEqual(self.Schedule[2].level,        0)
-        for index_i, thing in enumerate(shuffle_actions.items()):
+        self.assertEqual(self.Schedule[2].number,          10)
+        self.assertEqual(self.Schedule[2].shuffle_agents,  True)
+        self.assertEqual(self.Schedule[2].shuffle_actions, False)
+        self.assertEqual(self.Schedule[2].parallel_reg,    False)
+        self.assertEqual(self.Schedule[2].parallel_loc,    False)
+        self.assertEqual(self.Schedule[2].level,           0)
+        for index_i, thing in enumerate(shuffle_actions_0.items()):
             agent_key, action_keys = thing
             self.assertIsInstance(self.Schedule[2][index_i],
                                   agent_actions.Actions)
@@ -173,14 +185,15 @@ class TestSchedule(ut.TestCase):
             self.assertEqual(len(self.Schedule[2][index_i]), 3)
         self.assertEqual(len(self.Schedule[2]), 3)
 
-        # reg tuple
+        # shuffle tuple 1
         self.assertIsInstance(self.Schedule[3], agent_step.Step)
-        self.assertEqual(self.Schedule[3].number,       10)
-        self.assertEqual(self.Schedule[3].shuffle,      True)
-        self.assertEqual(self.Schedule[3].parallel_reg, True)
-        self.assertEqual(self.Schedule[3].parallel_loc, False)
-        self.assertEqual(self.Schedule[3].level,        0)
-        for index_i, thing in enumerate(reg_actions.items()):
+        self.assertEqual(self.Schedule[3].number,          10)
+        self.assertEqual(self.Schedule[3].shuffle_agents,  True)
+        self.assertEqual(self.Schedule[3].shuffle_actions, True)
+        self.assertEqual(self.Schedule[3].parallel_reg,    False)
+        self.assertEqual(self.Schedule[3].parallel_loc,    False)
+        self.assertEqual(self.Schedule[3].level,           0)
+        for index_i, thing in enumerate(shuffle_actions_1.items()):
             agent_key, action_keys = thing
             self.assertIsInstance(self.Schedule[3][index_i],
                                   agent_actions.Actions)
@@ -196,14 +209,15 @@ class TestSchedule(ut.TestCase):
             self.assertEqual(len(self.Schedule[3][index_i]), 3)
         self.assertEqual(len(self.Schedule[3]), 3)
 
-        # loc tuple
+        # reg tuple
         self.assertIsInstance(self.Schedule[4], agent_step.Step)
-        self.assertEqual(self.Schedule[4].number,       10)
-        self.assertEqual(self.Schedule[4].shuffle,      True)
-        self.assertEqual(self.Schedule[4].parallel_reg, False)
-        self.assertEqual(self.Schedule[4].parallel_loc, True)
-        self.assertEqual(self.Schedule[4].level,        1)
-        for index_i, thing in enumerate(loc_actions.items()):
+        self.assertEqual(self.Schedule[4].number,          10)
+        self.assertEqual(self.Schedule[4].shuffle_agents,  True)
+        self.assertEqual(self.Schedule[4].shuffle_actions, True)
+        self.assertEqual(self.Schedule[4].parallel_reg,    True)
+        self.assertEqual(self.Schedule[4].parallel_loc,    False)
+        self.assertEqual(self.Schedule[4].level,           0)
+        for index_i, thing in enumerate(reg_actions.items()):
             agent_key, action_keys = thing
             self.assertIsInstance(self.Schedule[4][index_i],
                                   agent_actions.Actions)
@@ -218,3 +232,27 @@ class TestSchedule(ut.TestCase):
                 self.assertEqual(action.action, action_keys[index_j])
             self.assertEqual(len(self.Schedule[4][index_i]), 3)
         self.assertEqual(len(self.Schedule[4]), 3)
+
+        # loc tuple
+        self.assertIsInstance(self.Schedule[5], agent_step.Step)
+        self.assertEqual(self.Schedule[5].number,          10)
+        self.assertEqual(self.Schedule[5].shuffle_agents,  True)
+        self.assertEqual(self.Schedule[5].shuffle_actions, True)
+        self.assertEqual(self.Schedule[5].parallel_reg,    False)
+        self.assertEqual(self.Schedule[5].parallel_loc,    True)
+        self.assertEqual(self.Schedule[5].level,           1)
+        for index_i, thing in enumerate(loc_actions.items()):
+            agent_key, action_keys = thing
+            self.assertIsInstance(self.Schedule[5][index_i],
+                                  agent_actions.Actions)
+            self.assertEqual(self.Schedule[5][index_i].agent_key, agent_key)
+            for index_j, action in enumerate(action_keys):
+                self.assertIsInstance(self.Schedule[5][index_i][index_j],
+                                      agent_actions.Action)
+                self.assertEqual(self.Schedule[5][index_i][index_j].action,
+                                 action)
+            for index_j, action in enumerate(self.Schedule[5][index_i]):
+                self.assertIsInstance(action, agent_actions.Action)
+                self.assertEqual(action.action, action_keys[index_j])
+            self.assertEqual(len(self.Schedule[5][index_i]), 3)
+        self.assertEqual(len(self.Schedule[5]), 3)

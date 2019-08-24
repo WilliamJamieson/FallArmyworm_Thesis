@@ -113,7 +113,7 @@ class Agent(object):
         self.alive = False
         self.deactivate()
 
-    def reset(self) -> None:
+    def reset(self) -> hint.agent_list:
         """
         Reset the agent
 

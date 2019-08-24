@@ -272,6 +272,11 @@ egg_mass_data = egg_mass(input_data.egg_mass_number,
                          input_data.egg_mass_samples)
 init_mass_homo_s = egg_mass_data[3]
 init_mass_homo_r = egg_mass_data[3] * input_data.homo_r_mass_factor
+init_mass_hetero = input_data.hetero(init_mass_homo_s,
+                                     init_mass_homo_r)
+mass_0           = {keyword.homo_s: init_mass_homo_s,
+                    keyword.homo_r: init_mass_homo_r,
+                    keyword.hetero: init_mass_hetero}
 
 #       Biomass fit data
 biomass_data_homo_r = biomass(init_mass_homo_r,
@@ -280,10 +285,17 @@ biomass_data_homo_r = biomass(init_mass_homo_r,
                               input_data.mass_final_r,
                               input_data.time_final_r)
 biomass_data_homo_s = biomass(init_mass_homo_s,
-                              input_data.mass_middle_r,
-                              input_data.time_middle_r,
-                              input_data.mass_final_r,
-                              input_data.time_final_r)
+                              input_data.mass_middle_s,
+                              input_data.time_middle_s,
+                              input_data.mass_final_s,
+                              input_data.time_final_s)
+mass_const_homo_s = biomass_data_homo_s[3]
+mass_const_homo_r = biomass_data_homo_r[3]
+mass_const_hetero = input_data.hetero(mass_const_homo_s,
+                                      mass_const_homo_r)
+mass_constant     = {keyword.homo_s:  mass_const_homo_s,
+                     keyword.homo_r:  mass_const_homo_r,
+                     keyword.hetero:  mass_const_hetero}
 
 
 # Create the data points

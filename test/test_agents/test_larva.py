@@ -515,7 +515,7 @@ class TestLarva(ut.TestCase):
     def test_reset(self):
         """test empty the gut system"""
 
-        self.Larva.reset()
+        self.assertEqual(self.Larva.reset(), [])
         self.assertEqual(self.Larva.plant_gut, 0)
         self.assertEqual(self.Larva.egg_gut,   0)
         self.assertEqual(self.Larva.larva_gut, 0)

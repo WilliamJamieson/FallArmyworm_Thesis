@@ -312,7 +312,7 @@ class Larva(insect.Insect):
 
         return []
 
-    def reset(self) -> None:
+    def reset(self) -> hint.agent_list:
         """
         Reset the agent
 
@@ -326,6 +326,8 @@ class Larva(insect.Insect):
         self.larva_gut = 0
 
         self.full = False
+
+        return []
 
     @classmethod
     def initialize(cls, unique_id:  str,

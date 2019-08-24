@@ -188,7 +188,7 @@ class Adult(insect.Insect):
 
             return []
 
-    def reset(self) -> None:
+    def reset(self) -> hint.agent_list:
         """
         Reset the agent
 
@@ -204,6 +204,8 @@ class Adult(insect.Insect):
 
         elif self.agent_key == keyword.mated:
             self.transition(keyword.male)
+
+        return []
 
 
     def _set_sex(self) -> None:
