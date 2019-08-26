@@ -172,7 +172,11 @@ class AgentsBin(collect.UserDict):
         dataframes = {}
         for agent_key, agent_bin in self.items():
             key = '{}_{}'.format(self.location_key, agent_key)
-            dataframes[key] = agent_bin.counts.dataframe()
+
+            # TODO: fix unittest to check this
+            dataframe = agent_bin.counts.dataframe()
+            if not dataframe.empty:
+                dataframes[key] = dataframe
 
         return dataframes
 

@@ -46,7 +46,7 @@ class Step(collect.UserList):
 
     @staticmethod
     def _perform_agent_action_regular(action: hint.actions,
-                                      agents: hint.agent_list) \
+                                      agents: hint.agent_bin) \
             -> hint.agent_list:
         """
         Perform the specific action on the agents
@@ -66,7 +66,7 @@ class Step(collect.UserList):
         return results
 
     def _perform_agent_action_parallel(self, action: hint.actions,
-                                             agents: hint.agent_list) \
+                                             agents: hint.agent_bin) \
             -> hint.agent_list:
         """
         Perform the specific action on the agents in parallel by agent
@@ -79,7 +79,7 @@ class Step(collect.UserList):
             list of agents to add in
         """
 
-        def step(agent: hint.agent_list) -> hint.agent_list:
+        def step(agent: hint.agent_bin) -> hint.agent_list:
             """
             Create a loop function to parallelize actions
 
@@ -93,7 +93,8 @@ class Step(collect.UserList):
             return self._perform_agent_action_regular(action, agent)
 
         n = multi.cpu_count()
-        splits = [agents[i * n:(i + 1) * n]
+        # TODO: fix unittest here
+        splits = [agents.data[i * n:(i + 1) * n]
                   for i in range((len(agents) + n - 1) // n)]
         values = para.Parallel(n_jobs=n, require='sharedmem')(
             para.delayed(step)(ags) for ags in splits)
@@ -114,7 +115,7 @@ class Step(collect.UserList):
             list of agents to add in
         """
 
-        agents: hint.agent_list = agent_bin[action.agent_key]
+        agents: hint.agent_bin = agent_bin[action.agent_key]
         if self.shuffle_agents:
             rnd.shuffle(agents)
 
