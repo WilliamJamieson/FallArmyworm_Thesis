@@ -3,6 +3,8 @@ import unittest.mock as mk
 
 import collections as collect
 
+import source.agents.agent as main_agent
+
 import source.schedule.actions  as agent_actions
 import source.schedule.schedule as schedule
 import source.schedule.step     as agent_step
@@ -31,8 +33,19 @@ class TestSchedule(ut.TestCase):
         self.assertEqual(self.Schedule,      self.steps)
         self.assertEqual(self.Schedule.data, self.steps)
 
-    def test_perform(self):
-        """test perform the schedule"""
+    def test__activate(self):
+        """test activate the results"""
+
+        results = [mk.create_autospec(main_agent.Agent, spec_set=True)
+                   for _ in range(3)]
+
+        self.Schedule._activate(results)
+        for result in results:
+            self.assertEqual(result.activate.call_args_list,
+                             [mk.call()])
+
+    def test__perform(self):
+        """test perform the schedule and get results"""
 
         space  = mk.create_autospec(agent_space.Space, spec_set=True)
         agents = mk.create_autospec(main_agents.Agents, spec_set=True)
@@ -43,13 +56,29 @@ class TestSchedule(ut.TestCase):
             step.perform.return_value = result
             results.extend(result)
 
-        self.assertEqual(self.Schedule.perform(space, agents), results)
+        self.assertEqual(self.Schedule._perform(space, agents), results)
 
         for step in self.steps:
             self.assertEqual(step.perform.call_args_list,
                              [mk.call(space, agents)])
         self.assertEqual(len(self.steps), 3)
-        
+
+    def test_perform(self):
+        """test perform the schedule"""
+
+        space  = mk.create_autospec(agent_space.Space, spec_set=True)
+        agents = mk.create_autospec(main_agents.Agents, spec_set=True)
+
+        with mk.patch.object(schedule.Schedule, '_perform',
+                             autospec=True) as mkPerform:
+            with mk.patch.object(schedule.Schedule, '_activate',
+                                 autospec=True) as mkActivate:
+                self.Schedule.perform(space, agents)
+                self.assertEqual(mkActivate.call_args_list,
+                                 [mk.call(mkPerform.return_value)])
+                self.assertEqual(mkPerform.call_args_list,
+                                 [mk.call(self.Schedule, space, agents)])
+
     def test_setup(self):
         """test setup an entire schedule"""
 

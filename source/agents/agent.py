@@ -63,9 +63,18 @@ class Agent(object):
             adds to new location
         """
 
+        # print('{} agent currently at {} moving to vertex: {} at {}'.
+        #       format(self.unique_id,
+        #              self.location,
+        #              vertex,
+        #              level))
+
         self.simulation.agents.deactivate(self)
         self.location[level] = vertex
         self.simulation.agents.activate(self)
+
+        # print('{} agent now at {}'.format(self.unique_id,
+        #                                   self.location))
 
     def transition(self, agent_key: str) -> None:
         """

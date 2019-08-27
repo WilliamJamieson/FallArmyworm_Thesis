@@ -2,6 +2,7 @@ import unittest      as ut
 import unittest.mock as mk
 
 import collections as collect
+import pandas      as pd
 
 import source.keyword as keyword
 
@@ -227,16 +228,34 @@ class TestAgentsBin(ut.TestCase):
     def test_dataframes(self):
         """test create a dictionary of dataframes"""
 
+        # Test no empty
         dataframes = {}
         for agent_key, agent_bin in self.agents.items():
             key = '{}_{}'.format(self.location_key, agent_key)
             agent_bin.counts = mk.create_autospec(counter.Counts, spec_set=True)
-            dataframe = mk.MagicMock()
+            dataframe        = mk.create_autospec(pd.DataFrame, spec_set=True)
+            dataframe.empty  = False
             agent_bin.counts.dataframe.return_value = dataframe
             dataframes[key] = dataframe
         self.assertEqual(len(dataframes), 3)
 
         self.assertEqual(self.AgentsBin.dataframes(), dataframes)
+        for agent_bin in self.AgentsBin.values():
+            self.assertEqual(agent_bin.counts.dataframe.call_args_list,
+                             [mk.call()])
+
+        # Test empty
+        dataframes = {}
+        for agent_key, agent_bin in self.agents.items():
+            key = '{}_{}'.format(self.location_key, agent_key)
+            agent_bin.counts = mk.create_autospec(counter.Counts, spec_set=True)
+            dataframe        = mk.create_autospec(pd.DataFrame, spec_set=True)
+            dataframe.empty  = True
+            agent_bin.counts.dataframe.return_value = dataframe
+            dataframes[key] = dataframe
+        self.assertEqual(len(dataframes), 3)
+
+        self.assertEqual(self.AgentsBin.dataframes(), {})
         for agent_bin in self.AgentsBin.values():
             self.assertEqual(agent_bin.counts.dataframe.call_args_list,
                              [mk.call()])

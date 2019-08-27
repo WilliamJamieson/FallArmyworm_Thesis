@@ -68,6 +68,7 @@ pupa_level     = 1
 adult_level    = 1
 bt_level       = 1
 plant_level    = 1
+leaf_level     = 2
 
 # depth
 egg_depth      = 3
