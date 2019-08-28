@@ -16,11 +16,16 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
+# num_steps  = 40
+# num_eggs   = 10
+# num_larvae = 1000
+# num_pupae  = 1000
+# num_adults = 1000
 num_steps  = 40
-num_eggs   = 10
-num_larvae = 1000
-num_pupae  = 1000
-num_adults = 1000
+num_eggs   = 0
+num_larvae = 113
+num_pupae  = 0
+num_adults = 0
 save_fig   = False
 
 
@@ -48,7 +53,7 @@ class Simulator(object):
                                       keyword.reset],
                      keyword.egg:    [keyword.survive],
                      keyword.pupa:   [keyword.survive],
-                     keyword.female: [keyword.survive]},)]
+                     keyword.female: [keyword.survive]}, 1, False, False, True, False, 0)]
     emigration  = []
     immigration = []
 

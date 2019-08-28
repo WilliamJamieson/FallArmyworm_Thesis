@@ -11,6 +11,7 @@ import source.schedule.actions as agent_actions
 
 
 num_cpu = multi.cpu_count()
+# num_cpu = 4
 
 
 class Step(collect.UserList):
@@ -96,8 +97,10 @@ class Step(collect.UserList):
             return self._perform_agent_action_regular(action, agent)
 
         n      = num_cpu
-        splits = [agents[i * n:(i + 1) * n]
-                  for i in range((len(agents) + n - 1) // n)]
+        # TODO: change the splitter this is incorrect
+        splits = [agents[i::n] for i in range(n)]
+
+        print('         Going parallel')
         values = para.Parallel(n_jobs=n, require='sharedmem')(
             para.delayed(step)(ags) for ags in splits)
 
@@ -197,8 +200,8 @@ class Step(collect.UserList):
             return self._perform_regular_step(keys, agents)
 
         n      = num_cpu
-        splits = [location_keys[i * n:(i + 1) * n]
-                  for i in range((len(location_keys) + n - 1) // n)]
+        # TODO: change the splitter this is incorrect
+        splits = [location_keys[i::n].copy() for i in range(n)]
         values = para.Parallel(n_jobs=n, require='sharedmem')(
             para.delayed(step)(loc_keys) for loc_keys in splits)
 

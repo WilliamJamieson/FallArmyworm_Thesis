@@ -8,6 +8,7 @@ import source.data.counter as count
 import source.space.environment as agent_environment
 
 
+# TODO: modify this possibly to be a dict
 class AgentBin(collect.UserList):
     """
     Class to contain agents
@@ -172,8 +173,6 @@ class AgentsBin(collect.UserDict):
         dataframes = {}
         for agent_key, agent_bin in self.items():
             key = '{}_{}'.format(self.location_key, agent_key)
-
-            # TODO: fix unittest to check this
             dataframe = agent_bin.counts.dataframe()
             if not dataframe.empty:
                 dataframes[key] = dataframe
