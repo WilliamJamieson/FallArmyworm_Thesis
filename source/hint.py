@@ -94,8 +94,9 @@ if typing.TYPE_CHECKING:
 # Agent hints
 agent      = 'main_agent.Agent'
 agent_list = typing.List[agent]
-
-agent_dict = typing.Dict[int, agent]
+agent_dict = typing.Dict[str, agent]
+#
+# agent_dict = typing.Dict[int, agent]
 
 egg      = 'main_egg.Egg'
 egg_mass = 'main_egg_mass.EggMass'

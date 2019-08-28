@@ -60,7 +60,7 @@ for agent in test_agents:
 
 test_copy     = test_agents.copy()
 # rnd.shuffle(test_copy)
-remove_agents = test_copy[:100]
+remove_agents = test_copy[:500]
 
 n = 4
 splits = [remove_agents[i::n] for i in range(n)]

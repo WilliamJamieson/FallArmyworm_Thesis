@@ -43,10 +43,12 @@ class TestAgentBin(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.agents = []
+        self.agents = {}
         for _ in range(3):
-            agent = mk.create_autospec(AgentTest, spec_set=True)
-            self.agents.append(agent)
+            unique_id = mk.MagicMock(spec=str)
+            agent     = mk.create_autospec(AgentTest, spec_set=True)
+            agent.unique_id = unique_id
+            self.agents[unique_id] = agent
 
         self.counts    = mk.create_autospec(counter.Counts, spec_set=True)
         self.agent_key = mk.MagicMock(spec=str)
@@ -58,7 +60,7 @@ class TestAgentBin(ut.TestCase):
     def test___init__(self):
         """test __init__ for class"""
 
-        self.assertIsInstance(self.AgentBin, collect.UserList)
+        self.assertIsInstance(self.AgentBin, collect.UserDict)
         self.assertIsInstance(self.AgentBin, agents.AgentBin)
 
         self.assertEqual(self.AgentBin.counts,    self.counts)
@@ -67,15 +69,35 @@ class TestAgentBin(ut.TestCase):
         self.assertEqual(self.AgentBin,      self.agents)
         self.assertEqual(self.AgentBin.data, self.agents)
 
+    def test_agents(self):
+        """test get the agents in system"""
+
+        # Test calls
+        with mk.patch.object(agents.AgentBin, 'values',
+                             autospec=True) as mkValues:
+            with mk.patch.object(agents, 'list') as mkList:
+                self.assertEqual(self.AgentBin.agents,
+                                 mkList.return_value)
+                self.assertEqual(mkList.call_args_list,
+                                 [mk.call(mkValues.return_value)])
+                self.assertEqual(mkValues.call_args_list,
+                                 [mk.call(self.AgentBin)])
+
+        # Test practical
+        self.assertEqual(self.AgentBin.agents, list(self.agents.values()))
+
     def test_activate(self):
         """test activate an agent"""
 
-        agent = mk.create_autospec(AgentTest, spec_set=True)
 
-        self.assertNotIn(agent, self.AgentBin)
+        agent     = mk.create_autospec(AgentTest, spec_set=True)
+        unique_id = mk.MagicMock(spec=str)
+        agent.unique_id = unique_id
+
+        self.assertNotIn(unique_id, self.AgentBin)
         self.AgentBin.activate(agent)
-        self.assertIn(agent, self.AgentBin)
-        self.assertEqual(self.AgentBin[-1], agent)
+        self.assertIn(unique_id, self.AgentBin)
+        self.assertEqual(self.AgentBin[unique_id], agent)
         self.assertEqual(self.counts.add.call_args_list,
                          [mk.call(agent)])
 
@@ -85,10 +107,10 @@ class TestAgentBin(ut.TestCase):
         """test deactivate"""
 
         self.assertEqual(len(self.AgentBin), 3)
-        for agent in self.agents:
-            self.assertIn(agent, self.AgentBin)
+        for unique_id, agent in self.agents.items():
+            self.assertIn(unique_id, self.AgentBin)
             self.AgentBin.deactivate(agent)
-            self.assertNotIn(agent, self.AgentBin)
+            self.assertNotIn(unique_id, self.AgentBin)
             self.assertEqual(self.counts.sub.call_args_list,
                              [mk.call(agent)])
             self.counts.reset_mock()
@@ -105,7 +127,7 @@ class TestAgentBin(ut.TestCase):
 
         self.AgentBin = agents.AgentBin.empty(self.agent_key, attrs)
         self.assertIsInstance(self.AgentBin, agents.AgentBin)
-        self.assertEqual(self.AgentBin, [])
+        self.assertEqual(self.AgentBin, {})
         self.assertEqual(self.AgentBin.agent_key, self.agent_key)
 
         self.assertIsInstance(self.AgentBin.counts, counter.Counts)
@@ -336,6 +358,7 @@ class TestAgentsBin(ut.TestCase):
         for agent_key in agent_keys:
             self.assertIn(agent_key, agent_bins)
             self.assertIsInstance(agent_bins[agent_key], agents.AgentBin)
+            self.assertEqual(agent_bins[agent_key], {})
             self.assertEqual(agent_bins[agent_key].agent_key, agent_key)
             self.assertIsInstance(agent_bins[agent_key].counts,
                                   counter.Counts)
@@ -386,7 +409,7 @@ class TestAgentsBin(ut.TestCase):
         agent_bins = self.AgentsBin.make_bins(agent_keys, {})
         for agent_key in agent_keys:
             self.assertIsInstance(agent_bins[agent_key], agents.AgentBin)
-            self.assertEqual(agent_bins[agent_key], [])
+            self.assertEqual(agent_bins[agent_key], {})
             self.assertEqual(agent_bins[agent_key].agent_key, agent_key)
             self.assertIsInstance(agent_bins[agent_key].counts, counter.Counts)
             self.assertEqual(agent_bins[agent_key].counts, {})
@@ -486,7 +509,7 @@ class TestAgents(ut.TestCase):
             mk.create_autospec(AgentBinTest, spec_set=True)
 
         self.assertEqual(self.Agents.agents(agent_key),
-                         self.master.__getitem__.return_value)
+                         self.master.__getitem__.return_value.agents)
         self.assertEqual(self.master.__getitem__.call_args_list,
                          [mk.call(agent_key)])
 

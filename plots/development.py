@@ -341,7 +341,11 @@ steps_full = [({keyword.egg:   [keyword.develop,
 print('{} Running Development Full Bt simulations'.
       format(datetime.datetime.now()))
 simulator_full_bt = Simulator(initial_pops, 1, steps_full)
+start = datetime.datetime.now()
 simulator_full_bt.run(t)
+end = datetime.datetime.now()
+bt_time = end - start
+print('Elapsed time: {}'.format(bt_time))
 dataframes_full_bt = simulator_full_bt.simulation.agents.dataframes()
 full_egg_bt   = dataframes_full_bt['(0, 0)_egg']
 full_larva_bt = dataframes_full_bt['(0, 0)_larva']
@@ -350,7 +354,11 @@ full_adult_bt = dataframes_full_bt['(0, 0)_female']
 print('{} Running Development Full Not Bt simulations'.
       format(datetime.datetime.now()))
 simulator_full_not_bt = Simulator(initial_pops, 0, steps_full)
+start = datetime.datetime.now()
 simulator_full_not_bt.run(t)
+end = datetime.datetime.now()
+not_bt_time = end - start
+print('Elapsed time: {}'.format(not_bt_time))
 dataframes_full_not_bt = simulator_full_not_bt.simulation.agents.dataframes()
 full_egg_not_bt   = dataframes_full_not_bt['(0, 0)_egg']
 full_larva_not_bt = dataframes_full_not_bt['(0, 0)_larva']

@@ -19,7 +19,7 @@ import source.simulation.simulation as main_simulation
 num_steps  = 15
 num_larvae = 1
 num_adults = 1
-save_fig   = False
+save_fig   = True
 
 
 width  = 0.5

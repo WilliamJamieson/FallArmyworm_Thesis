@@ -166,6 +166,7 @@ class Simulator(object):
 
         values = []
         for agent in larvae:
+            # noinspection PyUnresolvedReferences
             values.append(agent.mass)
 
         return values

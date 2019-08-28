@@ -115,8 +115,9 @@ class TestEmigration(ut.TestCase):
         population = []
         agent_bins = []
         for agent_key in self.agent_keys:
-            pop       = [mk.create_autospec(main_agent.Agent, spec_set=True)
-                         for _ in range(3)]
+            pop       = {mk.MagicMock(spec=str):
+                             mk.create_autospec(main_agent.Agent, spec_set=True)
+                         for _ in range(3)}
             agent_bin = main_agents.AgentBin(pop, mk.MagicMock(), agent_key)
             population.extend(agent_bin)
             agent_bins.append(agent_bin)

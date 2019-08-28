@@ -8,8 +8,7 @@ import source.data.counter as count
 import source.space.environment as agent_environment
 
 
-# TODO: modify this possibly to be a dict
-class AgentBin(collect.UserList):
+class AgentBin(collect.UserDict):
     """
     Class to contain agents
 
@@ -30,13 +29,19 @@ class AgentBin(collect.UserList):
         empty: setup a class
     """
 
-    def __init__(self, agents:    hint.agent_list,
+    def __init__(self, agents:    hint.agent_dict,
                        counts:    hint.counts,
                        agent_key: str):
         super().__init__(agents)
 
         self.counts    = counts
         self.agent_key = agent_key
+
+    @property
+    def agents(self) -> hint.agent_list:
+        """Get the agents in bin in a list format"""
+
+        return list(self.values())
 
     def activate(self, agent: hint.agent) -> None:
         """
@@ -49,7 +54,7 @@ class AgentBin(collect.UserList):
             add agent to bin
         """
 
-        self.append(agent)
+        self[agent.unique_id] = agent
         self.counts.add(agent)
 
     def deactivate(self, agent: hint.agent) -> None:
@@ -63,7 +68,7 @@ class AgentBin(collect.UserList):
             remove agent from bin
         """
 
-        self.remove(agent)
+        del self[agent.unique_id]
         self.counts.sub(agent)
 
     @classmethod
@@ -82,7 +87,7 @@ class AgentBin(collect.UserList):
 
         counts = count.Counts.empty(attrs)
 
-        return cls([], counts, agent_key)
+        return cls({}, counts, agent_key)
 
 
 class AgentsBin(collect.UserDict):
@@ -293,7 +298,7 @@ class Agents(collect.UserDict):
     def __init__(self, agents: hint.agents_dict):
         super().__init__(agents)
 
-    def agents(self, agent_key: str) -> list:
+    def agents(self, agent_key: str) -> hint.agent_list:
         """
         Get a list of all the agents for the given key
 
@@ -304,7 +309,7 @@ class Agents(collect.UserDict):
             agents from master location
         """
 
-        return self[(0,)][agent_key]
+        return self[(0,)][agent_key].agents
 
     def activate(self, agent: hint.agent) -> None:
         """

@@ -155,10 +155,10 @@ class TestStep(ut.TestCase):
         agents = [AgentParallel('test', index, loc) for index in range(40)]
         regular_results  = self.Step._perform_agent_action_regular( actions,
                                                                     agents)
-        self.assertEqual(len(regular_results), 40 * 9)
+        self.assertEqual(len(set(regular_results)), 40 * 9)
         parallel_results = self.Step._perform_agent_action_parallel(actions,
                                                                     agents)
-        self.assertEqual(regular_results, parallel_results)
+        self.assertEqual(set(regular_results), set(parallel_results))
 
     def test__perform_agent_action(self):
         """test perform action on agent_bin"""
@@ -170,8 +170,8 @@ class TestStep(ut.TestCase):
                       for _ in range(3)]
 
         agents_bin.__getitem__.return_value = agent_bin
-        agent_bin.data                   = mk.MagicMock(spec=list)
-        agent_bin.data.copy.return_value = agents
+        agent_bin.agents                 = mk.MagicMock(spec=list)
+        agent_bin.agents.copy.return_value = agents
 
         with mk.patch.object(step.Step, '_perform_agent_action_parallel',
                              autospec=True) as mkParallel:
@@ -191,7 +191,7 @@ class TestStep(ut.TestCase):
                     self.assertEqual(mkRegular.call_args_list, [])
                     self.assertEqual(agents_bin.__getitem__.call_args_list,
                                      [mk.call(action.agent_key)])
-                    self.assertEqual(agent_bin.data.copy.call_args_list,
+                    self.assertEqual(agent_bin.agents.copy.call_args_list,
                                      [mk.call()])
                     self.assertEqual(mkRnd.call_args_list,
                                      [mk.call(agents)])
@@ -199,7 +199,7 @@ class TestStep(ut.TestCase):
                     mkRnd.reset_mock()
                     mkParallel.reset_mock()
                     agents_bin.reset_mock()
-                    agent_bin.data.reset_mock()
+                    agent_bin.agents.reset_mock()
                     #      Test without shuffle
                     self.Step.shuffle_agents = False
                     self.Step.parallel_reg   = True
@@ -212,14 +212,14 @@ class TestStep(ut.TestCase):
                     self.assertEqual(mkRegular.call_args_list, [])
                     self.assertEqual(agents_bin.__getitem__.call_args_list,
                                      [mk.call(action.agent_key)])
-                    self.assertEqual(agent_bin.data.copy.call_args_list,
+                    self.assertEqual(agent_bin.agents.copy.call_args_list,
                                      [mk.call()])
                     self.assertEqual(mkRnd.call_args_list, [])
 
                     mkParallel.reset_mock()
                     agent_bin.reset_mock()
                     agents_bin.reset_mock()
-                    agent_bin.data.reset_mock()
+                    agent_bin.agents.reset_mock()
                     # Test run regular
                     #      Test with shuffle
                     self.Step.shuffle_agents = True
@@ -233,7 +233,7 @@ class TestStep(ut.TestCase):
                     self.assertEqual(mkParallel.call_args_list, [])
                     self.assertEqual(agents_bin.__getitem__.call_args_list,
                                      [mk.call(action.agent_key)])
-                    self.assertEqual(agent_bin.data.copy.call_args_list,
+                    self.assertEqual(agent_bin.agents.copy.call_args_list,
                                      [mk.call()])
                     self.assertEqual(mkRnd.call_args_list,
                                      [mk.call(agents)])
@@ -242,7 +242,7 @@ class TestStep(ut.TestCase):
                     mkRegular.reset_mock()
                     agent_bin.reset_mock()
                     agents_bin.reset_mock()
-                    agent_bin.data.reset_mock()
+                    agent_bin.agents.reset_mock()
                     #      Test with shuffle
                     self.Step.shuffle_agents = False
                     self.Step.parallel_reg   = False
@@ -255,7 +255,7 @@ class TestStep(ut.TestCase):
                     self.assertEqual(mkParallel.call_args_list, [])
                     self.assertEqual(agents_bin.__getitem__.call_args_list,
                                      [mk.call(action.agent_key)])
-                    self.assertEqual(agent_bin.data.copy.call_args_list,
+                    self.assertEqual(agent_bin.agents.copy.call_args_list,
                                      [mk.call()])
                     self.assertEqual(mkRnd.call_args_list, [])
 

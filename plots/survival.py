@@ -16,17 +16,17 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
-# num_steps  = 40
-# num_eggs   = 10
-# num_larvae = 1000
-# num_pupae  = 1000
-# num_adults = 1000
 num_steps  = 40
-num_eggs   = 0
-num_larvae = 113
-num_pupae  = 0
-num_adults = 0
-save_fig   = False
+num_eggs   = 10
+num_larvae = 1000
+num_pupae  = 1000
+num_adults = 1000
+# num_steps  = 40
+# num_eggs   = 0
+# num_larvae = 200
+# num_pupae  = 0
+# num_adults = 0
+save_fig   = True
 
 
 sex_model = input_repro.init_sex
@@ -53,7 +53,7 @@ class Simulator(object):
                                       keyword.reset],
                      keyword.egg:    [keyword.survive],
                      keyword.pupa:   [keyword.survive],
-                     keyword.female: [keyword.survive]}, 1, False, False, True, False, 0)]
+                     keyword.female: [keyword.survive]},)]
     emigration  = []
     immigration = []
 
@@ -115,7 +115,10 @@ initial_pops = ((num_eggs,   num_eggs,   num_eggs),
                 (0,          0,          0))
 print('{} Running Survival Bt simulations'.format(datetime.datetime.now()))
 simulator_bt = Simulator(initial_pops, 1)
+start = datetime.datetime.now()
 simulator_bt.run(t)
+end   = datetime.datetime.now()
+print('Run time: {}'.format(end - start))
 dataframes_bt = simulator_bt.simulation.agents.dataframes()
 egg_bt        = dataframes_bt['(0, 0)_egg']
 larva_bt      = dataframes_bt['(0, 0)_larva']
@@ -124,7 +127,10 @@ adult_bt      = dataframes_bt['(0, 0)_female']
 
 print('{} Running Survival not Bt simulations'.format(datetime.datetime.now()))
 simulator_not_bt = Simulator(initial_pops, 0)
+start = datetime.datetime.now()
 simulator_not_bt.run(t)
+end   = datetime.datetime.now()
+print('Run time: {}'.format(end - start))
 dataframes_not_bt = simulator_not_bt.simulation.agents.dataframes()
 egg_not_bt        = dataframes_not_bt['(0, 0)_egg']
 larva_not_bt      = dataframes_not_bt['(0, 0)_larva']
