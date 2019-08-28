@@ -60,7 +60,7 @@ class Larva(insect.Insect):
 
     @property
     def active(self) -> bool:
-        """Determine if this egg mass is still active"""
+        """Determine if this larva is still active"""
 
         return self.mass > 0
 

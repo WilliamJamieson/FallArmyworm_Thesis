@@ -15,6 +15,7 @@ class LarvaTest(agent_larva.Larva):
 
     mass     = mk.MagicMock(spec=float)
     genotype = mk.MagicMock(spec=str)
+    alive    = mk.MagicMock(spec=bool)
 
 
 class TestLarva(ut.TestCase):
@@ -66,6 +67,24 @@ class TestLarva(ut.TestCase):
 
         with mk.patch.object(forage.Larva, '_available',
                              autospec=True) as mkAvailable:
+            # Target is dead
+            target.alive = False
+            self.Larva._consume(larva, target)
+            self.assertEqual(target.die.call_args_list, [])
+            self.assertEqual(target.mass, mass.__sub__.return_value)
+            self.assertEqual(mass.__sub__.call_args_list,
+                             [mk.call(larva.add_larva.return_value)])
+            self.assertEqual(larva.add_larva.call_args_list,
+                             [mk.call(mkAvailable.return_value)])
+            self.assertEqual(mkAvailable.call_args_list,
+                             [mk.call(self.Larva, larva, target)])
+
+            larva.reset_mock()
+            target.mass = mass
+            mass.reset_mock()
+            mkAvailable.reset_mock()
+            # Target is alive
+            target.alive = True
             self.Larva._consume(larva, target)
             self.assertEqual(target.die.call_args_list,
                              [mk.call(keyword.cannibalism)])

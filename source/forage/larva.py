@@ -58,7 +58,9 @@ class Larva(object):
         available    = self._available(larva, target)
         amount       = larva.add_larva(available)
         target.mass -= amount
-        target.die(keyword.cannibalism)
+
+        if target.alive:
+            target.die(keyword.cannibalism)
 
     def consume(self, larva:  hint.larva,
                       target: hint.larva) -> None:

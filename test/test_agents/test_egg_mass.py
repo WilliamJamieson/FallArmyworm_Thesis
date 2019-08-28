@@ -299,7 +299,9 @@ class TestEggMass(ut.TestCase):
 
         with mk.patch.object(agent.Agent, 'activate',
                              autospec=True) as mkActivate:
+            self.assertEqual(self.EggMass.alive, self.alive)
             self.EggMass.activate()
+            self.assertEqual(self.EggMass.alive, True)
             self.assertEqual(mkActivate.call_args_list,
                              [mk.call(self.EggMass)])
             self.assertEqual(self.eggs.activate.call_args_list,
@@ -310,7 +312,9 @@ class TestEggMass(ut.TestCase):
 
         with mk.patch.object(agent.Agent, 'deactivate',
                              autospec=True) as mkDeactivate:
+            self.assertEqual(self.EggMass.alive, self.alive)
             self.EggMass.deactivate()
+            self.assertEqual(self.EggMass.alive, False)
             self.assertEqual(mkDeactivate.call_args_list,
                              [mk.call(self.EggMass)])
             self.assertEqual(self.eggs.deactivate.call_args_list,

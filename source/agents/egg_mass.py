@@ -145,6 +145,7 @@ class EggMass(agent.Agent):
 
         super().activate()
         self.eggs.activate()
+        self.alive = True
 
     def deactivate(self) -> None:
         """
@@ -156,6 +157,7 @@ class EggMass(agent.Agent):
 
         super().deactivate()
         self.eggs.deactivate()
+        self.alive = False
 
     def _feed_number(self, amount: float) -> int:
         """
