@@ -195,13 +195,19 @@ class TestAdult(ut.TestCase):
         self.simulation.agents.__getitem__.return_value = \
             mk.create_autospec(agents.AgentsBin, spec_set=True)
 
+        egg_bin = mk.create_autospec(agents.AgentBin, spec_set=True)
+        larva_bin = mk.create_autospec(agents.AgentBin, spec_set=True)
+
         eggs   = [mk.create_autospec(egg_mass.EggMass, spec_set=True)
                   for _ in range(3)]
         larvae = [mk.create_autospec(larva.Larva, spec_set=True)
                   for _ in range(3)]
+        egg_bin.  agents = eggs
+        larva_bin.agents = larvae
         self.simulation.agents.__getitem__.return_value.\
-            __getitem__.side_effect = [eggs, larvae, eggs, larvae]
-
+            __getitem__.side_effect = [egg_bin, larva_bin,
+                                       egg_bin, larva_bin]
+        # Test calls
         with mk.patch.object(adult, 'len') as mkLen:
             self.assertEqual(self.Adult.population(),
                              mkLen.return_value.__add__.return_value)
@@ -214,9 +220,9 @@ class TestAdult(ut.TestCase):
                              [mk.call(keyword.egg_mass),
                               mk.call(keyword.larva)])
             self.assertEqual(self.simulation.agents.__getitem__.call_args_list,
-                             [mk.call(self.location.location_key),
-                              mk.call(self.location.location_key)])
+                             [mk.call(self.location.location_key)])
 
+        # Test practical
         self.assertEqual(self.Adult.population(), 6)
 
     def test_set_mate(self):
@@ -315,20 +321,25 @@ class TestAdult(ut.TestCase):
 
         self.simulation.agents = mk.create_autospec(agents.Agents,
                                                     spec_set=True)
-        location_keys = [mk.MagicMock(spec=tuple) for _ in range(3)]
 
-        agent_bins = []
-        mates    = []
-        for index in range(3):
-            agent_bin = mk.create_autospec(agents.AgentsBin, spec_set=True)
-            adults = []
+        location_keys = []
+        agents_bins   = []
+        mates         = []
+        for _ in range(3):
+            location_key = mk.MagicMock(spec=tuple)
+            agents_bin   = mk.create_autospec(agents.AgentsBin, spec_set=True)
+            male_bin     = mk.create_autospec(agents.AgentBin, spec_set=True)
+            adults       = []
             for _ in range(3):
                 adults.append(mk.create_autospec(adult.Adult, spec_set=True))
-            agent_bin.__getitem__.return_value = adults
+            male_bin.agents = adults
             mates.extend(adults)
-            agent_bins.append(agent_bin)
 
-        self.simulation.agents.__getitem__.side_effect = agent_bins
+            location_keys.append(location_key)
+            agents_bin.__getitem__.return_value = male_bin
+            agents_bins.append(agents_bin)
+
+        self.simulation.agents.__getitem__.side_effect = agents_bins
 
         with mk.patch.object(adult.Adult, '_location_keys',
                              autospec=True) as mkKeys:
@@ -345,7 +356,7 @@ class TestAdult(ut.TestCase):
                                  mk.call(location_keys[index]))
             self.assertEqual(len(self.simulation.agents.
                                  __getitem__.call_args_list), 3)
-            for index, agent_bin in enumerate(agent_bins):
+            for index, agent_bin in enumerate(agents_bins):
                 self.assertEqual(agent_bin.__getitem__.call_args_list,
                                  [mk.call(keyword.male)])
 

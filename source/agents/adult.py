@@ -106,9 +106,10 @@ class Adult(insect.Insect):
         """
 
         location_key = self.location.location_key
+        agent_bin    = self.simulation.agents[location_key]
 
-        num_eggs   = len(self.simulation.agents[location_key][keyword.egg_mass])
-        num_larvae = len(self.simulation.agents[location_key][keyword.larva])
+        num_eggs   = len(agent_bin[keyword.egg_mass].agents)
+        num_larvae = len(agent_bin[keyword.larva].   agents)
 
         return num_eggs + num_larvae
 
@@ -169,7 +170,7 @@ class Adult(insect.Insect):
         mates = []
         for location_key in location_keys:
             agent_bin = self.simulation.agents[location_key]
-            mates    += agent_bin[keyword.male]
+            mates    += agent_bin[keyword.male].agents
 
         return mates
 

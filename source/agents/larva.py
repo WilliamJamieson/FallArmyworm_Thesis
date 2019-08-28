@@ -287,8 +287,8 @@ class Larva(insect.Insect):
         targets = []
         for location_key in location_keys:
             agent_bin = self.simulation.agents[location_key]
-            targets  += agent_bin[keyword.egg_mass]
-            targets  += agent_bin[keyword.larva]
+            targets  += agent_bin[keyword.egg_mass].agents
+            targets  += agent_bin[keyword.larva].agents
 
         targets.remove(self)
 
