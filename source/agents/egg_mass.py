@@ -11,7 +11,7 @@ import source.agents.agent as agent
 import source.agents.egg   as agent_egg
 
 
-class Eggs(collect.UserList):
+class Eggs(collect.UserDict):
     """
     Class to handle the eggs for an egg_mass
 
@@ -22,7 +22,7 @@ class Eggs(collect.UserList):
         mass: mass of single egg
     """
 
-    def __init__(self, eggs: hint.eggs,
+    def __init__(self, eggs: hint.egg_dict,
                        mass: float):
         super().__init__(eggs)
 
@@ -36,7 +36,7 @@ class Eggs(collect.UserList):
             activates all the eggs
         """
 
-        for egg in self:
+        for egg in self.values():
             egg.activate()
 
     def deactivate(self) -> None:
@@ -47,7 +47,7 @@ class Eggs(collect.UserList):
             deactivates all the eggs
         """
 
-        for egg in self:
+        for egg in self.values():
             egg.deactivate()
 
     def cannibalize(self, number: int) -> None:
@@ -61,10 +61,12 @@ class Eggs(collect.UserList):
             randomly remove that number of eggs
         """
 
-        rnd.shuffle(self)
+        unique_ids = list(self.keys())
 
-        for index in range(number):
-            self[index].die(keyword.cannibalism)
+        rnd.shuffle(unique_ids)
+
+        for unique_id in unique_ids[:number]:
+            self[unique_id].die(keyword.cannibalism)
 
     @classmethod
     def initialize(cls, egg_mass:  hint.egg_mass,
@@ -82,7 +84,7 @@ class Eggs(collect.UserList):
             a setup collection of eggs
         """
 
-        eggs = []
+        eggs = {}
         for genotype in genotypes:
             unique_id  = egg_mass.new_unique_id()
             simulation = egg_mass.simulation
@@ -94,7 +96,7 @@ class Eggs(collect.UserList):
                                            mass,
                                            genotype,
                                            egg_mass)
-            eggs.append(new)
+            eggs[new.unique_id] = new
 
         return cls(eggs, mass)
 
@@ -211,7 +213,7 @@ class EggMass(agent.Agent):
             removes the egg from the class
         """
 
-        self.eggs.remove(egg)
+        del self.eggs[egg.unique_id]
 
     def reset(self) -> hint.agent_list:
         """
@@ -327,7 +329,7 @@ class EggMass(agent.Agent):
         agent_key = keyword.egg_mass
         alive     = True
 
-        eggs = Eggs([], -1)
+        eggs = Eggs({}, -1)
 
         return cls(agent_key, unique_id, simulation, location, alive, eggs)
 

@@ -28,6 +28,7 @@ import source.forage.cannibalism as cannibalism
 import source.forage.egg         as forage_egg
 import source.forage.larva       as forage_larva
 import source.forage.plant       as forage_plant
+import source.forage.target      as target_loss
 import source.movement.larva     as movement
 import source.survival.larva     as survival
 
@@ -44,6 +45,7 @@ class BehaviorsTest(behaviors.Behaviors):
     forage_plant  = mk.create_autospec(forage_plant.Plant,      spec_set=True)
     forage_egg    = mk.create_autospec(forage_egg.Egg,          spec_set=True)
     forage_larva  = mk.create_autospec(forage_larva.Larva,      spec_set=True)
+    loss          = mk.create_autospec(target_loss.Target,      spec_set=True)
 
 
 class SimulationTest(simulation.Simulation):
@@ -107,6 +109,8 @@ class TestLarva(ut.TestCase):
                                                spec_set=True)
         self.forage_larva = mk.create_autospec(forage_larva.Larva,
                                                spec_set=True)
+        self.loss         = mk.create_autospec(target_loss.Target,
+                                               spec_set=True)
         self.cannibalism  = mk.create_autospec(cannibalism.Cannibalism,
                                                spec_set=True)
 
@@ -132,6 +136,7 @@ class TestLarva(ut.TestCase):
                                  self.forage_plant,
                                  self.forage_egg,
                                  self.forage_larva,
+                                 self.loss,
                                  self.cannibalism,
                                  self.target)
 
@@ -166,6 +171,7 @@ class TestLarva(ut.TestCase):
         self.assertEqual(self.Larva.forage_plant, self.forage_plant)
         self.assertEqual(self.Larva.forage_egg,   self.forage_egg)
         self.assertEqual(self.Larva.forage_larva, self.forage_larva)
+        self.assertEqual(self.Larva.loss,         self.loss)
         self.assertEqual(self.Larva.cannibalism,  self.cannibalism,)
         self.assertEqual(self.Larva.target,       self.target)
 
@@ -176,6 +182,54 @@ class TestLarva(ut.TestCase):
                          next(i_tools.count(self.age + 1)))
 
         self.assertTrue(dclass.is_dataclass(self.Larva))
+
+    def test_active(self):
+        """test if this is active"""
+
+        self.mass.__gt__.side_effect = [True, False]
+
+        # test active
+        self.assertTrue(self.Larva.active)
+        self.assertEqual(self.mass.__gt__.call_args_list,
+                         [mk.call(0)])
+
+        self.mass.reset_mock()
+        # test inactive
+        self.assertFalse(self.Larva.active)
+        self.assertEqual(self.mass.__gt__.call_args_list,
+                         [mk.call(0)])
+
+    def test__can_consume(self):
+        """test if larva can consume"""
+
+        # Not alive
+        self.Larva.alive = False
+        self.assertFalse(self.Larva._can_consume)
+
+        # Alive and full
+        self.Larva.alive = True
+        self.Larva.full  = True
+        self.assertFalse(self.Larva._can_consume)
+
+        # Alive and  not full
+        self.Larva.alive = True
+        self.Larva.full  = False
+        self.assertTrue(self.Larva._can_consume)
+
+    def test__has_target(self):
+        """test if this larva has a target"""
+
+        # has target given and active
+        self.Larva.target.active = True
+        self.assertTrue(self.Larva._has_target)
+
+        # has target given but inactive
+        self.Larva.target.active = False
+        self.assertFalse(self.Larva._has_target)
+
+        # no target given
+        self.Larva.target = None
+        self.assertFalse(self.Larva._has_target)
 
     def test_add_plant(self):
         """test add_plant"""
@@ -328,30 +382,41 @@ class TestLarva(ut.TestCase):
     def test_move(self):
         """test run move behavior"""
 
-        self.assertEqual(self.Larva.move(), [])
-        self.assertEqual(self.movement.move.call_args_list,
-                         [mk.call(self.Larva)])
+        with mk.patch.object(larva.Larva, '_can_consume',
+                             autospec=True) as mkCan:
+            with mk.patch.object(larva.Larva, '_has_target',
+                                 autospec=True) as mkHas:
+                mkCan.__get__ = mk.MagicMock(side_effect=[False, True, True])
+                mkHas.__get__ = mk.MagicMock(side_effect=[       True, False])
+
+                # Cannot consume
+                self.assertEqual(self.Larva.move(), [])
+                self.assertEqual(self.movement.move.call_args_list, [])
+
+                # Can consume and has target
+                self.assertEqual(self.Larva.move(), [])
+                self.assertEqual(self.movement.move.call_args_list, [])
+
+                # Can consume and does not have target
+                self.assertEqual(self.Larva.move(), [])
+                self.assertEqual(self.movement.move.call_args_list,
+                                 [mk.call(self.Larva)])
 
     def test__consume_plant(self):
         """test consume the plant"""
 
-        # Not alive
-        self.Larva.alive = False
-        self.Larva._consume_plant()
-        self.assertEqual(self.forage_plant.consume.call_args_list, [])
+        with mk.patch.object(larva.Larva, '_can_consume',
+                             autospec=True) as mkCan:
+            mkCan.__get__ = mk.MagicMock(side_effect=[False, True])
 
-        # Alive and full
-        self.Larva.alive = True
-        self.Larva.full  = True
-        self.Larva._consume_plant()
-        self.assertEqual(self.forage_plant.consume.call_args_list, [])
+            # Cannot consume
+            self.Larva._consume_plant()
+            self.assertEqual(self.forage_plant.consume.call_args_list, [])
 
-        # Alive and not full
-        self.Larva.alive = True
-        self.Larva.full  = False
-        self.Larva._consume_plant()
-        self.assertEqual(self.forage_plant.consume.call_args_list,
-                         [mk.call(self.Larva)])
+            # Can consume
+            self.Larva._consume_plant()
+            self.assertEqual(self.forage_plant.consume.call_args_list,
+                             [mk.call(self.Larva)])
 
     def test_consume_egg(self):
         """test consume the egg"""
@@ -376,37 +441,18 @@ class TestLarva(ut.TestCase):
     def test__consume_target(self):
         """test consume the target"""
 
-        with mk.patch.object(larva.Larva, 'consume_egg',
-                             autospec=True) as mkEgg:
-            with mk.patch.object(larva.Larva, 'consume_larva',
-                                 autospec=True) as mkLarva:
-                # Target is active
-                self.target.active = True
-                #   target is not egg_mass
-                self.Larva._consume_target()
-                self.assertEqual(mkLarva.call_args_list,
-                                 [mk.call(self.Larva, self.target)])
-                self.assertEqual(mkEgg.call_args_list, [])
-                mkLarva.reset_mock()
-                #   target is egg_mass
-                self.target.agent_key = keyword.egg_mass
-                self.Larva._consume_target()
-                self.assertEqual(mkEgg.call_args_list,
-                                 [mk.call(self.Larva, self.target)])
-                self.assertEqual(mkLarva.call_args_list, [])
+        with mk.patch.object(larva.Larva, '_has_target',
+                             autospec=True) as mkHas:
+            mkHas.__get__ = mk.MagicMock(side_effect=[False, True])
 
-                mkEgg.reset_mock()
-                # Target is not active
-                self.target.active = False
-                self.Larva._consume_target()
-                self.assertEqual(mkEgg.call_args_list, [])
-                self.assertEqual(mkLarva.call_args_list, [])
+            # Has no target
+            self.Larva._consume_target()
+            self.assertEqual(self.loss.consume.call_args_list, [])
 
-                # Target is none
-                self.Larva.target = None
-                self.Larva._consume_target()
-                self.assertEqual(mkEgg.call_args_list, [])
-                self.assertEqual(mkLarva.call_args_list, [])
+            # Has target
+            self.Larva._consume_target()
+            self.assertEqual(self.loss.consume.call_args_list,
+                             [mk.call(self.Larva)])
 
     def test__location_keys(self):
         """test get the location keys for cannibalism"""
@@ -685,6 +731,7 @@ class TestLarva(ut.TestCase):
         self.simulation.behaviors.forage_plant  = self.forage_plant
         self.simulation.behaviors.forage_egg    = self.forage_egg
         self.simulation.behaviors.forage_larva  = self.forage_larva
+        self.simulation.behaviors.target        = self.loss
 
         egg = mk.create_autospec(EggTest, spec_set=True)
         egg.unique_id  = self.unique_id
@@ -726,7 +773,8 @@ class TestLarva(ut.TestCase):
         self.assertEqual(self.Larva.forage_plant, self.forage_plant)
         self.assertEqual(self.Larva.forage_egg,   self.forage_egg)
         self.assertEqual(self.Larva.forage_larva, self.forage_larva)
-        self.assertEqual(self.Larva.cannibalism,  self.cannibalism,)
+        self.assertEqual(self.Larva.loss,         self.loss)
+        self.assertEqual(self.Larva.cannibalism,  self.cannibalism)
 
         # noinspection PyTypeChecker
         self.assertIsInstance(self.Larva._age_count, i_tools.count)

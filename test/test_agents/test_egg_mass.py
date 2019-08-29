@@ -52,6 +52,15 @@ class AdultTest(agent_adult.Adult):
     mate       = mk.MagicMock(spec=str)
 
 
+class EggTest(agent_egg.Egg):
+    """Class to add dynamic values for tests"""
+
+    unique_id  = mk.MagicMock(spec=str)
+    simulation = mk.create_autospec(SimulationTest,    spec_set=True)
+    location   = mk.create_autospec(location.Location, spec_set=True)
+    genotype   = mk.MagicMock(spec=str)
+
+
 class EggMassTest(egg_mass.EggMass):
     """Class to add dynamic values for tests"""
 
@@ -74,8 +83,9 @@ class TestEggs(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.eggs = [mk.create_autospec(agent_egg.Egg, spec_set=True)
-                     for _ in range(3)]
+        self.eggs = {mk.MagicMock(spec=str):
+                         mk.create_autospec(agent_egg.Egg, spec_set=True)
+                     for _ in range(3)}
         self.mass = mk.MagicMock(spec=float)
 
         self.Eggs = egg_mass.Eggs(self.eggs,
@@ -84,7 +94,7 @@ class TestEggs(ut.TestCase):
     def test___init__(self):
         """test __init__ for class"""
 
-        self.assertIsInstance(self.Eggs, collect.UserList)
+        self.assertIsInstance(self.Eggs, collect.UserDict)
         self.assertIsInstance(self.Eggs, egg_mass.Eggs)
 
         self.assertEqual(self.Eggs.mass, self.mass)
@@ -97,7 +107,7 @@ class TestEggs(ut.TestCase):
 
         self.Eggs.activate()
 
-        for egg in self.eggs:
+        for egg in self.eggs.values():
             self.assertEqual(egg.activate.call_args_list,
                              [mk.call()])
 
@@ -106,25 +116,28 @@ class TestEggs(ut.TestCase):
 
         self.Eggs.deactivate()
 
-        for egg in self.eggs:
+        for egg in self.eggs.values():
             self.assertEqual(egg.deactivate.call_args_list,
                              [mk.call()])
 
     def test_cannibalize(self):
         """test cannibalize the number of eggs"""
 
+        unique_ids = list(self.eggs.keys())
+
         with mk.patch.object(rnd, 'shuffle') as mkRND:
             for number in range(len(self.eggs)):
                 self.Eggs.cannibalize(number)
                 self.assertEqual(mkRND.call_args_list,
-                                 [mk.call(self.Eggs)])
+                                 [mk.call(unique_ids)])
                 mkRND.reset_mock()
 
                 for index in range(number):
-                    self.assertEqual(self.eggs[index].die.call_args_list,
+                    unique_id = unique_ids[index]
+                    self.assertEqual(self.eggs[unique_id].die.call_args_list,
                                      [mk.call(keyword.cannibalism)])
-                    self.eggs[index].reset_mock()
-                for egg in self.eggs:
+                    self.eggs[unique_id].reset_mock()
+                for egg in self.eggs.values():
                     self.assertEqual(egg.die.call_args_list, [])
                     
     def test_initialize(self):
@@ -141,20 +154,23 @@ class TestEggs(ut.TestCase):
         sim.behaviors.survive_egg = survive
         sim.behaviors.develop_egg = develop
 
+        genotypes  = [mk.MagicMock(spec=str) for _ in range(3)]
+        unique_ids = [mk.MagicMock(spec=str) for _ in range(3)]
+
         mass = mk.create_autospec(EggMassTest, spec_set=True)
         mass.simulation = sim
         mass.location   = loc
-
-        genotypes = [mk.MagicMock(spec=str) for _ in range(3)]
+        mass.new_unique_id.side_effect = unique_ids
 
         self.Eggs = egg_mass.Eggs.initialize(mass,
                                              genotypes,
                                              self.mass)
-        self.assertIsInstance(self.Eggs, collect.UserList)
+        self.assertIsInstance(self.Eggs, collect.UserDict)
         self.assertIsInstance(self.Eggs, egg_mass.Eggs)
         self.assertEqual(self.Eggs.mass, self.mass)
 
-        for index, egg in enumerate(self.Eggs):
+        for index, this in enumerate(self.Eggs.items()):
+            unique_id, egg = this
             self.assertIsInstance(egg, agent_egg.Egg)
 
             self.assertEqual(egg.agent_key, keyword.egg)
@@ -162,8 +178,9 @@ class TestEggs(ut.TestCase):
             self.assertEqual(egg.age, 0)
             self.assertEqual(egg.death, keyword.alive)
 
+            self.assertEqual(unique_id, egg.unique_id)
             self.assertEqual(egg.unique_id,
-                             mass.new_unique_id.return_value)
+                             unique_ids[index])
             self.assertEqual(mass.new_unique_id.call_args_list[index],
                              mk.call())
             self.assertEqual(egg.location,
@@ -450,11 +467,11 @@ class TestEggMass(ut.TestCase):
     def test_remove(self):
         """test remove an egg from egg_mass"""
         
-        egg = mk.create_autospec(EggsTest, spec_set=True)
+        egg = mk.create_autospec(EggTest, spec_set=True)
         
         self.EggMass.remove(egg)
-        self.assertEqual(self.eggs.remove.call_args_list,
-                         [mk.call(egg)])
+        self.assertEqual(self.eggs.__delitem__.call_args_list,
+                         [mk.call(egg.unique_id)])
 
     def test_reset(self):
         """test reset the egg_mass"""
@@ -632,7 +649,7 @@ class TestEggMass(ut.TestCase):
         self.assertEqual(self.EggMass.location,   self.location)
 
         self.assertIsInstance(self.EggMass.eggs, egg_mass.Eggs)
-        self.assertEqual(self.EggMass.eggs,      [])
+        self.assertEqual(self.EggMass.eggs,      {})
         self.assertEqual(self.EggMass.eggs.mass, -1)
 
         # noinspection PyTypeChecker
@@ -685,7 +702,8 @@ class TestEggMass(ut.TestCase):
             self.assertIsInstance(self.EggMass.eggs, egg_mass.Eggs)
             self.assertEqual(self.EggMass.eggs.mass, mass)
 
-            for index, egg in enumerate(self.EggMass.eggs):
+            for index, this in enumerate(self.EggMass.eggs.items()):
+                unique_id, egg = this
                 self.assertIsInstance(egg, agent_egg.Egg)
 
                 self.assertEqual(egg.agent_key, keyword.egg)
@@ -693,6 +711,7 @@ class TestEggMass(ut.TestCase):
                 self.assertEqual(egg.age, 0)
                 self.assertEqual(egg.death, keyword.alive)
 
+                self.assertEqual(unique_id, egg.unique_id)
                 self.assertEqual(egg.unique_id,
                                  str(self.unique_id) + str(index))
                 self.assertEqual(egg.location, locations[index])
@@ -770,7 +789,8 @@ class TestEggMass(ut.TestCase):
                 self.assertIsInstance(self.EggMass.eggs, egg_mass.Eggs)
                 self.assertEqual(self.EggMass.eggs.mass, mass)
 
-                for index_j, egg in enumerate(self.EggMass.eggs):
+                for index_j, this in enumerate(self.EggMass.eggs.items()):
+                    unique_id, egg = this
                     self.assertIsInstance(egg, agent_egg.Egg)
 
                     self.assertEqual(egg.agent_key, keyword.egg)
@@ -778,6 +798,7 @@ class TestEggMass(ut.TestCase):
                     self.assertEqual(egg.age, 0)
                     self.assertEqual(egg.death, keyword.alive)
 
+                    self.assertEqual(unique_id, egg.unique_id)
                     self.assertEqual(egg.unique_id,
                                      self.EggMass.unique_id + str(index_j))
                     self.assertEqual(egg.location, locations[index_j])
@@ -847,7 +868,8 @@ class TestEggMass(ut.TestCase):
             self.assertIsInstance(self.EggMass.eggs, egg_mass.Eggs)
             self.assertEqual(self.EggMass.eggs.mass, mass)
 
-            for index, egg in enumerate(self.EggMass.eggs):
+            for index, this in enumerate(self.EggMass.eggs.items()):
+                unique_id, egg = this
                 self.assertIsInstance(egg, agent_egg.Egg)
 
                 self.assertEqual(egg.agent_key, keyword.egg)
@@ -855,6 +877,7 @@ class TestEggMass(ut.TestCase):
                 self.assertEqual(egg.age, 0)
                 self.assertEqual(egg.death, keyword.alive)
 
+                self.assertEqual(unique_id, egg.unique_id)
                 self.assertEqual(egg.unique_id,
                                  str(self.unique_id) + str(index))
                 self.assertEqual(egg.location, locations[index])

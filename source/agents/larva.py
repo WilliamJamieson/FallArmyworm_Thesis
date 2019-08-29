@@ -25,6 +25,7 @@ class Larva(insect.Insect):
         forage_plant: forage a plant system
         forage_egg:   forage an egg  system
         forage_larva: forage a larva system
+        loss:         target loss/consume system
         cannibalism:  perform cannibalism system
 
     Methods:
@@ -54,6 +55,7 @@ class Larva(insect.Insect):
     forage_plant: hint.plant_forage
     forage_egg:   hint.egg_forage
     forage_larva: hint.larva_forage
+    loss:         hint.target_loss
     cannibalism:  hint.cannibalism
 
     target: hint.target = None
@@ -63,6 +65,18 @@ class Larva(insect.Insect):
         """Determine if this larva is still active"""
 
         return self.mass > 0
+
+    @property
+    def _can_consume(self) -> bool:
+        """Determine if this larva can consume"""
+
+        return self.alive and (not self.full)
+
+    @property
+    def _has_target(self) -> bool:
+        """Determine if this larva has a valid target"""
+
+        return (self.target is not None) and self.target.active
 
     def add_plant(self, available: float) -> float:
         """
@@ -193,7 +207,8 @@ class Larva(insect.Insect):
             empty list
         """
 
-        self.movement.move(self)
+        if self._can_consume and (not self._has_target):
+            self.movement.move(self)
 
         return []
 
@@ -205,7 +220,7 @@ class Larva(insect.Insect):
             consume the plant
         """
 
-        if self.alive and (not self.full):
+        if self._can_consume:
             self.forage_plant.consume(self)
 
     def consume_egg(self, egg_mass: hint.egg_mass) -> None:
@@ -244,11 +259,8 @@ class Larva(insect.Insect):
             consumes the target
         """
 
-        if (self.target is not None) and self.target.active:
-            if self.target.agent_key == keyword.egg_mass:
-                self.consume_egg(self.target)
-            else:
-                self.consume_larva(self.target)
+        if self._has_target:
+            self.loss.consume(self)
 
     def _location_keys(self, **kwargs) -> hint.location_keys:
         """
@@ -369,12 +381,13 @@ class Larva(insect.Insect):
         forage_plant = simulation.behaviors.forage_plant
         forage_egg   = simulation.behaviors.forage_egg
         forage_larva = simulation.behaviors.forage_larva
+        loss         = simulation.behaviors.target
 
         return cls(agent_key, unique_id, simulation, location, alive,
                    mass, genotype, age, death,
                    plant_gut, egg_gut, larva_gut, full, starve,
                    gut, biomass, survival, development, movement,
-                   forage_plant, forage_egg, forage_larva, cannibalism)
+                   forage_plant, forage_egg, forage_larva, loss, cannibalism)
 
     @classmethod
     def setup(cls, unique_id_num: int,

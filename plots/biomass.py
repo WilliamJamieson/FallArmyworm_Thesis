@@ -314,6 +314,13 @@ plt.plot(t, biomass_data_hetero[7], 'r--', label='95% Confidence Heterozygous')
 plt.plot(t, biomass_data_hetero[8], 'r--')
 plt.plot(t, biomass_data_homo_s[7], 'k--', label='95% Confidence Susceptible')
 plt.plot(t, biomass_data_homo_s[8], 'k--')
+# #       Plot pupation data
+# plt.axhline(input_biomass.fin_point_r[1], color='b', linestyle=':')
+# plt.axvline(input_biomass.fin_point_r[0], color='b', linestyle=':',
+#             label='Resistant Pupation')
+# plt.axhline(input_biomass.fin_point_s[1], color='k', linestyle=':')
+# plt.axvline(input_biomass.fin_point_s[0], color='k', linestyle=':',
+#             label='Susceptible Pupation')
 #       Add plot labels
 plt.legend()
 plt.xlabel('time (days)')

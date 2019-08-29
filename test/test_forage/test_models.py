@@ -267,13 +267,163 @@ class TestLarva(ut.TestCase):
         """test call the class"""
 
         target_mass = mk.MagicMock(spec=float)
-        mass         = mk.MagicMock(spec=float)
-        genotype     = mk.MagicMock(spec=str)
+        mass        = mk.MagicMock(spec=float)
+        genotype    = mk.MagicMock(spec=str)
 
         self.assertEqual(self.Larva(target_mass, mass, genotype),
                          self.factor.__mul__.return_value)
         self.assertEqual(self.factor.__mul__.call_args_list,
                          [mk.call(target_mass)])
+
+
+class TestLoss(ut.TestCase):
+    """test target Loss mathematical model"""
+
+    def setUp(self):
+        """Setup the tests"""
+
+        self.slope = mk.MagicMock(spec=dict)
+        self.mid   = mk.MagicMock(spec=dict)
+
+        self.max_gut      = mk.MagicMock(spec=biomass.MaxGut)
+        self.forage_egg   = mk.MagicMock(spec=model.Egg)
+        self.forage_larva = mk.MagicMock(spec=model.Larva)
+
+        self.Loss = model.Loss(self.slope,
+                               self.mid,
+                               self.max_gut,
+                               self.forage_egg,
+                               self.forage_larva)
+
+    def test___init__(self):
+        """test __init__ for class"""
+
+        self.assertIsInstance(self.Loss, models.Model)
+        self.assertIsInstance(self.Loss, model.Loss)
+
+        self.assertEqual(self.Loss.slope,        self.slope)
+        self.assertEqual(self.Loss.mid,          self.mid)
+        self.assertEqual(self.Loss.max_gut,      self.max_gut)
+        self.assertEqual(self.Loss.forage_egg,   self.forage_egg)
+        self.assertEqual(self.Loss.forage_larva, self.forage_larva)
+
+        self.assertEqual(self.Loss.model_key, keyword.loss)
+
+        self.assertTrue(dclass.is_dataclass(self.Loss))
+        
+    def test__diff(self):
+        """test find the difference in food and gut"""
+
+        mass        = mk.MagicMock(spec=float)
+        target_mass = mk.MagicMock(spec=float)
+        genotype    = mk.MagicMock(spec=str)
+
+        # Is egg mass
+        self.assertEqual(self.Loss._diff(mass, target_mass, genotype,
+                                         keyword.egg_mass),
+                         self.forage_egg.return_value.__sub__.return_value)
+        self.assertEqual(self.forage_egg.return_value.__sub__.call_args_list,
+                         [mk.call(self.max_gut.return_value)])
+        self.assertEqual(self.forage_egg.call_args_list,
+                         [mk.call(target_mass, mass, genotype)])
+        self.assertEqual(self.max_gut.call_args_list,
+                         [mk.call(mass)])
+        self.assertEqual(self.forage_larva.call_args_list, [])
+
+        self.forage_egg.reset_mock()
+        self.max_gut.reset_mock()
+        # Is larva
+        self.assertEqual(self.Loss._diff(mass, target_mass, genotype,
+                                         keyword.larva),
+                         self.forage_larva.return_value.__sub__.return_value)
+        self.assertEqual(self.forage_larva.return_value.__sub__.call_args_list,
+                         [mk.call(self.max_gut.return_value)])
+        self.assertEqual(self.forage_larva.call_args_list,
+                         [mk.call(target_mass, mass, genotype)])
+        self.assertEqual(self.max_gut.call_args_list,
+                         [mk.call(mass)])
+        self.assertEqual(self.forage_egg.call_args_list, [])
+
+    def test__prob(self):
+        """test find the probability"""
+
+        mass        = mk.MagicMock(spec=float)
+        target_mass = mk.MagicMock(spec=float)
+        genotype    = mk.MagicMock(spec=str)
+        target_key  = mk.MagicMock(spec=str)
+
+        with mk.patch.object(model.Loss, '_diff', autospec=True) as mkDiff:
+            with mk.patch.object(np, 'exp') as mkExp:
+                self.assertEqual(self.Loss._prob(mass, target_mass,
+                                                 genotype, target_key),
+                                 self.mid.__getitem__.return_value.
+                                    __mul__.return_value.
+                                    __add__.return_value.
+                                    __rtruediv__.return_value)
+                self.assertEqual(self.mid.__getitem__.return_value.
+                                    __mul__.return_value.
+                                    __add__.return_value.
+                                    __rtruediv__.call_args_list,
+                                  [mk.call(1)])
+                self.assertEqual(self.mid.__getitem__.return_value.
+                                    __mul__.return_value.
+                                    __add__.call_args_list,
+                                 [mk.call(1)])
+                self.assertEqual(self.mid.__getitem__.return_value.
+                                    __mul__.call_args_list,
+                                 [mk.call(mkExp.return_value)])
+                self.assertEqual(self.mid.__getitem__.call_args_list,
+                                 [mk.call(target_key)])
+                self.assertEqual(mkExp.call_args_list,
+                                 [mk.call(self.slope.__getitem__.return_value.
+                                            __neg__.return_value.
+                                            __mul__.return_value)])
+                self.assertEqual(self.slope.__getitem__.return_value.
+                                    __neg__.return_value.
+                                    __mul__.call_args_list,
+                                 [mk.call(mkDiff.return_value)])
+                self.assertEqual(self.slope.__getitem__.return_value.
+                                    __neg__.call_args_list,
+                                 [mk.call()])
+                self.assertEqual(self.slope.__getitem__.call_args_list,
+                                 [mk.call(target_key)])
+                self.assertEqual(mkDiff.call_args_list,
+                                 [mk.call(self.Loss, mass, target_mass,
+                                          genotype, target_key)])
+
+    def test___call__(self):
+        """test call the model"""
+
+        mass        = mk.MagicMock(spec=float)
+        target_mass = mk.MagicMock(spec=float)
+        genotype    = mk.MagicMock(spec=str)
+        target_key  = mk.MagicMock(spec=str)
+
+        with mk.patch.object(model.Loss, '_prob', autospec=True) as mkProb:
+            with mk.patch.object(rnd, 'random') as mkRND:
+                mkRND.return_value.__le__.side_effect = [True, False]
+
+                # test true
+                self.assertTrue(self.Loss(mass, target_mass, genotype, target_key))
+                self.assertEqual(mkRND.return_value.__le__.call_args_list,
+                                 [mk.call(mkProb.return_value)])
+                self.assertEqual(mkRND.call_args_list,
+                                 [mk.call()])
+                self.assertEqual(mkProb.call_args_list,
+                                 [mk.call(self.Loss, mass, target_mass,
+                                          genotype, target_key)])
+
+                mkRND.reset_mock()
+                mkProb.reset_mock()
+                # test false
+                self.assertFalse(self.Loss(mass, target_mass, genotype, target_key))
+                self.assertEqual(mkRND.return_value.__le__.call_args_list,
+                                 [mk.call(mkProb.return_value)])
+                self.assertEqual(mkRND.call_args_list,
+                                 [mk.call()])
+                self.assertEqual(mkProb.call_args_list,
+                                 [mk.call(self.Loss, mass, target_mass,
+                                          genotype, target_key)])
 
 
 class TestFight(ut.TestCase):

@@ -16,6 +16,7 @@ import source.forage.cannibalism as agent_cannibalism
 import source.forage.egg         as agent_forage_egg
 import source.forage.larva       as agent_forage_larva
 import source.forage.plant       as agent_forage_plant
+import source.forage.target      as agent_target
 
 import source.movement.adult as agent_move_adult
 import source.movement.larva as agent_move_larva
@@ -55,6 +56,8 @@ class TestBehaviors(ut.TestCase):
                                                spec_set=True)
         self.forage_plant = mk.create_autospec(agent_forage_plant.Plant,
                                                spec_set=True)
+        self.target       = mk.create_autospec(agent_target.Target,
+                                               spec_set=True)
 
         self.move_adult = mk.create_autospec(agent_move_adult.Adult,
                                              spec_set=True)
@@ -82,6 +85,7 @@ class TestBehaviors(ut.TestCase):
                                             self.forage_egg,
                                             self.forage_larva,
                                             self.forage_plant,
+                                            self.target,
                                             self.move_adult,
                                             self.move_larva,
                                             self.lay,
@@ -107,6 +111,7 @@ class TestBehaviors(ut.TestCase):
         self.assertEqual(self.Behavior.forage_egg,   self.forage_egg)
         self.assertEqual(self.Behavior.forage_larva, self.forage_larva)
         self.assertEqual(self.Behavior.forage_plant, self.forage_plant)
+        self.assertEqual(self.Behavior.target,       self.target)
 
         self.assertEqual(self.Behavior.move_adult, self.move_adult)
         self.assertEqual(self.Behavior.move_larva, self.move_larva)
@@ -186,7 +191,8 @@ class TestBehaviors(ut.TestCase):
                   keyword.radius:       mk.MagicMock(spec=callable),
                   keyword.egg_forage:   mk.MagicMock(spec=callable),
                   keyword.larva_forage: mk.MagicMock(spec=callable),
-                  keyword.plant_forage: mk.MagicMock(spec=callable)}
+                  keyword.plant_forage: mk.MagicMock(spec=callable),
+                  keyword.loss:         mk.MagicMock(spec=callable)}
 
         # Already present
         self.Behavior.make_forage(**kwargs)
@@ -194,12 +200,14 @@ class TestBehaviors(ut.TestCase):
         self.assertEqual(self.Behavior.forage_egg,   self.forage_egg)
         self.assertEqual(self.Behavior.forage_larva, self.forage_larva)
         self.assertEqual(self.Behavior.forage_plant, self.forage_plant)
+        self.assertEqual(self.Behavior.target,       self.target)
 
         # Not present
         self.Behavior.cannibalism  = None
         self.Behavior.forage_egg   = None
         self.Behavior.forage_larva = None
         self.Behavior.forage_plant = None
+        self.Behavior.target       = None
         self.Behavior.make_forage(**kwargs)
 
         self.assertIsInstance(self.Behavior.cannibalism,
@@ -225,6 +233,11 @@ class TestBehaviors(ut.TestCase):
                               agent_forage_plant.Plant)
         self.assertEqual(self.Behavior.forage_plant.forage,
                          kwargs[keyword.plant_forage])
+
+        self.assertIsInstance(self.Behavior.target,
+                              agent_target.Target)
+        self.assertEqual(self.Behavior.target.loss,
+                         kwargs[keyword.loss])
 
     def test_make_movement(self):
         """test make movement behaviors"""

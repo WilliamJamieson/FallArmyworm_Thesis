@@ -111,6 +111,7 @@ pupa_development  = 'pupa_development'
 egg_forage   = 'egg_forage'
 larva_forage = 'larva_forage'
 plant_forage = 'plant_forage'
+loss         = 'loss'
 
 fight     = 'fight'
 encounter = 'encounter'

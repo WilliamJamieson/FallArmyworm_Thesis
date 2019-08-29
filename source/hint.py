@@ -41,6 +41,8 @@ if typing.TYPE_CHECKING:
     import source.forage.larva       as main_larva_forage
     # noinspection PyUnresolvedReferences
     import source.forage.plant       as main_plant_forage
+    # noinspection PyUnresolvedReferences
+    import source.forage.target      as main_target
 
     # noinspection PyUnresolvedReferences
     import source.migration.emigration  as main_emigration
@@ -109,6 +111,8 @@ egg_masses    = typing.List[egg_mass]
 
 genotypes = typing.List[str]
 eggs      = typing.List[egg]
+
+egg_dict = typing.Dict[str, egg]
 
 alleles = typing.Tuple[int, int]
 
@@ -298,10 +302,12 @@ adult_movement = 'main_adult_movement.Adult'
 forage_plant = typing.Callable[[float, float, str, str], float]
 forage_egg   = typing.Callable[[float, float, str],      float]
 forage_larva = typing.Callable[[float, float, str],      float]
+loss         = typing.Callable[[float, float, str, str], bool]
 
 plant_forage = 'main_plant_forage.Plant'
 egg_forage   = 'main_egg_forage.Egg'
 larva_forage = 'main_larva_forage.Larva'
+target_loss  = 'main_target.Target'
 
 #       Cannibalism Hints
 target    = typing.Union[egg_mass, larva]

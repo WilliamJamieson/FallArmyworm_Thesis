@@ -13,6 +13,7 @@ import source.forage.cannibalism as agent_cannibalism
 import source.forage.egg         as agent_forage_egg
 import source.forage.larva       as agent_forage_larva
 import source.forage.plant       as agent_forage_plant
+import source.forage.target      as agent_target
 
 import source.movement.adult as agent_move_adult
 import source.movement.larva as agent_move_larva
@@ -39,10 +40,11 @@ class Behaviors(object):
         develop_larva: larva development behavior
         develop_pupa:   pupa development behavior
 
-        cannibalism:  cannibalism     behavior
-        forage_egg:   egg   consuming behavior
-        forage_larva: larva consuming behavior
-        forage_plant: plant consuming behavior
+        cannibalism:  cannibalism      behavior
+        forage_egg:   egg    consuming behavior
+        forage_larva: larva  consuming behavior
+        forage_plant: plant  consuming behavior
+        target:       target consuming behavior
 
         move_adult: adult movement behavior
         move_larva: larva movement behavior
@@ -67,6 +69,7 @@ class Behaviors(object):
     forage_egg:   hint.egg_forage   = None
     forage_larva: hint.larva_forage = None
     forage_plant: hint.plant_forage = None
+    target:       hint.target_loss  = None
 
     move_adult: hint.adult_movement = None
     move_larva: hint.larva_movement = None
@@ -138,6 +141,9 @@ class Behaviors(object):
 
         if self.forage_plant is None:
             self.forage_plant = agent_forage_plant.Plant.setup(**kwargs)
+
+        if self.target is None:
+            self.target = agent_target.Target.setup(**kwargs)
 
     def make_movement(self, **kwargs) -> None:
         """

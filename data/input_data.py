@@ -134,6 +134,12 @@ starvation_sigma = 0.05
 egg_factor            = 1
 larva_factor          = 1
 
+egg_slope   = 4
+larva_slope = 4
+egg_mid     = 0.9
+larva_mid   = 0.25
+
+
 # Cannibalism measurements
 fight_steepness       = 4
 cannibalism_encounter = 1

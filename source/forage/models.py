@@ -236,6 +236,96 @@ class Larva(models.Model):
 
 
 @dclass.dataclass
+class Loss(models.Model):
+    """
+    Class for describing the probability that a larva leaves a target food:
+
+        Fixed probability
+
+    Variables:
+        prob: probability of leaving target
+    """
+
+    model_key = keyword.loss
+
+    slope: hint.variable
+    mid:   hint.variable
+
+    max_gut:      hint.max_gut
+    forage_egg:   hint.forage_egg
+    forage_larva: hint.forage_larva
+
+    def _diff(self, mass:        float,
+                    target_mass: float,
+                    genotype:    str,
+                    target_key:  str) -> float:
+        """
+        Find the diff between amount and gut
+
+        Args:
+            mass:        mass of larva
+            target_mass: mass of target
+            genotype:    genotype of larva
+            target_key:  type of target
+
+        Returns:
+            Food - gut
+        """
+
+        gut = self.max_gut(mass)
+
+        if target_key == keyword.egg_mass:
+            food = self.forage_egg(target_mass, mass, genotype)
+        else:
+            food = self.forage_larva(target_mass, mass, genotype)
+
+        return food - gut
+
+    def _prob(self, mass:        float,
+                    target_mass: float,
+                    genotype:    str,
+                    target_key:  str) -> float:
+        """
+        Find the probability of staying
+
+        Args:
+            mass:        mass of larva
+            target_mass: mass of target
+            genotype:    genotype of larva
+            target_key:  type of target
+
+        Returns:
+            probability of staying with food source
+        """
+
+        d = self._diff(mass, target_mass, genotype, target_key)
+        r = self.slope[target_key]
+        q = self.mid[  target_key]
+
+        return 1 / (q * np.exp(-r*d) + 1)
+
+    def __call__(self, mass:        float,
+                       target_mass: float,
+                       genotype:    str,
+                       target_key:  str) -> bool:
+        """
+        Call the model
+
+        Args:
+            mass:        mass of larva
+            target_mass: mass of target
+            genotype:    genotype of larva
+            target_key:  type of target
+
+        Returns:
+            if we leave the target
+        """
+
+        return rnd.random() <= self._prob(mass, target_mass,
+                                          genotype, target_key)
+
+
+@dclass.dataclass
 class Fight(models.Model):
     """
     Class for describing results of a larva cannibalistic fight
