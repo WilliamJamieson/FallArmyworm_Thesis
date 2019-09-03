@@ -35,7 +35,8 @@ class Pupa(insect.Insect):
             empty list
         """
 
-        self.survival.survive(self)
+        if self.alive:
+            self.survival.survive(self)
 
         return []
 
@@ -50,7 +51,8 @@ class Pupa(insect.Insect):
             empty list
         """
 
-        self.development.develop(self)
+        if self.alive:
+            self.development.develop(self)
 
         return []
 
@@ -124,8 +126,10 @@ class Pupa(insect.Insect):
             A pupa version of this larva
         """
 
+        location = larva.location[:keyword.pupa_depth]
+
         return cls.initialize(larva.unique_id,
                               larva.simulation,
-                              larva.location,
+                              location,
                               larva.mass,
                               larva.genotype)

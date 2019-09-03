@@ -150,6 +150,13 @@ class TestAdult(ut.TestCase):
     def test_move(self):
         """test run move behavior"""
 
+        # Adult is not alive
+        self.Adult.alive = False
+        self.assertEqual(self.Adult.move(), [])
+        self.assertEqual(self.movement.move.call_args_list, [])
+
+        # Adult is alive
+        self.Adult.alive = True
         self.assertEqual(self.Adult.move(), [])
         self.assertEqual(self.movement.move.call_args_list,
                          [mk.call(self.Adult)])
@@ -363,14 +370,22 @@ class TestAdult(ut.TestCase):
     def test_reproduce(self):
         """test reproduce the agents"""
 
-        # Test has a mate
+        # Adult is not alive
+        self.Adult.alive = False
+        self.assertEqual(self.Adult.reproduce(), [])
+        self.assertEqual(self.mating.mate.call_args_list, [])
+        self.assertEqual(self.lay.lay.call_args_list, [])
+
+        # Adult is alive
+        self.Adult.alive = True
+        #   Test has a mate
         self.assertEqual(self.Adult.reproduce(),
                          self.lay.lay.return_value)
         self.assertEqual(self.lay.lay.call_args_list,
                          [mk.call(self.Adult)])
         self.assertEqual(self.mating.mate.call_args_list, [])
 
-        # Test no mate
+        #   Test no mate
         self.lay.reset_mock()
         self.Adult.mate = None
         self.assertEqual(self.Adult.reproduce(), [])
@@ -429,7 +444,18 @@ class TestAdult(ut.TestCase):
             self.Adult.mate     = self.mate
             self.simulation.models.reset_mock()
             self.lay.reset_mock()
-            # Is mated
+            # Is mated and not alive
+            self.Adult.alive = False
+            self.Adult.agent_key = keyword.mated
+            self.assertEqual(self.Adult.reset(), [])
+            self.assertEqual(self.Adult.mate, self.mate)
+            self.assertEqual(self.Adult.num_eggs, self.num_eggs)
+            self.assertEqual(self.lay.reset.call_args_list, [])
+            self.assertEqual(mkTransition.call_args_list, [])
+            self.assertEqual(self.simulation.models.
+                             __getitem__.call_args_list, [])
+            # Is mated and alive
+            self.Adult.alive = True
             self.Adult.agent_key = keyword.mated
             self.assertEqual(self.Adult.reset(), [])
             self.assertEqual(self.Adult.mate, self.mate)

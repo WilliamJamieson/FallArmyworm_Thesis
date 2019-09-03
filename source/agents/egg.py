@@ -49,7 +49,8 @@ class Egg(insect.Insect):
             empty list
         """
 
-        self.survival.survive(self)
+        if self.alive:
+            self.survival.survive(self)
 
         return []
 
@@ -64,7 +65,8 @@ class Egg(insect.Insect):
             empty list
         """
 
-        self.development.develop(self)
+        if self.alive:
+            self.development.develop(self)
 
         return []
 

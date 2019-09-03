@@ -113,6 +113,13 @@ class TestPupa(ut.TestCase):
     def test_survive(self):
         """test run survive behavior"""
 
+        # Pupa is not alive
+        self.Pupa.alive = False
+        self.assertEqual(self.Pupa.survive(), [])
+        self.assertEqual(self.survival.survive.call_args_list, [])
+
+        # Pupa is alive
+        self.Pupa.alive = True
         self.assertEqual(self.Pupa.survive(), [])
         self.assertEqual(self.survival.survive.call_args_list,
                          [mk.call(self.Pupa)])
@@ -120,6 +127,13 @@ class TestPupa(ut.TestCase):
     def test_develop(self):
         """test run develop behavior"""
 
+        # Pupa is not alive
+        self.Pupa.alive = False
+        self.assertEqual(self.Pupa.develop(), [])
+        self.assertEqual(self.development.develop.call_args_list, [])
+
+        # Pupa is alive
+        self.Pupa.alive = True
         self.assertEqual(self.Pupa.develop(), [])
         self.assertEqual(self.development.develop.call_args_list,
                          [mk.call(self.Pupa)])
@@ -252,7 +266,10 @@ class TestPupa(ut.TestCase):
 
         self.assertEqual(self.Pupa.unique_id,  self.unique_id)
         self.assertEqual(self.Pupa.simulation, self.simulation)
-        self.assertEqual(self.Pupa.location,   self.location)
+        self.assertEqual(self.Pupa.location,
+                         self.location.__getitem__.return_value)
+        self.assertEqual(self.location.__getitem__.call_args_list,
+                         [mk.call(slice(None, keyword.pupa_depth, None))])
 
         self.assertEqual(self.Pupa.mass,     self.mass)
         self.assertEqual(self.Pupa.genotype, self.genotype)

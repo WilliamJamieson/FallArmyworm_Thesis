@@ -39,7 +39,7 @@ class Simulator(object):
     data        = (np.inf,)
     steps       = [({keyword.female: [keyword.move,
                                       keyword.reproduce],
-                     keyword.male:   [keyword.move]}, 2),
+                     keyword.male:   [keyword.move]}, 24),
                    ({keyword.female: [keyword.advance_age,
                                       keyword.reset],
                      keyword.male:   [keyword.advance_age,

@@ -126,3 +126,5 @@ dmypy.json
 .pyre/
 data/*.graph
 plots/*.png
+simulations/*.png
+simulations/*.sqlite

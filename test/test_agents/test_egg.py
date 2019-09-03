@@ -127,6 +127,13 @@ class TestEgg(ut.TestCase):
     def test_survive(self):
         """test run survive behavior"""
 
+        # Egg is not alive
+        self.Egg.alive = False
+        self.assertEqual(self.Egg.survive(), [])
+        self.assertEqual(self.survival.survive.call_args_list, [])
+
+        # Egg is alive
+        self.Egg.alive = True
         self.assertEqual(self.Egg.survive(), [])
         self.assertEqual(self.survival.survive.call_args_list,
                          [mk.call(self.Egg)])
@@ -134,6 +141,13 @@ class TestEgg(ut.TestCase):
     def test_develop(self):
         """test run develop behavior"""
 
+        # Egg is not alive
+        self.Egg.alive = False
+        self.assertEqual(self.Egg.develop(), [])
+        self.assertEqual(self.development.develop.call_args_list, [])
+
+        # Egg is alive
+        self.Egg.alive = True
         self.assertEqual(self.Egg.develop(), [])
         self.assertEqual(self.development.develop.call_args_list,
                          [mk.call(self.Egg)])

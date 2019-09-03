@@ -26,7 +26,7 @@ class Emigration(object):
         emigration: run emigration
     """
 
-    location = agent_location.Location([0])
+    location = agent_location.Location([0]).location_key
 
     mu:         float
     sigma:      float
@@ -83,7 +83,7 @@ class Emigration(object):
 
         population = []
         for agent_key in self.agent_keys:
-            population.extend(agents[self.location][agent_key])
+            population.extend(agents[self.location][agent_key].agents)
 
         return population
 

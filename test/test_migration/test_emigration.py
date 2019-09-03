@@ -12,8 +12,7 @@ import source.agents.agent as main_agent
 
 import source.migration.emigration as emigration
 
-import source.space.agents   as main_agents
-import source.space.location as agent_location
+import source.space.agents as main_agents
 
 
 class TestEmigration(ut.TestCase):
@@ -40,8 +39,7 @@ class TestEmigration(ut.TestCase):
         self.assertEqual(self.Emigration.sigma,      self.sigma)
         self.assertEqual(self.Emigration.agent_keys, self.agent_keys)
 
-        self.assertIsInstance(self.Emigration.location, agent_location.Location)
-        self.assertEqual(self.Emigration.location, [0])
+        self.assertEqual(self.Emigration.location, (0,))
 
         self.assertTrue(dclass.is_dataclass(self.Emigration))
         
@@ -119,7 +117,7 @@ class TestEmigration(ut.TestCase):
                              mk.create_autospec(main_agent.Agent, spec_set=True)
                          for _ in range(3)}
             agent_bin = main_agents.AgentBin(pop, mk.MagicMock(), agent_key)
-            population.extend(agent_bin)
+            population.extend(agent_bin.agents)
             agent_bins.append(agent_bin)
 
         agents.__getitem__.return_value.__getitem__.side_effect = agent_bins
@@ -218,6 +216,5 @@ class TestEmigrations(ut.TestCase):
             self.assertEqual(emigrate.sigma,      setup_tuples[index][1])
             self.assertEqual(emigrate.agent_keys, setup_tuples[index][2])
 
-            self.assertIsInstance(emigrate.location, agent_location.Location)
-            self.assertEqual(emigrate.location, [0])
+            self.assertEqual(emigrate.location, (0,))
         self.assertEqual(len(self.Emigrations), 3)

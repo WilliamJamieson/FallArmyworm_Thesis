@@ -338,7 +338,18 @@ class TestLarva(ut.TestCase):
 
         self.biomass.grow.return_value.__lt__.side_effect = [False, True]
 
-        # Test that it does not starve
+        # Larva is not alive
+        self.Larva.alive = False
+        #   Test that it does not starve
+        self.assertEqual(self.Larva.grow(), [])
+        self.assertEqual(self.Larva.mass, self.mass)
+        self.assertEqual(self.mass.__add__.call_args_list, [])
+        self.assertEqual(self.biomass.grow.call_args_list, [])
+        self.assertEqual(self.Larva.starve, self.starve)
+
+        # Larva is alive
+        self.Larva.alive = True
+        #   Test that it does not starve
         self.assertEqual(self.Larva.grow(), [])
         self.assertEqual(self.Larva.mass,
                          self.mass.__add__.return_value)
@@ -355,7 +366,7 @@ class TestLarva(ut.TestCase):
         self.Larva.mass = self.mass
         self.mass.reset_mock()
 
-        # Test that it does starve
+        #   Test that it does starve
         self.assertEqual(self.Larva.grow(), [])
         self.assertEqual(self.Larva.mass, self.mass)
         self.assertEqual(self.mass.__add__.call_args_list, [])
@@ -368,6 +379,13 @@ class TestLarva(ut.TestCase):
     def test_survive(self):
         """test run survive behavior"""
 
+        # Larva is not alive
+        self.Larva.alive = False
+        self.assertEqual(self.Larva.survive(), [])
+        self.assertEqual(self.survival.survive.call_args_list, [])
+
+        # Larva is alive
+        self.Larva.alive = True
         self.assertEqual(self.Larva.survive(), [])
         self.assertEqual(self.survival.survive.call_args_list,
                          [mk.call(self.Larva)])
@@ -375,6 +393,13 @@ class TestLarva(ut.TestCase):
     def test_develop(self):
         """test run develop behavior"""
 
+        # Larva is not alive
+        self.Larva.alive = False
+        self.assertEqual(self.Larva.develop(), [])
+        self.assertEqual(self.development.develop.call_args_list, [])
+
+        # Larva is alive
+        self.Larva.alive = True
         self.assertEqual(self.Larva.develop(), [])
         self.assertEqual(self.development.develop.call_args_list,
                          [mk.call(self.Larva)])
@@ -443,13 +468,19 @@ class TestLarva(ut.TestCase):
 
         with mk.patch.object(larva.Larva, '_has_target',
                              autospec=True) as mkHas:
-            mkHas.__get__ = mk.MagicMock(side_effect=[False, True])
+            mkHas.__get__ = mk.MagicMock(side_effect=[False, True, True])
 
             # Has no target
             self.Larva._consume_target()
             self.assertEqual(self.loss.consume.call_args_list, [])
 
-            # Has target
+            # Has target and is not alive
+            self.Larva.alive = False
+            self.Larva._consume_target()
+            self.assertEqual(self.loss.consume.call_args_list, [])
+
+            # Has target and is alive
+            self.Larva.alive = True
             self.Larva._consume_target()
             self.assertEqual(self.loss.consume.call_args_list,
                              [mk.call(self.Larva)])

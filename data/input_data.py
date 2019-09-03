@@ -155,7 +155,7 @@ fecundity_maximum = 10
 fecundity_decay   = 0.01
 
 density_eta   = 0.45
-density_gamma = 2
+density_gamma = 4
 
 lifetime_female = True
 lifetime_male   = False

@@ -66,7 +66,8 @@ class Adult(insect.Insect):
             empty list
         """
 
-        self.movement.move(self)
+        if self.alive:
+            self.movement.move(self)
 
         return []
 
@@ -182,12 +183,13 @@ class Adult(insect.Insect):
             list of egg_masses which have been laid
         """
 
-        if self.mate is not None:
-            return self.lay.lay(self)
-        else:
-            self.mating.mate(self)
+        if self.alive:
+            if self.mate is not None:
+                return self.lay.lay(self)
+            else:
+                self.mating.mate(self)
 
-            return []
+        return []
 
     def reset(self) -> hint.agent_list:
         """
@@ -203,7 +205,7 @@ class Adult(insect.Insect):
             if not self.simulation.models[keyword.lifetime_female]:
                 self.mate = None
 
-        elif self.agent_key == keyword.mated:
+        elif (self.agent_key == keyword.mated) and self.alive:
             self.transition(keyword.male)
 
         return []

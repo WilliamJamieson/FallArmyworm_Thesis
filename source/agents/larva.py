@@ -158,11 +158,12 @@ class Larva(insect.Insect):
             empty list
         """
 
-        growth = self.biomass.grow(self)
-        if growth < 0:
-            self.starve = True
-        else:
-            self.mass += growth
+        if self.alive:
+            growth = self.biomass.grow(self)
+            if growth < 0:
+                self.starve = True
+            else:
+                self.mass += growth
 
         return []
 
@@ -177,7 +178,8 @@ class Larva(insect.Insect):
             empty list
         """
 
-        self.survival.survive(self)
+        if self.alive:
+            self.survival.survive(self)
 
         return []
 
@@ -192,7 +194,8 @@ class Larva(insect.Insect):
             empty list
         """
 
-        self.development.develop(self)
+        if self.alive:
+            self.development.develop(self)
 
         return []
 
@@ -259,7 +262,7 @@ class Larva(insect.Insect):
             consumes the target
         """
 
-        if self._has_target:
+        if self._has_target and self.alive:
             self.loss.consume(self)
 
     def _location_keys(self, **kwargs) -> hint.location_keys:
