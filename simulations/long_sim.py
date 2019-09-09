@@ -36,7 +36,7 @@ class Simulator(object):
     grid        = [input_graph.graph(25),
                    input_graph.graph(10)]
     attrs       = {0: input_tracking.genotype_attrs}
-    data        = (50, 'long_sim_25_gen_no_im_bt_90.sqlite')
+    data        = (50, 'long_sim_25_gen_no_im_bt_10_no_hetero.sqlite')
     steps       = [({keyword.female:   [keyword.move,
                                         keyword.reproduce],
                      keyword.male:     [keyword.move],
@@ -140,10 +140,10 @@ initial_pops = ((0,            0,            0),
                 (0,            0,            0),
                 (0,            0,            0),
                 (0,            0,            0),
-                (num_pregnant, num_pregnant, num_pregnant))
+                (num_pregnant, 0,            num_pregnant))
 print('{} Setting Up Long Time Simulations'.
       format(datetime.datetime.now()))
-simulator = Simulator(initial_pops, 0.9)
+simulator = Simulator(initial_pops, 0.1)
 print('{} Running Long Time Simulations'.
       format(datetime.datetime.now()))
 simulator.run(t)
