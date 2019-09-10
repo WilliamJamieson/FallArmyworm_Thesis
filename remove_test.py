@@ -1,4 +1,4 @@
-import numpy.random as rnd
+# import numpy.random as rnd
 
 import joblib as para
 
@@ -14,6 +14,7 @@ import source.space.space  as main_space
 import source.agents.agent as main_agent
 
 
+# noinspection PyUnusedLocal
 def init_plant(bt: str) -> float:
     return 0
 
