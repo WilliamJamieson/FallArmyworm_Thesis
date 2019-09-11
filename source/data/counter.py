@@ -217,6 +217,17 @@ class Count(collect.UserDict):
         else:
             self[value] -= 1
 
+    def _reset(self) -> None:
+        """
+        Reset the counts of the system
+
+        Effects:
+            set counts to zero
+        """
+
+        for key in self:
+            self[key] = 0
+
     def record(self) -> None:
         """
         Record the current count
@@ -226,6 +237,9 @@ class Count(collect.UserDict):
         """
 
         self.data_columns.record(self)
+
+        if self.removal:
+            self._reset()
 
     def refresh(self) -> None:
         """

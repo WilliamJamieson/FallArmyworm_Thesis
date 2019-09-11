@@ -4,10 +4,13 @@ import bokeh.plotting     as plt
 import bokeh.layouts      as lay
 import bokeh.models       as mdl
 import bokeh.palettes     as palettes
+import bokeh.models.tools as tools
 
+import scipy.signal             as signal
 import statsmodels.tsa.seasonal as seasonal
 
 import dataclasses   as dclass
+import numpy         as np
 import pandas        as pd
 import sqlalchemy    as sql
 
@@ -25,7 +28,8 @@ tables      = ['(0,)_egg',
 
 save_file = 'timeseries_decomp.html'
 
-frequency = 45
+frequency       = 28
+sample_interval = 28
 
 plt.output_file(save_file)
 
@@ -200,6 +204,130 @@ egg_source    = mdl.ColumnDataSource(egg)
 larva_source  = mdl.ColumnDataSource(larva)
 pupa_source   = mdl.ColumnDataSource(pupa)
 female_source = mdl.ColumnDataSource(female)
+
+egg_resistant_freq, egg_resistant_power = \
+    signal.periodogram(egg['genotype_resistant'])
+egg_resistant_period = (1 / egg_resistant_freq[1:]).tolist()
+egg_resistant_period.insert(0, np.inf)
+egg_resistant_spec = \
+    pd.DataFrame.from_dict({'frequency': egg_resistant_freq,
+                            'power':     egg_resistant_power,
+                            'period':    np.array(egg_resistant_period)})
+egg_resistant_spec['genotype'] = 'Resistant'
+egg_heterozygous_freq, egg_heterozygous_power = \
+    signal.periodogram(egg['genotype_heterozygous'])
+egg_heterozygous_period = (1 / egg_heterozygous_freq[1:]).tolist()
+egg_heterozygous_period.insert(0, np.inf)
+egg_heterozygous_spec = \
+    pd.DataFrame.from_dict({'frequency': egg_heterozygous_freq,
+                            'power':     egg_heterozygous_power,
+                            'period':    np.array(egg_heterozygous_period)})
+egg_heterozygous_spec['genotype'] = 'Heterozygous'
+egg_susceptible_freq, egg_susceptible_power = \
+    signal.periodogram(egg['genotype_susceptible'])
+egg_susceptible_period = (1 / egg_susceptible_freq[1:]).tolist()
+egg_susceptible_period.insert(0, np.inf)
+egg_susceptible_spec = \
+    pd.DataFrame.from_dict({'frequency': egg_susceptible_freq,
+                            'power':     egg_susceptible_power,
+                            'period':    np.array(egg_susceptible_period)})
+egg_susceptible_spec['genotype'] = 'Susceptible'
+egg_resistant_periodogram    = mdl.ColumnDataSource(egg_resistant_spec)
+egg_heterozygous_periodogram = mdl.ColumnDataSource(egg_heterozygous_spec)
+egg_susceptible_periodogram  = mdl.ColumnDataSource(egg_susceptible_spec)
+
+larva_resistant_freq, larva_resistant_power = \
+    signal.periodogram(larva['genotype_resistant'])
+larva_resistant_period = (1 / larva_resistant_freq[1:]).tolist()
+larva_resistant_period.insert(0, np.inf)
+larva_resistant_spec = \
+    pd.DataFrame.from_dict({'frequency': larva_resistant_freq,
+                            'power':     larva_resistant_power,
+                            'period':    np.array(larva_resistant_period)})
+larva_resistant_spec['genotype'] = 'Resistant'
+larva_heterozygous_freq, larva_heterozygous_power = \
+    signal.periodogram(larva['genotype_heterozygous'])
+larva_heterozygous_period = (1 / larva_heterozygous_freq[1:]).tolist()
+larva_heterozygous_period.insert(0, np.inf)
+larva_heterozygous_spec = \
+    pd.DataFrame.from_dict({'frequency': larva_heterozygous_freq,
+                            'power':     larva_heterozygous_power,
+                            'period':    np.array(larva_heterozygous_period)})
+larva_heterozygous_spec['genotype'] = 'Heterozygous'
+larva_susceptible_freq, larva_susceptible_power = \
+    signal.periodogram(larva['genotype_susceptible'])
+larva_susceptible_period = (1 / larva_susceptible_freq[1:]).tolist()
+larva_susceptible_period.insert(0, np.inf)
+larva_susceptible_spec = \
+    pd.DataFrame.from_dict({'frequency': larva_susceptible_freq,
+                            'power':     larva_susceptible_power,
+                            'period':    np.array(larva_susceptible_period)})
+larva_susceptible_spec['genotype'] = 'Susceptible'
+larva_resistant_periodogram    = mdl.ColumnDataSource(larva_resistant_spec)
+larva_heterozygous_periodogram = mdl.ColumnDataSource(larva_heterozygous_spec)
+larva_susceptible_periodogram  = mdl.ColumnDataSource(larva_susceptible_spec)
+
+pupa_resistant_freq, pupa_resistant_power = \
+    signal.periodogram(pupa['genotype_resistant'])
+pupa_resistant_period = (1 / pupa_resistant_freq[1:]).tolist()
+pupa_resistant_period.insert(0, np.inf)
+pupa_resistant_spec = \
+    pd.DataFrame.from_dict({'frequency': pupa_resistant_freq,
+                            'power':     pupa_resistant_power,
+                            'period':    np.array(pupa_resistant_period)})
+pupa_resistant_spec['genotype'] = 'Resistant'
+pupa_heterozygous_freq, pupa_heterozygous_power = \
+    signal.periodogram(pupa['genotype_heterozygous'])
+pupa_heterozygous_period = (1 / pupa_heterozygous_freq[1:]).tolist()
+pupa_heterozygous_period.insert(0, np.inf)
+pupa_heterozygous_spec = \
+    pd.DataFrame.from_dict({'frequency': pupa_heterozygous_freq,
+                            'power':     pupa_heterozygous_power,
+                            'period':    np.array(pupa_heterozygous_period)})
+pupa_heterozygous_spec['genotype'] = 'Heterozygous'
+pupa_susceptible_freq, pupa_susceptible_power = \
+    signal.periodogram(pupa['genotype_susceptible'])
+pupa_susceptible_period = (1 / pupa_susceptible_freq[1:]).tolist()
+pupa_susceptible_period.insert(0, np.inf)
+pupa_susceptible_spec = \
+    pd.DataFrame.from_dict({'frequency': pupa_susceptible_freq,
+                            'power':     pupa_susceptible_power,
+                            'period':    np.array(pupa_susceptible_period)})
+pupa_susceptible_spec['genotype'] = 'Susceptible'
+pupa_resistant_periodogram    = mdl.ColumnDataSource(pupa_resistant_spec)
+pupa_heterozygous_periodogram = mdl.ColumnDataSource(pupa_heterozygous_spec)
+pupa_susceptible_periodogram  = mdl.ColumnDataSource(pupa_susceptible_spec)
+
+female_resistant_freq, female_resistant_power = \
+    signal.periodogram(female['genotype_resistant'])
+female_resistant_period = (1 / female_resistant_freq[1:]).tolist()
+female_resistant_period.insert(0, np.inf)
+female_resistant_spec = \
+    pd.DataFrame.from_dict({'frequency': female_resistant_freq,
+                            'power':     female_resistant_power,
+                            'period':    np.array(female_resistant_period)})
+female_resistant_spec['genotype'] = 'Resistant'
+female_heterozygous_freq, female_heterozygous_power = \
+    signal.periodogram(female['genotype_heterozygous'])
+female_heterozygous_period = (1 / female_heterozygous_freq[1:]).tolist()
+female_heterozygous_period.insert(0, np.inf)
+female_heterozygous_spec = \
+    pd.DataFrame.from_dict({'frequency': female_heterozygous_freq,
+                            'power':     female_heterozygous_power,
+                            'period':    np.array(female_heterozygous_period)})
+female_heterozygous_spec['genotype'] = 'Heterozygous'
+female_susceptible_freq, female_susceptible_power = \
+    signal.periodogram(female['genotype_susceptible'])
+female_susceptible_period = (1 / female_susceptible_freq[1:]).tolist()
+female_susceptible_period.insert(0, np.inf)
+female_susceptible_spec = \
+    pd.DataFrame.from_dict({'frequency': female_susceptible_freq,
+                            'power':     female_susceptible_power,
+                            'period':    np.array(female_susceptible_period)})
+female_susceptible_spec['genotype'] = 'Susceptible'
+female_resistant_periodogram    = mdl.ColumnDataSource(female_resistant_spec)
+female_heterozygous_periodogram = mdl.ColumnDataSource(female_heterozygous_spec)
+female_susceptible_periodogram  = mdl.ColumnDataSource(female_susceptible_spec)
 
 egg_decomp    = seasonal.seasonal_decompose(egg,
                                             model='additive', freq=frequency)
@@ -489,7 +617,106 @@ series_plot = lay.gridplot([[egg_plot,    egg_trend,    egg_seasonal,
                              female_resid]],
                            toolbar_location='left')
 
-main_title = mdl.Div(text='<h1>Time Series Decomposition, '
-                          'Generation Time {} Days</h1>'.format(frequency))
-plt.show(lay.column(main_title,
-                    series_plot))
+egg_periodogram = plt.figure(y_axis_type='log')
+egg_periodogram.title.text = 'Egg Periodogram'
+egg_periodogram.yaxis.axis_label = 'Power Spectral Density'
+egg_periodogram.xaxis.axis_label = 'Frequency'
+egg_periodogram.line(x='frequency', y='power',
+                     source=egg_resistant_periodogram,
+                     color=colors[0], legend='Resistant')
+egg_periodogram.line(x='frequency', y='power',
+                     source=egg_heterozygous_periodogram,
+                     color=colors[1], legend='Heterozygous')
+egg_periodogram.line(x='frequency', y='power',
+                     source=egg_susceptible_periodogram,
+                     color=colors[2], legend='Susceptible')
+egg_hover = tools.HoverTool()
+egg_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+egg_periodogram.add_tools(egg_hover)
+
+larva_periodogram = plt.figure(y_axis_type='log')
+larva_periodogram.title.text = 'Larva Periodogram'
+larva_periodogram.yaxis.axis_label = 'Power Spectral Density'
+larva_periodogram.xaxis.axis_label = 'Frequency'
+larva_periodogram.line(x='frequency', y='power',
+                       source=larva_resistant_periodogram,
+                       color=colors[0], legend='Resistant')
+larva_periodogram.line(x='frequency', y='power',
+                       source=larva_heterozygous_periodogram,
+                       color=colors[1], legend='Heterozygous')
+larva_periodogram.line(x='frequency', y='power',
+                       source=larva_susceptible_periodogram,
+                       color=colors[2], legend='Susceptible')
+larva_hover = tools.HoverTool()
+larva_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+larva_periodogram.add_tools(larva_hover)
+
+pupa_periodogram = plt.figure(y_axis_type='log')
+pupa_periodogram.title.text = 'Pupa Periodogram'
+pupa_periodogram.yaxis.axis_label = 'Power Spectral Density'
+pupa_periodogram.xaxis.axis_label = 'Frequency'
+pupa_periodogram.line(x='frequency', y='power',
+                      source=pupa_resistant_periodogram,
+                      color=colors[0], legend='Resistant')
+pupa_periodogram.line(x='frequency', y='power',
+                      source=pupa_heterozygous_periodogram,
+                      color=colors[1], legend='Heterozygous')
+pupa_periodogram.line(x='frequency', y='power',
+                      source=pupa_susceptible_periodogram,
+                      color=colors[2], legend='Susceptible')
+pupa_hover = tools.HoverTool()
+pupa_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+pupa_periodogram.add_tools(pupa_hover)
+
+female_periodogram = plt.figure(y_axis_type='log')
+female_periodogram.title.text = 'Female Periodogram'
+female_periodogram.yaxis.axis_label = 'Power Spectral Density'
+female_periodogram.xaxis.axis_label = 'Frequency'
+female_periodogram.line(x='frequency', y='power',
+                        source=female_resistant_periodogram,
+                        color=colors[0], legend='Resistant')
+female_periodogram.line(x='frequency', y='power',
+                        source=female_heterozygous_periodogram,
+                        color=colors[1], legend='Heterozygous')
+female_periodogram.line(x='frequency', y='power',
+                        source=female_susceptible_periodogram,
+                        color=colors[2], legend='Susceptible')
+female_hover = tools.HoverTool()
+female_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Frequency',        '@frequency'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+female_periodogram.add_tools(female_hover)
+
+periodograms = lay.row(egg_periodogram,
+                       larva_periodogram,
+                       pupa_periodogram,
+                       female_periodogram)
+
+timeseries_title = mdl.Div(text='<h1>Time Series Decomposition, '
+                                'Generation Time {} Days</h1>'.
+                           format(frequency))
+periodogram_title = mdl.Div(text='<h1>Time Series Periodograms</h1>')
+
+plt.show(lay.column(timeseries_title,
+                    series_plot,
+                    periodogram_title,
+                    periodograms))

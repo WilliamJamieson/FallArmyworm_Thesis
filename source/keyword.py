@@ -8,6 +8,7 @@ male     = 'male'
 mated    = 'mated'
 
 agent_keys = [egg, egg_mass, larva, pupa, female, male, mated]
+insect_keys = [egg, larva, pupa, female, male, mated]
 
 adult    = 'adult'
 pregnant = 'pregnant'

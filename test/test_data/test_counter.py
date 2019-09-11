@@ -320,12 +320,36 @@ class TestCount(ut.TestCase):
         count.sub(agent)
         self.assertEqual(count[False], 1)
 
+    def test__reset(self):
+        """test reset the count"""
+
+        self.assertEqual(self.Count, self.counts)
+        self.Count._reset()
+        self.assertNotEqual(self.Count, self.counts)
+
+        for key in self.counts:
+            self.assertIn(key, self.Count)
+            self.assertEqual(self.Count[key], 0)
+
     def test_record(self):
         """test record the counts"""
 
-        self.Count.record()
-        self.assertEqual(self.data_columns.record.call_args_list,
-                         [mk.call(self.Count)])
+        with mk.patch.object(counter.Count, '_reset', autospec=True) as mkReset:
+            # Removal is False
+            self.Count.removal = False
+            self.Count.record()
+            self.assertEqual(self.data_columns.record.call_args_list,
+                             [mk.call(self.Count)])
+            self.assertEqual(mkReset.call_args_list, [])
+
+            self.data_columns.reset_mock()
+            # Removal is true
+            self.Count.removal = True
+            self.Count.record()
+            self.assertEqual(self.data_columns.record.call_args_list,
+                             [mk.call(self.Count)])
+            self.assertEqual(mkReset.call_args_list,
+                             [mk.call(self.Count)])
 
     def test_refresh(self):
         """test refresh the stored values"""

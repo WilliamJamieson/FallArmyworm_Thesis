@@ -11,3 +11,8 @@ genotype_attrs = {keyword.egg:    genotype,
 
 death_attr = (keyword.death_keys, True)
 death      = {keyword.death: death_attr}
+
+genotype_death = {**genotype, **death}
+
+genotype_death_attrs = {agent_key: genotype_death
+                            for agent_key in keyword.insect_keys}
