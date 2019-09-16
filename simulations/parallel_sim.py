@@ -20,13 +20,13 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
-num_steps     = 900
+num_steps     = 1800
 num_pregnant  = 100
 save_fig      = True
-base_save     = 'parallel_sim_12_gen_no_im_no_hetero'
+base_save     = 'parallel_sim_25_gen_no_bt_only_resist'
 
-num_simulation = 24
-num_cpu        = 8
+num_simulation = 48
+num_cpu        = 16
 
 
 @dclass.dataclass
@@ -114,7 +114,7 @@ class Simulator(object):
     def __post_init__(self):
 
         save_name = '{}_{}{}'.format(base_save, self.run_number, '.sqlite')
-        self.data = (50, save_name)
+        self.data = (100, save_name)
 
         self.simulation = main_simulation.Simulation. \
             setup(self.nums,
@@ -165,11 +165,11 @@ def run_simulation(sim_number) -> int:
                     (0,            0,            0),
                     (0,            0,            0),
                     (0,            0,            0),
-                    (num_pregnant, 0,            num_pregnant))
+                    (num_pregnant, 0,            0))
 
     print('{} Run {} Setting Up Long Time Simulations'.
           format(datetime.datetime.now(), sim_number))
-    simulator = Simulator(initial_pops, 0.5, sim_number)
+    simulator = Simulator(initial_pops, 0, sim_number)
     print('{} Run {} Running Long Time Simulations'.
           format(datetime.datetime.now(), sim_number))
     simulator.run(t)

@@ -19,6 +19,7 @@ import source.hint as hint
 
 
 source_name = 'long_sim_25_gen_no_im_bt_10_no_hetero.sqlite'
+# source_name = 'parallel_sim_25_gen_no_bt_only_sus_0.sqlite'
 source_path = '/home/william/Dropbox/Research/Parallel_FallArmyworm/' \
               'simulations/'
 tables      = ['(0,)_egg',
@@ -29,7 +30,8 @@ tables      = ['(0,)_egg',
 save_file = 'timeseries_decomp.html'
 
 frequency       = 28
-sample_interval = 28
+sample_interval = 50
+sample_length   = 10
 
 plt.output_file(save_file)
 
@@ -366,6 +368,158 @@ larva_resid_source  = mdl.ColumnDataSource(larva_decomp.resid)
 pupa_resid_source   = mdl.ColumnDataSource(pupa_decomp.resid)
 female_resid_source = mdl.ColumnDataSource(female_decomp.resid)
 
+egg_sample    = egg.   iloc[::sample_interval, :].copy()
+larva_sample  = larva. iloc[::sample_interval, :].copy()
+pupa_sample   = pupa.  iloc[::sample_interval, :].copy()
+female_sample = female.iloc[::sample_interval, :].copy()
+
+egg_sample[   'index'] = range(len(egg_sample))
+larva_sample[ 'index'] = range(len(larva_sample))
+pupa_sample[  'index'] = range(len(pupa_sample))
+female_sample['index'] = range(len(female_sample))
+
+egg_samples    = pd.DataFrame()
+larva_samples  = pd.DataFrame()
+pupa_samples   = pd.DataFrame()
+female_samples = pd.DataFrame()
+
+egg_samples[   'index'] = egg_sample[   'index']
+larva_samples[ 'index'] = larva_sample[ 'index']
+pupa_samples[  'index'] = pupa_sample[  'index']
+female_samples['index'] = female_sample['index']
+
+egg_samples.   reset_index(inplace=True, drop=True)
+larva_samples. reset_index(inplace=True, drop=True)
+pupa_samples.  reset_index(inplace=True, drop=True)
+female_samples.reset_index(inplace=True, drop=True)
+
+column_titles = ['genotype_resistant',
+                 'genotype_heterozygous',
+                 'genotype_susceptible']
+for index in range(sample_length + 1):
+    egg_data    = egg.   iloc[index::sample_interval, :].copy()
+    larva_data  = larva. iloc[index::sample_interval, :].copy()
+    pupa_data   = pupa.  iloc[index::sample_interval, :].copy()
+    female_data = female.iloc[index::sample_interval, :].copy()
+
+    egg_data.reset_index(inplace=True, drop=True)
+    larva_data.reset_index(inplace=True, drop=True)
+    pupa_data.reset_index(inplace=True, drop=True)
+    female_data.reset_index(inplace=True, drop=True)
+
+
+    for genotype_title in column_titles:
+        column_title = '{}_{}'.format(genotype_title, index)
+
+        egg_samples[   column_title] = egg_data[   genotype_title]
+        larva_samples[ column_title] = larva_data[ genotype_title]
+        pupa_samples[  column_title] = pupa_data[  genotype_title]
+        female_samples[column_title] = female_data[genotype_title]
+
+
+def data_mean(row, geno_title):
+    data_list = []
+
+    for s_index in range(sample_length + 1):
+        col_title = '{}_{}'.format(geno_title, index)
+        data_list.append(row[col_title])
+
+    return np.mean(data_list)
+
+
+def data_median(row, geno_title):
+    data_list = []
+
+    for s_index in range(sample_length + 1):
+        col_title = '{}_{}'.format(geno_title, index)
+        data_list.append(row[col_title])
+
+    return np.median(data_list)
+
+
+def data_min(row, geno_title):
+    data_list = []
+
+    for s_index in range(sample_length + 1):
+        col_title = '{}_{}'.format(geno_title, index)
+        data_list.append(row[col_title])
+
+    return np.min(data_list)
+
+
+def data_max(row, geno_title):
+    data_list = []
+
+    for s_index in range(sample_length + 1):
+        col_title = '{}_{}'.format(geno_title, index)
+        data_list.append(row[col_title])
+
+    return np.max(data_list)
+
+
+for genotype_title in column_titles:
+    column_title = '{}_{}'.format(genotype_title, 'mean')
+    egg_samples[column_title] =\
+        egg_samples.apply(lambda row: data_mean(row, genotype_title), axis=1)
+    larva_samples[column_title] = \
+        larva_samples.apply(lambda row: data_mean(row, genotype_title), axis=1)
+    pupa_samples[column_title] = \
+        pupa_samples.apply(lambda row: data_mean(row, genotype_title), axis=1)
+    female_samples[column_title] = \
+        female_samples.apply(lambda row: data_mean(row, genotype_title), axis=1)
+
+    column_title = '{}_{}'.format(genotype_title, 'median')
+    egg_samples[column_title] = \
+        egg_samples.apply(lambda row: data_median(row, genotype_title),
+                          axis=1)
+    larva_samples[column_title] = \
+        larva_samples.apply(lambda row: data_median(row, genotype_title),
+                            axis=1)
+    pupa_samples[column_title] = \
+        pupa_samples.apply(lambda row: data_median(row, genotype_title),
+                           axis=1)
+    female_samples[column_title] = \
+        female_samples.apply(lambda row: data_median(row, genotype_title),
+                             axis=1)
+
+    column_title = '{}_{}'.format(genotype_title, 'min')
+    egg_samples[column_title] = \
+        egg_samples.apply(lambda row: data_min(row, genotype_title),
+                          axis=1)
+    larva_samples[column_title] = \
+        larva_samples.apply(lambda row: data_min(row, genotype_title),
+                            axis=1)
+    pupa_samples[column_title] = \
+        pupa_samples.apply(lambda row: data_min(row, genotype_title),
+                           axis=1)
+    female_samples[column_title] = \
+        female_samples.apply(lambda row: data_min(row, genotype_title),
+                             axis=1)
+
+    column_title = '{}_{}'.format(genotype_title, 'max')
+    egg_samples[column_title] = \
+        egg_samples.apply(lambda row: data_max(row, genotype_title),
+                          axis=1)
+    larva_samples[column_title] = \
+        larva_samples.apply(lambda row: data_max(row, genotype_title),
+                            axis=1)
+    pupa_samples[column_title] = \
+        pupa_samples.apply(lambda row: data_max(row, genotype_title),
+                           axis=1)
+    female_samples[column_title] = \
+        female_samples.apply(lambda row: data_max(row, genotype_title),
+                             axis=1)
+
+egg_sample_source    = mdl.ColumnDataSource(egg_sample)
+larva_sample_source  = mdl.ColumnDataSource(larva_sample)
+pupa_sample_source   = mdl.ColumnDataSource(pupa_sample)
+female_sample_source = mdl.ColumnDataSource(female_sample)
+
+egg_samples_source    = mdl.ColumnDataSource(egg_samples)
+larva_samples_source  = mdl.ColumnDataSource(larva_samples)
+pupa_samples_source   = mdl.ColumnDataSource(pupa_samples)
+female_samples_source = mdl.ColumnDataSource(female_samples)
+
 colors = palettes.Set1[3]
 
 egg_plot = plt.figure(plot_width=1500, plot_height=400)
@@ -617,7 +771,7 @@ series_plot = lay.gridplot([[egg_plot,    egg_trend,    egg_seasonal,
                              female_resid]],
                            toolbar_location='left')
 
-egg_periodogram = plt.figure(y_axis_type='log')
+egg_periodogram = plt.figure()
 egg_periodogram.title.text = 'Egg Periodogram'
 egg_periodogram.yaxis.axis_label = 'Power Spectral Density'
 egg_periodogram.xaxis.axis_label = 'Frequency'
@@ -639,7 +793,7 @@ egg_hover.tooltips = [
 ]
 egg_periodogram.add_tools(egg_hover)
 
-larva_periodogram = plt.figure(y_axis_type='log')
+larva_periodogram = plt.figure()
 larva_periodogram.title.text = 'Larva Periodogram'
 larva_periodogram.yaxis.axis_label = 'Power Spectral Density'
 larva_periodogram.xaxis.axis_label = 'Frequency'
@@ -661,7 +815,7 @@ larva_hover.tooltips = [
 ]
 larva_periodogram.add_tools(larva_hover)
 
-pupa_periodogram = plt.figure(y_axis_type='log')
+pupa_periodogram = plt.figure()
 pupa_periodogram.title.text = 'Pupa Periodogram'
 pupa_periodogram.yaxis.axis_label = 'Power Spectral Density'
 pupa_periodogram.xaxis.axis_label = 'Frequency'
@@ -683,7 +837,7 @@ pupa_hover.tooltips = [
 ]
 pupa_periodogram.add_tools(pupa_hover)
 
-female_periodogram = plt.figure(y_axis_type='log')
+female_periodogram = plt.figure()
 female_periodogram.title.text = 'Female Periodogram'
 female_periodogram.yaxis.axis_label = 'Power Spectral Density'
 female_periodogram.xaxis.axis_label = 'Frequency'
@@ -706,17 +860,252 @@ female_hover.tooltips = [
 ]
 female_periodogram.add_tools(female_hover)
 
-periodograms = lay.row(egg_periodogram,
-                       larva_periodogram,
-                       pupa_periodogram,
-                       female_periodogram)
+egg_log_periodogram = plt.figure(y_axis_type='log')
+egg_log_periodogram.title.text = 'Egg Log-Scale Periodogram'
+egg_log_periodogram.yaxis.axis_label = 'Power Spectral Density'
+egg_log_periodogram.xaxis.axis_label = 'Frequency'
+egg_log_periodogram.line(x='frequency', y='power',
+                         source=egg_resistant_periodogram,
+                         color=colors[0], legend='Resistant')
+egg_log_periodogram.line(x='frequency', y='power',
+                         source=egg_heterozygous_periodogram,
+                         color=colors[1], legend='Heterozygous')
+egg_log_periodogram.line(x='frequency', y='power',
+                         source=egg_susceptible_periodogram,
+                         color=colors[2], legend='Susceptible')
+egg_log_hover = tools.HoverTool()
+egg_log_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+egg_log_periodogram.add_tools(egg_log_hover)
+
+larva_log_periodogram = plt.figure(y_axis_type='log')
+larva_log_periodogram.title.text = 'Larva Log-Scale Periodogram'
+larva_log_periodogram.yaxis.axis_label = 'Power Spectral Density'
+larva_log_periodogram.xaxis.axis_label = 'Frequency'
+larva_log_periodogram.line(x='frequency', y='power',
+                           source=larva_resistant_periodogram,
+                           color=colors[0], legend='Resistant')
+larva_log_periodogram.line(x='frequency', y='power',
+                           source=larva_heterozygous_periodogram,
+                           color=colors[1], legend='Heterozygous')
+larva_log_periodogram.line(x='frequency', y='power',
+                           source=larva_susceptible_periodogram,
+                           color=colors[2], legend='Susceptible')
+larva_log_hover = tools.HoverTool()
+larva_log_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+larva_log_periodogram.add_tools(larva_log_hover)
+
+pupa_log_periodogram = plt.figure(y_axis_type='log')
+pupa_log_periodogram.title.text = 'Pupa Log-Scale Periodogram'
+pupa_log_periodogram.yaxis.axis_label = 'Power Spectral Density'
+pupa_log_periodogram.xaxis.axis_label = 'Frequency'
+pupa_log_periodogram.line(x='frequency', y='power',
+                          source=pupa_resistant_periodogram,
+                          color=colors[0], legend='Resistant')
+pupa_log_periodogram.line(x='frequency', y='power',
+                          source=pupa_heterozygous_periodogram,
+                          color=colors[1], legend='Heterozygous')
+pupa_log_periodogram.line(x='frequency', y='power',
+                          source=pupa_susceptible_periodogram,
+                          color=colors[2], legend='Susceptible')
+pupa_log_hover = tools.HoverTool()
+pupa_log_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+pupa_log_periodogram.add_tools(pupa_log_hover)
+
+female_log_periodogram = plt.figure(y_axis_type='log')
+female_log_periodogram.title.text = 'Female Log-Scale Periodogram'
+female_log_periodogram.yaxis.axis_label = 'Power Spectral Density'
+female_log_periodogram.xaxis.axis_label = 'Frequency'
+female_log_periodogram.line(x='frequency', y='power',
+                            source=female_resistant_periodogram,
+                            color=colors[0], legend='Resistant')
+female_log_periodogram.line(x='frequency', y='power',
+                            source=female_heterozygous_periodogram,
+                            color=colors[1], legend='Heterozygous')
+female_log_periodogram.line(x='frequency', y='power',
+                            source=female_susceptible_periodogram,
+                            color=colors[2], legend='Susceptible')
+female_log_hover = tools.HoverTool()
+female_log_hover.tooltips = [
+    ('Frequency',        '@frequency'),
+    ('Period',           '@period'),
+    ('Spectral Density', '@power'),
+    ('Genotype',         '@genotype')
+]
+female_log_periodogram.add_tools(female_log_hover)
+
+periodograms = lay.gridplot([[egg_periodogram,
+                              larva_periodogram,
+                              pupa_periodogram,
+                              female_periodogram],
+                            [egg_log_periodogram,
+                             larva_log_periodogram,
+                             pupa_log_periodogram,
+                             female_log_periodogram]])
+
+egg_sample_plot = plt.figure(plot_width=1500, plot_height=400)
+egg_sample_plot.title.text = 'Egg Sample data'
+egg_sample_plot.yaxis.axis_label = 'Population'
+egg_sample_plot.xaxis.axis_label = 'time (every {} days)'.\
+    format(sample_interval)
+egg_sample_plot.line(x='index', y='genotype_resistant',
+                     source=egg_sample_source,
+                     color=colors[0], legend='Resistant')
+egg_sample_plot.line(x='index', y='genotype_heterozygous',
+                     source=egg_sample_source,
+                     color=colors[1], legend='Heterozygous')
+egg_sample_plot.line(x='index', y='genotype_susceptible',
+                     source=egg_sample_source,
+                     color=colors[2], legend='Susceptible')
+
+larva_sample_plot = plt.figure(plot_width=1500, plot_height=400,
+                               x_range=egg_sample_plot.x_range)
+larva_sample_plot.title.text = 'Larva Sample data'
+larva_sample_plot.yaxis.axis_label = 'Population'
+larva_sample_plot.xaxis.axis_label = 'time (every {} days)'. \
+    format(sample_interval)
+larva_sample_plot.line(x='index', y='genotype_resistant',
+                       source=larva_sample_source,
+                       color=colors[0], legend='Resistant')
+larva_sample_plot.line(x='index', y='genotype_heterozygous',
+                       source=larva_sample_source,
+                       color=colors[1], legend='Heterozygous')
+larva_sample_plot.line(x='index', y='genotype_susceptible',
+                       source=larva_sample_source,
+                       color=colors[2], legend='Susceptible')
+
+pupa_sample_plot = plt.figure(plot_width=1500, plot_height=400,
+                              x_range=egg_sample_plot.x_range)
+pupa_sample_plot.title.text = 'Pupa Sample data'
+pupa_sample_plot.yaxis.axis_label = 'Population'
+pupa_sample_plot.xaxis.axis_label = 'time (every {} days)'. \
+    format(sample_interval)
+pupa_sample_plot.line(x='index', y='genotype_resistant',
+                      source=pupa_sample_source,
+                      color=colors[0], legend='Resistant')
+pupa_sample_plot.line(x='index', y='genotype_heterozygous',
+                      source=pupa_sample_source,
+                      color=colors[1], legend='Heterozygous')
+pupa_sample_plot.line(x='index', y='genotype_susceptible',
+                      source=pupa_sample_source,
+                      color=colors[2], legend='Susceptible')
+
+female_sample_plot = plt.figure(plot_width=1500, plot_height=400,
+                                x_range=egg_sample_plot.x_range)
+female_sample_plot.title.text = 'Female Sample data'
+female_sample_plot.yaxis.axis_label = 'Population'
+female_sample_plot.xaxis.axis_label = 'time (every {} days)'. \
+    format(sample_interval)
+female_sample_plot.line(x='index', y='genotype_resistant',
+                        source=female_sample_source,
+                        color=colors[0], legend='Resistant')
+female_sample_plot.line(x='index', y='genotype_heterozygous',
+                        source=female_sample_source,
+                        color=colors[1], legend='Heterozygous')
+female_sample_plot.line(x='index', y='genotype_susceptible',
+                        source=female_sample_source,
+                        color=colors[2], legend='Susceptible')
+
+sample_plot = lay.gridplot([[egg_sample_plot],
+                            [larva_sample_plot],
+                            [pupa_sample_plot],
+                            [female_sample_plot]],
+                           toolbar_location='left')
+
+# egg_samples_plot_mean = plt.figure(plot_width=1500, plot_height=400)
+# egg_samples_plot_mean.title.text = 'Egg Sample data'
+# egg_samples_plot_mean.yaxis.axis_label = 'Population'
+# egg_samples_plot_mean.xaxis.axis_label = 'time (every {} days)'. \
+#     format(sample_interval)
+# egg_samples_plot_mean.line(x='index', y='genotype_resistant',
+#                      source=egg_samples_source,
+#                      color=colors[0], legend='Resistant')
+# egg_samples_plot_mean.line(x='index', y='genotype_heterozygous',
+#                      source=egg_samples_source,
+#                      color=colors[1], legend='Heterozygous')
+# egg_samples_plot_mean.line(x='index', y='genotype_susceptible',
+#                      source=egg_samples_source,
+#                      color=colors[2], legend='Susceptible')
+#
+# larva_samples_plot_mean = plt.figure(plot_width=1500, plot_height=400,
+#                                x_range=egg_samples_plot_mean.x_range)
+# larva_samples_plot_mean.title.text = 'Larva Sample data'
+# larva_samples_plot_mean.yaxis.axis_label = 'Population'
+# larva_samples_plot_mean.xaxis.axis_label = 'time (every {} days)'. \
+#     format(sample_interval)
+# larva_samples_plot_mean.line(x='index', y='genotype_resistant',
+#                        source=larva_samples_source,
+#                        color=colors[0], legend='Resistant')
+# larva_samples_plot_mean.line(x='index', y='genotype_heterozygous',
+#                        source=larva_samples_source,
+#                        color=colors[1], legend='Heterozygous')
+# larva_samples_plot_mean.line(x='index', y='genotype_susceptible',
+#                        source=larva_samples_source,
+#                        color=colors[2], legend='Susceptible')
+#
+# pupa_samples_plot_mean = plt.figure(plot_width=1500, plot_height=400,
+#                               x_range=egg_samples_plot_mean.x_range)
+# pupa_samples_plot_mean.title.text = 'Pupa Sample data'
+# pupa_samples_plot_mean.yaxis.axis_label = 'Population'
+# pupa_samples_plot_mean.xaxis.axis_label = 'time (every {} days)'. \
+#     format(sample_interval)
+# pupa_samples_plot_mean.line(x='index', y='genotype_resistant',
+#                       source=pupa_samples_source,
+#                       color=colors[0], legend='Resistant')
+# pupa_samples_plot_mean.line(x='index', y='genotype_heterozygous',
+#                       source=pupa_samples_source,
+#                       color=colors[1], legend='Heterozygous')
+# pupa_samples_plot_mean.line(x='index', y='genotype_susceptible',
+#                       source=pupa_samples_source,
+#                       color=colors[2], legend='Susceptible')
+#
+# female_samples_plot_mean = plt.figure(plot_width=1500, plot_height=400,
+#                                 x_range=egg_samples_plot_mean.x_range)
+# female_samples_plot_mean.title.text = 'Female Sample data'
+# female_samples_plot_mean.yaxis.axis_label = 'Population'
+# female_samples_plot_mean.xaxis.axis_label = 'time (every {} days)'. \
+#     format(sample_interval)
+# female_samples_plot_mean.line(x='index', y='genotype_resistant_mean',
+#                         source=female_samples_source,
+#                         color=colors[0], legend='Resistant')
+# female_samples_plot_mean.line(x='index', y='genotype_heterozygous_mean',
+#                         source=female_samples_source,
+#                         color=colors[1], legend='Heterozygous')
+# female_samples_plot_mean.line(x='index', y='genotype_susceptible_mean',
+#                         source=female_samples_source,
+#                         color=colors[2], legend='Susceptible')
+#
+# samples_plot_mean = lay.gridplot([[egg_samples_plot_mean],
+#                             [larva_samples_plot_mean],
+#                             [pupa_samples_plot_mean],
+#                             [female_samples_plot_mean]],
+#                            toolbar_location='left')
 
 timeseries_title = mdl.Div(text='<h1>Time Series Decomposition, '
                                 'Generation Time {} Days</h1>'.
                            format(frequency))
 periodogram_title = mdl.Div(text='<h1>Time Series Periodograms</h1>')
+sample_title = mdl.Div(text='<h1>Time Series Sampling, '
+                                'Sample Interval {} Days</h1>'.
+                           format(sample_interval))
 
 plt.show(lay.column(timeseries_title,
                     series_plot,
                     periodogram_title,
-                    periodograms))
+                    periodograms,
+                    sample_title,
+                    sample_plot))
