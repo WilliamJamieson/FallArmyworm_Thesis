@@ -200,14 +200,20 @@ data_column      = 'main_counter.DataColumn'
 data_column_dict = typing.Dict[str, data_column]
 data_columns     = 'main_counter.DataColumns'
 
+counts_dict  = typing.Dict[str, any]
 count_dict   = typing.Dict[str, int]
 attr_values  = typing.List[str]
 attrs        = typing.Dict[str, typing.Tuple[attr_values, bool]]
 counter      = 'main_counter.Count'
-counter_dict = typing.Dict[str, counter]
+count_filter = 'main_counter.CountFilter'
+counting     = typing.Union[counter, count_filter]
+counter_dict = typing.Dict[str, counting]
+attr_other   = typing.Union[attrs, bool]
 counts       = 'main_counter.Counts'
 
-attrs_dict  = typing.Dict[str, attrs]
+attr_filter = typing.Tuple[str, attr_values, attr_other]
+
+attrs_dict  = typing.Dict[str, attr_filter]
 attrs_depth = typing.Dict[int, attrs_dict]
 
 

@@ -2,8 +2,11 @@ import unittest      as ut
 import unittest.mock as mk
 
 import collections as collect
+import dataclasses as d_class
 
 import pandas as pd
+
+import source.keyword as keyword
 
 import source.agents.agent as main_agent
 
@@ -14,6 +17,14 @@ class CountTest(counter.Count):
     """Class to add dynamic values for agent tests"""
 
     data_columns = mk.create_autospec(counter.DataColumns, spec_set=True)
+
+
+@d_class.dataclass
+class InsectTest(main_agent.Agent):
+    """calls to define a new agent"""
+
+    death:    str
+    genotype: str
 
 
 class TestDataColumn(ut.TestCase):
@@ -149,6 +160,61 @@ class TestDataColumns(ut.TestCase):
             self.assertEqual(self.DataColumns[attr_value], [])
 
 
+class TestBaseCount(ut.TestCase):
+    """test BaseCount class"""
+
+    def setUp(self):
+        """Setup the tests"""
+
+        self.counts = {mk.MagicMock(spec=str): mk.MagicMock(spec=int)
+                       for _ in range(3)}
+
+        self.attr = mk.MagicMock(spec=str)
+
+        self.Count = counter.BaseCount(self.counts,
+                                       self.attr)
+
+    def test___init__(self):
+        """test __init__ for class"""
+
+        self.assertIsInstance(self.Count, collect.UserDict)
+        self.assertIsInstance(self.Count, counter.BaseCount)
+
+        self.assertEqual(self.Count.attr, self.attr)
+
+        self.assertEqual(self.Count,      self.counts)
+        self.assertEqual(self.Count.data, self.counts)
+
+    def test_add(self):
+        """test add count"""
+
+        agent = mk.create_autospec(main_agent.Agent, spec_set=True)
+
+        self.assertIsNone(self.Count.add(agent))
+
+    def test_sub(self):
+        """test sub count"""
+
+        agent = mk.create_autospec(main_agent.Agent, spec_set=True)
+
+        self.assertIsNone(self.Count.sub(agent))
+
+    def test_record(self):
+        """test record counts"""
+
+        self.assertIsNone(self.Count.record())
+
+    def test_refresh(self):
+        """test refresh counts"""
+
+        self.assertIsNone(self.Count.refresh())
+
+    def test_get_data_columns(self):
+        """test get the data columns"""
+
+        self.assertIsNone(self.Count.get_data_columns())
+
+
 class TestCount(ut.TestCase):
     """test Count class"""
 
@@ -173,6 +239,7 @@ class TestCount(ut.TestCase):
         """test __init__ for class"""
 
         self.assertIsInstance(self.Count, collect.UserDict)
+        self.assertIsInstance(self.Count, counter.BaseCount)
         self.assertIsInstance(self.Count, counter.Count)
 
         self.assertEqual(self.Count.attr,    self.attr)
@@ -362,6 +429,14 @@ class TestCount(ut.TestCase):
                          [mk.call.columns.refresh(),
                           mk.call.columns.record(self.Count)])
 
+    def test_get_data_columns(self):
+        """test get the data columns"""
+
+        self.assertEqual(self.Count.get_data_columns(),
+                         self.data_columns.columns.return_value)
+        self.assertEqual(self.data_columns.columns.call_args_list,
+                         [mk.call()])
+
     def test_empty(self):
         """test create empty class"""
 
@@ -391,17 +466,389 @@ class TestCount(ut.TestCase):
                                   counter.DataColumn)
             self.assertEqual(self.Count.data_columns[value].attr_value, value)
             self.assertEqual(self.Count.data_columns[value], [])
-
             
+            
+class TestCountFilter(ut.TestCase):
+    """test CountFilter class"""
+
+    def setUp(self):
+        """Setup the tests"""
+
+        self.counts = {}
+        for _ in range(3):
+            self.counts[mk.MagicMock(spec=str)] = \
+                mk.create_autospec(CountTest, spec_set=True)
+            self.counts[mk.MagicMock(spec=str)] = \
+                mk.create_autospec(counter.CountFilter, spec_set=True)
+
+        self.attr = mk.MagicMock(spec=str)
+
+        self.Count = counter.CountFilter(self.counts,
+                                         self.attr)
+
+    def test___init__(self):
+        """test __init__ for class"""
+
+        self.assertIsInstance(self.Count, collect.UserDict)
+        self.assertIsInstance(self.Count, counter.BaseCount)
+        self.assertIsInstance(self.Count, counter.CountFilter)
+
+        self.assertEqual(self.Count.attr, self.attr)
+
+        self.assertEqual(self.Count,      self.counts)
+        self.assertEqual(self.Count.data, self.counts)
+
+    def test_add(self):
+        """test add agent to counter"""
+
+        # Call test
+        agent = mk.create_autospec(main_agent.Agent, spec_set=True)
+
+        with mk.patch.object(counter, 'getattr') as mkGet:
+            for value in self.counts.keys():
+                mkGet.return_value = value
+                self.Count.add(agent)
+                self.assertEqual(mkGet.call_args_list,
+                                 [mk.call(agent, self.attr)])
+                mkGet.reset_mock()
+
+                self.assertEqual(self.Count[value].add.call_args_list,
+                                 [mk.call(agent)])
+                self.Count[value].reset_mock()
+            for value in self.counts.keys():
+                self.assertEqual(self.Count[value].add.call_args_list, [])
+
+        # Practical test
+        # noinspection PyTypeChecker
+        agent_sur_homo_r = InsectTest('test', 'test0', None, None, True,
+                                      keyword.survival, keyword.homo_r)
+        # noinspection PyTypeChecker
+        agent_sur_hetero = InsectTest('test', 'test0', None, None, True,
+                                      keyword.survival, keyword.hetero)
+        # noinspection PyTypeChecker
+        agent_sur_homo_s = InsectTest('test', 'test0', None, None, True,
+                                      keyword.survival, keyword.homo_s)
+        # noinspection PyTypeChecker
+        agent_can_homo_r = InsectTest('test', 'test0', None, None, True,
+                                      keyword.cannibalism, keyword.homo_r)
+        # noinspection PyTypeChecker
+        agent_can_hetero = InsectTest('test', 'test0', None, None, True,
+                                      keyword.cannibalism, keyword.hetero)
+        # noinspection PyTypeChecker
+        agent_can_homo_s = InsectTest('test', 'test0', None, None, True,
+                                      keyword.cannibalism, keyword.homo_s)
+        attrs = {keyword.genotype: (keyword.genotype_keys, False)}
+        count = counter.CountFilter.empty('death',
+                                          keyword.death_keys,
+                                          attrs)
+        count.add(agent_sur_homo_r)
+        count.add(agent_sur_hetero)
+        count.add(agent_sur_homo_s)
+        count.add(agent_can_homo_r)
+        count.add(agent_can_hetero)
+        count.add(agent_can_homo_s)
+        count.record()
+
+        count_data = count.get_data_columns()
+
+        actual_deaths = [keyword.cannibalism, keyword.survival]
+        other_deaths  = [key for key in keyword.death_keys
+                         if key not in actual_deaths]
+
+        for death_key in actual_deaths:
+            for genotype_key in keyword.genotype_keys:
+                key = '{}_{}_{}_{}'.format('death', death_key,
+                                           'genotype', genotype_key)
+                self.assertIn(key, count_data)
+                self.assertEqual(count_data[key], [1])
+
+        for death_key in other_deaths:
+            for genotype_key in keyword.genotype_keys:
+                key = '{}_{}_{}_{}'.format('death', death_key,
+                                           'genotype', genotype_key)
+                self.assertIn(key, count_data)
+                self.assertEqual(count_data[key], [0])
+
+    def test_sub(self):
+        """test sub agent to counter"""
+
+        # Call test
+        agent = mk.create_autospec(main_agent.Agent, spec_set=True)
+
+        with mk.patch.object(counter, 'getattr') as mkGet:
+            for value in self.counts.keys():
+                mkGet.return_value = value
+                self.Count.sub(agent)
+                self.assertEqual(mkGet.call_args_list,
+                                 [mk.call(agent, self.attr)])
+                mkGet.reset_mock()
+
+                self.assertEqual(self.Count[value].sub.call_args_list,
+                                 [mk.call(agent)])
+                self.Count[value].reset_mock()
+            for value in self.counts.keys():
+                self.assertEqual(self.Count[value].sub.call_args_list, [])
+
+        # Practical test
+        # noinspection PyTypeChecker
+        agent_sur_homo_r = InsectTest('test', 'test0', None, None, True,
+                                      keyword.survival, keyword.homo_r)
+        # noinspection PyTypeChecker
+        agent_sur_hetero = InsectTest('test', 'test0', None, None, True,
+                                      keyword.survival, keyword.hetero)
+        # noinspection PyTypeChecker
+        agent_sur_homo_s = InsectTest('test', 'test0', None, None, True,
+                                      keyword.survival, keyword.homo_s)
+        # noinspection PyTypeChecker
+        agent_can_homo_r = InsectTest('test', 'test0', None, None, True,
+                                      keyword.cannibalism, keyword.homo_r)
+        # noinspection PyTypeChecker
+        agent_can_hetero = InsectTest('test', 'test0', None, None, True,
+                                      keyword.cannibalism, keyword.hetero)
+        # noinspection PyTypeChecker
+        agent_can_homo_s = InsectTest('test', 'test0', None, None, True,
+                                      keyword.cannibalism, keyword.homo_s)
+        attrs = {keyword.genotype: (keyword.genotype_keys, False)}
+        count = counter.CountFilter.empty('death',
+                                          keyword.death_keys,
+                                          attrs)
+        count.sub(agent_sur_homo_r)
+        count.sub(agent_sur_hetero)
+        count.sub(agent_sur_homo_s)
+        count.sub(agent_can_homo_r)
+        count.sub(agent_can_hetero)
+        count.sub(agent_can_homo_s)
+        count.record()
+
+        count_data = count.get_data_columns()
+
+        actual_deaths = [keyword.cannibalism, keyword.survival]
+        other_deaths  = [key for key in keyword.death_keys
+                         if key not in actual_deaths]
+
+        for death_key in actual_deaths:
+            for genotype_key in keyword.genotype_keys:
+                key = '{}_{}_{}_{}'.format('death', death_key,
+                                           'genotype', genotype_key)
+                self.assertIn(key, count_data)
+                self.assertEqual(count_data[key], [-1])
+
+        for death_key in other_deaths:
+            for genotype_key in keyword.genotype_keys:
+                key = '{}_{}_{}_{}'.format('death', death_key,
+                                           'genotype', genotype_key)
+                self.assertIn(key, count_data)
+                self.assertEqual(count_data[key], [0])
+
+    def test_record(self):
+        """test record data"""
+
+        self.Count.record()
+        for count in self.counts.values():
+            self.assertEqual(count.record.call_args_list,
+                             [mk.call()])
+
+    def test_refresh(self):
+        """test refresh data"""
+
+        self.Count.refresh()
+        for count in self.counts.values():
+            self.assertEqual(count.refresh.call_args_list,
+                             [mk.call()])
+
+    def test_get_data_columns(self):
+        """test get the data columns"""
+
+        data_columns = {}
+        for attr_value, count in self.counts.items():
+            data_column = {mk.MagicMock(spec=str):
+                               mk.create_autospec(counter.DataColumn,
+                                                  spec_set=True)
+                           for _ in range(3)}
+            count.get_data_columns.return_value = data_column
+
+            for key, value in data_column.items():
+                data_key = '{}_{}_{}'.format(self.attr, attr_value, key)
+                data_columns[data_key] = value
+
+        self.assertEqual(self.Count.get_data_columns(), data_columns)
+        for count in self.Count.values():
+            self.assertEqual(count.get_data_columns.call_args_list,
+                             [mk.call()])
+            
+    def test_empty(self):
+        """test build an empty class"""
+
+        values = [mk.MagicMock(spec=str) for _ in range(3)]
+
+        # Single layer of filtering
+        attr  = mk.MagicMock(spec=str)
+        attrs = {attr:
+                     ([mk.MagicMock(spec=str) for _ in range(3)],
+                      mk.MagicMock(spec=bool))}
+        attr_data = attrs[attr]
+
+        self.Count = counter.CountFilter.empty(self.attr,
+                                               values,
+                                               attrs)
+        self.assertIsInstance(self.Count, counter.CountFilter)
+        self.assertEqual(self.Count.attr, self.attr)
+        for value_key, count in self.Count.items():
+            self.assertIn(value_key, values)
+            self.assertIsInstance(count, counter.Count)
+            self.assertEqual(count.attr,    attr)
+            self.assertEqual(count.removal, attr_data[1])
+
+            for key, value in count.items():
+                self.assertIn(key, attr_data[0])
+                self.assertEqual(value, 0)
+            for key in attr_data[0]:
+                self.assertIn(key, count)
+                self.assertEqual(count[key], 0)
+
+            self.assertIsInstance(count.data_columns, counter.DataColumns)
+            self.assertEqual(count.data_columns.attr, attr)
+            for key, column in count.data_columns.items():
+                self.assertIn(key, attr_data[0])
+                self.assertIsInstance(column, counter.DataColumn)
+                self.assertEqual(column.attr_value, key)
+                self.assertEqual(column, [])
+            for value in attr_data[0]:
+                self.assertIn(value, count.data_columns)
+                self.assertIsInstance(count.data_columns[value],
+                                      counter.DataColumn)
+                self.assertEqual(count.data_columns[value].attr_value, value)
+                self.assertEqual(count.data_columns[value], [])
+
+        self.assertEqual(len(self.Count), 3)
+        for value_key in values:
+            self.assertIn(value_key, self.Count)
+            count = self.Count[value_key]
+            self.assertIsInstance(count, counter.Count)
+            self.assertEqual(count.attr,    attr)
+            self.assertEqual(count.removal, attr_data[1])
+
+            for key, value in count.items():
+                self.assertIn(key, attr_data[0])
+                self.assertEqual(value, 0)
+            for key in attr_data[0]:
+                self.assertIn(key, count)
+                self.assertEqual(count[key], 0)
+
+            self.assertIsInstance(count.data_columns, counter.DataColumns)
+            self.assertEqual(count.data_columns.attr, attr)
+            for key, column in count.data_columns.items():
+                self.assertIn(key, attr_data[0])
+                self.assertIsInstance(column, counter.DataColumn)
+                self.assertEqual(column.attr_value, key)
+                self.assertEqual(column, [])
+            for value in attr_data[0]:
+                self.assertIn(value, count.data_columns)
+                self.assertIsInstance(count.data_columns[value],
+                                      counter.DataColumn)
+                self.assertEqual(count.data_columns[value].attr_value, value)
+                self.assertEqual(count.data_columns[value], [])
+
+        # Two layers of filtering
+        attrs = {mk.MagicMock(spec=str):
+                     ([mk.MagicMock(spec=str) for _ in range(3)],
+                      mk.MagicMock(spec=bool))
+                 for _ in range(2)}
+        attr_list = list(attrs.keys())
+        attr_data_list = [attrs[key] for key in attr_list]
+
+        self.Count = counter.CountFilter.empty(self.attr,
+                                               values,
+                                               attrs)
+        self.assertIsInstance(self.Count, counter.CountFilter)
+        self.assertEqual(self.Count.attr, self.attr)
+        for value_key0, count0 in self.Count.items():
+            attr0      = attr_list[0]
+            attr_data0 = attr_data_list[0]
+            self.assertIn(value_key0, values)
+            self.assertIsInstance(count0, counter.CountFilter)
+            self.assertEqual(count0.attr, attr0)
+            for value_key1, count1 in count0.items():
+                self.assertIn(value_key1, attr_data0[0])
+                self.assertIsInstance(count1, counter.Count)
+                attr1      = attr_list[1]
+                attr_data1 = attr_data_list[1]
+                self.assertEqual(count1.attr,    attr1)
+                self.assertEqual(count1.removal, attr_data1[1])
+
+                for key, value in count1.items():
+                    self.assertIn(key, attr_data1[0])
+                    self.assertEqual(value, 0)
+                for key in attr_data1[0]:
+                    self.assertIn(key, count1)
+                    self.assertEqual(count1[key], 0)
+
+                self.assertIsInstance(count1.data_columns, counter.DataColumns)
+                self.assertEqual(count1.data_columns.attr, attr1)
+                for key, column in count1.data_columns.items():
+                    self.assertIn(key, attr_data1[0])
+                    self.assertIsInstance(column, counter.DataColumn)
+                    self.assertEqual(column.attr_value, key)
+                    self.assertEqual(column, [])
+                for value in attr_data1[0]:
+                    self.assertIn(value, count1.data_columns)
+                    self.assertIsInstance(count1.data_columns[value],
+                                          counter.DataColumn)
+                    self.assertEqual(count1.data_columns[value].attr_value,
+                                     value)
+                    self.assertEqual(count1.data_columns[value], [])
+
+        self.assertEqual(len(self.Count), 3)
+        for value_key in values:
+            self.assertIn(value_key, self.Count)
+            count0     = self.Count[value_key]
+            attr0      = attr_list[0]
+            attr_data0 = attr_data_list[0]
+            self.assertIsInstance(count0, counter.CountFilter)
+            self.assertEqual(count0.attr, attr0)
+            for value_key1, count1 in count0.items():
+                self.assertIn(value_key1, attr_data0[0])
+                self.assertIsInstance(count1, counter.Count)
+                attr1      = attr_list[1]
+                attr_data1 = attr_data_list[1]
+                self.assertEqual(count1.attr,    attr1)
+                self.assertEqual(count1.removal, attr_data1[1])
+
+                for key, value in count1.items():
+                    self.assertIn(key, attr_data1[0])
+                    self.assertEqual(value, 0)
+                for key in attr_data1[0]:
+                    self.assertIn(key, count1)
+                    self.assertEqual(count1[key], 0)
+
+                self.assertIsInstance(count1.data_columns, counter.DataColumns)
+                self.assertEqual(count1.data_columns.attr, attr1)
+                for key, column in count1.data_columns.items():
+                    self.assertIn(key, attr_data1[0])
+                    self.assertIsInstance(column, counter.DataColumn)
+                    self.assertEqual(column.attr_value, key)
+                    self.assertEqual(column, [])
+                for value in attr_data1[0]:
+                    self.assertIn(value, count1.data_columns)
+                    self.assertIsInstance(count1.data_columns[value],
+                                          counter.DataColumn)
+                    self.assertEqual(count1.data_columns[value].attr_value,
+                                     value)
+                    self.assertEqual(count1.data_columns[value], [])
+
+
 class TestCounts(ut.TestCase):
     """test the Counts class"""
 
     def setUp(self):
         """Setup the tests"""
 
-        self.counts = {mk.MagicMock(spec=str):
-                           mk.create_autospec(CountTest, spec_set=True)
-                       for _ in range(3)}
+        self.counts = {}
+        for _ in range(3):
+            self.counts[mk.MagicMock(spec=str)] = \
+                mk.create_autospec(CountTest, spec_set=True)
+            self.counts[mk.MagicMock(spec=str)] = \
+                mk.create_autospec(counter.CountFilter, spec_set=True)
 
         self.Counts = counter.Counts(self.counts)
 
@@ -455,8 +902,6 @@ class TestCounts(ut.TestCase):
 
         columns = {}
         for count in self.counts.values():
-            count.data_columns = mk.create_autospec(counter.DataColumns,
-                                                    spec_set=True)
             column = {}
             for _ in range(3):
                 key   = mk.MagicMock(spec=str)
@@ -465,11 +910,11 @@ class TestCounts(ut.TestCase):
                 column[ key] = value
                 columns[key] = value
 
-            count.data_columns.columns.return_value = column
+            count.get_data_columns.return_value = column
 
         self.assertEqual(self.Counts.columns(), columns)
         for count in self.Counts.values():
-            self.assertEqual(count.data_columns.columns.call_args_list,
+            self.assertEqual(count.get_data_columns.call_args_list,
                              [mk.call()])
 
     def test_dataframe(self):
@@ -489,77 +934,74 @@ class TestCounts(ut.TestCase):
     def test_count(self):
         """test add a count to system"""
 
-        attr    = mk.MagicMock(spec=str)
-        values  = [mk.MagicMock(spec=str) for _ in range(3)]
+        attr_key = mk.MagicMock(spec=str)
+        attr     = mk.MagicMock(spec=str)
+        values   = [mk.MagicMock(spec=str) for _ in range(3)]
+
+        # Add standard
         removal = mk.MagicMock(spec=bool)
+        self.assertNotIn(attr_key, self.Counts)
 
-        self.assertNotIn(attr, self.Counts)
-        self.Counts.count(attr, values, removal)
-        self.assertIn(attr, self.Counts)
+        with mk.patch.object(counter.Count, 'empty', autospec=True) as mkEmpty:
+            self.Counts.count(attr_key, attr, values, removal)
+            self.assertIn(attr_key, self.Counts)
+            self.assertEqual(self.Counts[attr_key],
+                             mkEmpty.return_value)
+            self.assertEqual(mkEmpty.call_args_list,
+                             [mk.call(attr, values, removal)])
 
-        self.assertIsInstance(self.Counts[attr], counter.Count)
-        self.assertEqual(self.Counts[attr].attr,    attr)
-        self.assertEqual(self.Counts[attr].removal, removal)
-        for key, value in self.Counts[attr].items():
-            self.assertIn(key, values)
-            self.assertEqual(value, 0)
-        for value in values:
-            self.assertIn(value, self.Counts[attr])
-            self.assertEqual(self.Counts[attr][value], 0)
+        del self.Counts[attr_key]
 
-        self.assertIsInstance(self.Counts[attr].data_columns,
-                              counter.DataColumns)
-        self.assertEqual(self.Counts[attr].data_columns.attr, attr)
-        for key, column in self.Counts[attr].data_columns.items():
-            self.assertIn(key, values)
-            self.assertIsInstance(column, counter.DataColumn)
-            self.assertEqual(column.attr_value, key)
-            self.assertEqual(column, [])
-        for value in values:
-            self.assertIn(value, self.Counts[attr].data_columns)
-            self.assertIsInstance(self.Counts[attr].data_columns[value],
-                                  counter.DataColumn)
-            self.assertEqual(self.Counts[attr].data_columns[value].attr_value,
-                             value)
-            self.assertEqual(self.Counts[attr].data_columns[value], [])
+        # Add default
+        self.assertNotIn(attr_key, self.Counts)
+
+        with mk.patch.object(counter.Count, 'empty', autospec=True) as mkEmpty:
+            self.Counts.count(attr_key, attr, values, {})
+            self.assertIn(attr_key, self.Counts)
+            self.assertEqual(self.Counts[attr_key],
+                             mkEmpty.return_value)
+            self.assertEqual(mkEmpty.call_args_list,
+                             [mk.call(attr, values, False)])
+
+        del self.Counts[attr_key]
+
+        # Add filter stack
+        attrs = {mk.MagicMock(spec=str): mk.MagicMock(spec=tuple)}
+        self.assertNotIn(attr_key, self.Counts)
+
+        with mk.patch.object(counter.CountFilter, 'empty',
+                             autospec=True) as mkEmpty:
+            self.Counts.count(attr_key, attr, values, attrs)
+            self.assertIn(attr_key, self.Counts)
+            self.assertEqual(self.Counts[attr_key],
+                             mkEmpty.return_value)
+            self.assertEqual(mkEmpty.call_args_list,
+                             [mk.call(attr, values, attrs)])
+
 
     def test_empty(self):
         """test create an empty counts class"""
 
         attrs = {}
         for _ in range(3):
+            attr   = mk.MagicMock(spec=str)
             values = [mk.MagicMock(spec=str) for _ in range(3)]
             removal = mk.MagicMock(spec=bool)
-            attrs[mk.MagicMock(spec=str)] = (values, removal)
+            attrs[mk.MagicMock(spec=str)] = (attr, values, removal)
 
-        self.Counts = counter.Counts.empty(attrs)
-        self.assertIsInstance(self.Counts, counter.Counts)
+        attr_keys = list(attrs.keys())
 
-        for attr, things in attrs.items():
-            values, removal = things
-            self.assertIsInstance(self.Counts[attr], counter.Count)
-            self.assertEqual(self.Counts[attr].attr,    attr)
-            self.assertEqual(self.Counts[attr].removal, removal)
-            for key, value in self.Counts[attr].items():
-                self.assertIn(key, values)
-                self.assertEqual(value, 0)
-            for value in values:
-                self.assertIn(value, self.Counts[attr])
-                self.assertEqual(self.Counts[attr][value], 0)
+        with mk.patch.object(counter.Counts, 'count', autospec=True) as mkCount:
+            self.Counts = counter.Counts.empty(attrs)
+            self.assertIsInstance(self.Counts, counter.Counts)
+            self.assertEqual(self.Counts, {})
 
-            self.assertIsInstance(self.Counts[attr].data_columns,
-                                  counter.DataColumns)
-            self.assertEqual(self.Counts[attr].data_columns.attr, attr)
-            for key, column in self.Counts[attr].data_columns.items():
-                self.assertIn(key, values)
-                self.assertIsInstance(column, counter.DataColumn)
-                self.assertEqual(column.attr_value, key)
-                self.assertEqual(column, [])
-            for value in values:
-                self.assertIn(value, self.Counts[attr].data_columns)
-                self.assertIsInstance(self.Counts[attr].data_columns[value],
-                                      counter.DataColumn)
-                self.assertEqual(self.Counts[attr].data_columns[value].
-                                    attr_value,
-                                 value)
-                self.assertEqual(self.Counts[attr].data_columns[value], [])
+            for index, this in enumerate(attrs.items()):
+                attr_key, attr_filter = this
+                self.assertEqual(mkCount.call_args_list[index],
+                                 mk.call(self.Counts, attr_key, *attr_filter))
+            for index, call in enumerate(mkCount.call_args_list):
+                self.assertEqual(call,
+                                 mk.call(self.Counts, attr_keys[index],
+                                         *attrs[attr_keys[index]]))
+            self.assertEqual(len(mkCount.call_args_list), 3)
