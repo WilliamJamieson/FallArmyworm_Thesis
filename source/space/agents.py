@@ -73,7 +73,7 @@ class AgentBin(collect.UserDict):
 
     @classmethod
     def empty(cls, agent_key: str,
-                   attrs:     hint.attrs)  -> 'AgentBin':
+                   attrs:     hint.attrs_dict)  -> 'AgentBin':
         """
         Setup an empty agent bin
 

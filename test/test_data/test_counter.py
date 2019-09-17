@@ -982,6 +982,7 @@ class TestCounts(ut.TestCase):
     def test_empty(self):
         """test create an empty counts class"""
 
+        # Test calls
         attrs = {}
         for _ in range(3):
             attr   = mk.MagicMock(spec=str)
@@ -1005,3 +1006,123 @@ class TestCounts(ut.TestCase):
                                  mk.call(self.Counts, attr_keys[index],
                                          *attrs[attr_keys[index]]))
             self.assertEqual(len(mkCount.call_args_list), 3)
+
+
+        # test practical
+        attrs = {keyword.genotype:    (keyword.genotype,
+                                       keyword.genotype_keys,
+                                       False),
+                 keyword.death_track: (keyword.death,
+                                       keyword.death_keys,
+                                       {keyword.genotype:
+                                            (keyword.genotype_keys,
+                                             True)})}
+
+        self.Counts = counter.Counts.empty(attrs)
+        self.assertIsInstance(self.Counts, counter.Counts)
+
+        # check the genotype
+        self.assertIn(keyword.genotype, self.Counts)
+        count = self.Counts[keyword.genotype]
+        self.assertIsInstance(count, counter.Count)
+        self.assertEqual(count.attr,    keyword.genotype)
+        self.assertEqual(count.removal, False)
+        for key, value in count.items():
+            self.assertIn(key, keyword.genotype_keys)
+            self.assertEqual(value, 0)
+        for key in keyword.genotype_keys:
+            self.assertIn(key, count)
+            self.assertEqual(count[key], 0)
+        self.assertEqual(len(count), 3)
+        datacolumns = count.data_columns
+        self.assertIsInstance(datacolumns, counter.DataColumns)
+        self.assertEqual(datacolumns.attr, keyword.genotype)
+        for key, column in datacolumns.items():
+            self.assertIn(key, keyword.genotype_keys)
+            self.assertIsInstance(column, counter.DataColumn)
+            self.assertEqual(column.attr_value, key)
+            self.assertEqual(column, [])
+        for key in keyword.genotype_keys:
+            self.assertIn(key, datacolumns)
+            column = datacolumns[key]
+            self.assertIsInstance(column, counter.DataColumn)
+            self.assertEqual(column.attr_value, key)
+            self.assertEqual(column, [])
+        self.assertEqual(len(datacolumns), 3)
+
+        # check the death
+        self.assertIn(keyword.death_track, self.Counts)
+        death_count = self.Counts[keyword.death_track]
+        self.assertIsInstance(death_count, counter.CountFilter)
+        self.assertEqual(death_count.attr, keyword.death)
+        for death_key, count in death_count.items():
+            self.assertIn(death_key, keyword.death_keys)
+            self.assertIsInstance(count, counter.Count)
+            self.assertEqual(count.attr,    keyword.genotype)
+            self.assertEqual(count.removal, True)
+            for key, value in count.items():
+                self.assertIn(key, keyword.genotype_keys)
+                self.assertEqual(value, 0)
+            for key in keyword.genotype_keys:
+                self.assertIn(key, count)
+                self.assertEqual(count[key], 0)
+            self.assertEqual(len(count), 3)
+            datacolumns = count.data_columns
+            self.assertIsInstance(datacolumns, counter.DataColumns)
+            self.assertEqual(datacolumns.attr, keyword.genotype)
+            for key, column in datacolumns.items():
+                self.assertIn(key, keyword.genotype_keys)
+                self.assertIsInstance(column, counter.DataColumn)
+                self.assertEqual(column.attr_value, key)
+                self.assertEqual(column, [])
+            for key in keyword.genotype_keys:
+                self.assertIn(key, datacolumns)
+                column = datacolumns[key]
+                self.assertIsInstance(column, counter.DataColumn)
+                self.assertEqual(column.attr_value, key)
+                self.assertEqual(column, [])
+            self.assertEqual(len(datacolumns), 3)
+        for death_key in keyword.death_keys:
+            self.assertIn(death_key, death_count)
+            count = death_count[death_key]
+            self.assertIsInstance(count, counter.Count)
+            self.assertEqual(count.attr,    keyword.genotype)
+            self.assertEqual(count.removal, True)
+            for key, value in count.items():
+                self.assertIn(key, keyword.genotype_keys)
+                self.assertEqual(value, 0)
+            for key in keyword.genotype_keys:
+                self.assertIn(key, count)
+                self.assertEqual(count[key], 0)
+            self.assertEqual(len(count), 3)
+            datacolumns = count.data_columns
+            self.assertIsInstance(datacolumns, counter.DataColumns)
+            self.assertEqual(datacolumns.attr, keyword.genotype)
+            for key, column in datacolumns.items():
+                self.assertIn(key, keyword.genotype_keys)
+                self.assertIsInstance(column, counter.DataColumn)
+                self.assertEqual(column.attr_value, key)
+                self.assertEqual(column, [])
+            for key in keyword.genotype_keys:
+                self.assertIn(key, datacolumns)
+                column = datacolumns[key]
+                self.assertIsInstance(column, counter.DataColumn)
+                self.assertEqual(column.attr_value, key)
+                self.assertEqual(column, [])
+            self.assertEqual(len(datacolumns), 3)
+        self.assertEqual(len(death_count), 5)
+
+        # test the data columns
+        columns = self.Counts.columns()
+        #   genotype columns
+        for genotype_key in keyword.genotype_keys:
+            geno_key = '{}_{}'.format(keyword.genotype,
+                                      genotype_key)
+            self.assertIn(geno_key, columns)
+            self.assertEqual(columns[geno_key], [])
+            for death_key in keyword.death_keys:
+                key = '{}_{}_{}'.format(keyword.death,
+                                        death_key,
+                                        geno_key)
+                self.assertIn(key, columns)
+                self.assertEqual(columns[key], [])

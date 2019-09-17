@@ -659,9 +659,10 @@ class TestSpace(ut.TestCase):
             for agent_key in agent_keys:
                 attr = {}
                 for _ in range(3):
+                    attr_val = mk.MagicMock(spec=str)
                     values = [mk.MagicMock(spec=str) for _ in range(3)]
                     removal = mk.MagicMock(spec=bool)
-                    attr[mk.MagicMock(spec=str)] = (values, removal)
+                    attr[mk.MagicMock(spec=str)] = (attr_val, values, removal)
                 attrs[agent_key] = attr
             attrs_dict[index] = attrs
 
@@ -669,6 +670,7 @@ class TestSpace(ut.TestCase):
         init_plant = mk.MagicMock(spec=callable)
         environment = (cutoff, init_plant)
 
+        # noinspection PyTypeChecker
         agents = main_agents.Agents.empty(self.Space,
                                           agent_keys,
                                           attrs_dict,
@@ -712,11 +714,12 @@ class TestSpace(ut.TestCase):
 
                 counts = agent_bin.counts
                 self.assertIsInstance(counts, data_counter.Counts)
-                for attr, attr_tuple in attrs_dict[level][agent_key].items():
-                    values, removal = attr_tuple
+                for attr_key, attr_tuple in \
+                        attrs_dict[level][agent_key].items():
+                    attr, values, removal = attr_tuple
 
-                    self.assertIn(attr, counts)
-                    count = counts[attr]
+                    self.assertIn(attr_key, counts)
+                    count = counts[attr_key]
                     self.assertIsInstance(count, data_counter.Count)
                     self.assertEqual(count.attr,    attr)
                     self.assertEqual(count.removal, removal)

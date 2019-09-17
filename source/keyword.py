@@ -94,6 +94,8 @@ starve      = 'starve'
 alive       = 'alive'
 death_keys  = [cannibalism, emigrate, survival, starve, alive]
 
+death_track = 'death_track'
+
 # mathematical model keys
 max_gut = 'max_gut'
 growth  = 'growth'

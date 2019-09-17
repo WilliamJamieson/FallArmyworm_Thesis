@@ -121,9 +121,10 @@ class TestAgentBin(ut.TestCase):
 
         attrs = {}
         for _ in range(3):
+            attr   = mk.MagicMock(spec=str)
             values = [mk.MagicMock(spec=str) for _ in range(3)]
             removal = mk.MagicMock(spec=bool)
-            attrs[mk.MagicMock(spec=str)] = (values, removal)
+            attrs[mk.MagicMock(spec=str)] = (attr, values, removal)
 
         self.AgentBin = agents.AgentBin.empty(self.agent_key, attrs)
         self.assertIsInstance(self.AgentBin, agents.AgentBin)
@@ -131,35 +132,39 @@ class TestAgentBin(ut.TestCase):
         self.assertEqual(self.AgentBin.agent_key, self.agent_key)
 
         self.assertIsInstance(self.AgentBin.counts, counter.Counts)
-        for attr, things in attrs.items():
-            values, removal = things
-            self.assertIsInstance(self.AgentBin.counts[attr], counter.Count)
-            self.assertEqual(self.AgentBin.counts[attr].attr,    attr)
-            self.assertEqual(self.AgentBin.counts[attr].removal, removal)
-            for key, value in self.AgentBin.counts[attr].items():
+        for attr_key, things in attrs.items():
+            attr, values, removal = things
+            self.assertIsInstance(self.AgentBin.counts[attr_key], counter.Count)
+            self.assertEqual(self.AgentBin.counts[attr_key].attr,    attr)
+            self.assertEqual(self.AgentBin.counts[attr_key].removal, removal)
+            for key, value in self.AgentBin.counts[attr_key].items():
                 self.assertIn(key, values)
                 self.assertEqual(value, 0)
             for value in values:
-                self.assertIn(value, self.AgentBin.counts[attr])
-                self.assertEqual(self.AgentBin.counts[attr][value], 0)
+                self.assertIn(value, self.AgentBin.counts[attr_key])
+                self.assertEqual(self.AgentBin.counts[attr_key][value], 0)
 
-            self.assertIsInstance(self.AgentBin.counts[attr].data_columns,
+            self.assertIsInstance(self.AgentBin.counts[attr_key].data_columns,
                                   counter.DataColumns)
-            self.assertEqual(self.AgentBin.counts[attr].data_columns.attr, attr)
-            for key, column in self.AgentBin.counts[attr].data_columns.items():
+            self.assertEqual(self.AgentBin.counts[attr_key].data_columns.attr,
+                             attr)
+            for key, column in self.AgentBin.counts[attr_key].\
+                    data_columns.items():
                 self.assertIn(key, values)
                 self.assertIsInstance(column, counter.DataColumn)
                 self.assertEqual(column.attr_value, key)
                 self.assertEqual(column, [])
             for value in values:
-                self.assertIn(value, self.AgentBin.counts[attr].data_columns)
-                self.assertIsInstance(self.AgentBin.counts[attr].
+                self.assertIn(value,
+                              self.AgentBin.counts[attr_key].data_columns)
+                self.assertIsInstance(self.AgentBin.counts[attr_key].
                                         data_columns[value],
                                       counter.DataColumn)
-                self.assertEqual(self.AgentBin.counts[attr].data_columns[value].
-                                 attr_value,
+                self.assertEqual(self.AgentBin.counts[attr_key].
+                                    data_columns[value].attr_value,
                                  value)
-                self.assertEqual(self.AgentBin.counts[attr].data_columns[value],
+                self.assertEqual(self.AgentBin.counts[attr_key].
+                                    data_columns[value],
                                  [])
 
 
@@ -345,15 +350,17 @@ class TestAgentsBin(ut.TestCase):
         for _ in range(3):
             attr = {}
             for _ in range(3):
+                attr_val = mk.MagicMock(spec=str)
                 values = [mk.MagicMock(spec=str) for _ in range(3)]
                 removal = mk.MagicMock(spec=bool)
-                attr[mk.MagicMock(spec=str)] = (values, removal)
+                attr[mk.MagicMock(spec=str)] = (attr_val, values, removal)
 
             agent_key = mk.MagicMock(spec=str)
             agent_keys.append(agent_key)
             attrs[agent_key] = attr
 
         # with attrs
+        # noinspection PyTypeChecker
         agent_bins = self.AgentsBin.make_bins(agent_keys, attrs)
         for agent_key in agent_keys:
             self.assertIn(agent_key, agent_bins)
@@ -362,27 +369,30 @@ class TestAgentsBin(ut.TestCase):
             self.assertEqual(agent_bins[agent_key].agent_key, agent_key)
             self.assertIsInstance(agent_bins[agent_key].counts,
                                   counter.Counts)
-            for attr, things in attrs[agent_key].items():
-                values, removal = things
-                self.assertIsInstance(agent_bins[agent_key].counts[attr],
+            for attr_key, things in attrs[agent_key].items():
+                attr, values, removal = things
+                self.assertIsInstance(agent_bins[agent_key].counts[attr_key],
                                       counter.Count)
-                self.assertEqual(agent_bins[agent_key].counts[attr].attr, attr)
-                self.assertEqual(agent_bins[agent_key].counts[attr].removal,
+                self.assertEqual(agent_bins[agent_key].counts[attr_key].attr,
+                                 attr)
+                self.assertEqual(agent_bins[agent_key].counts[attr_key].removal,
                                  removal)
-                for key, value in agent_bins[agent_key].counts[attr].items():
+                for key, value in \
+                        agent_bins[agent_key].counts[attr_key].items():
                     self.assertIn(key, values)
                     self.assertEqual(value, 0)
                 for value in values:
-                    self.assertIn(value, agent_bins[agent_key].counts[attr])
-                    self.assertEqual(agent_bins[agent_key].counts[attr][value],
+                    self.assertIn(value, agent_bins[agent_key].counts[attr_key])
+                    self.assertEqual(agent_bins[agent_key].
+                                        counts[attr_key][value],
                                      0)
-                self.assertEqual(len(agent_bins[agent_key].counts[attr]), 3)
+                self.assertEqual(len(agent_bins[agent_key].counts[attr_key]), 3)
                 self.assertIsInstance(agent_bins[agent_key].
-                                        counts[attr].data_columns,
+                                        counts[attr_key].data_columns,
                                       counter.DataColumns)
                 self.assertEqual(agent_bins[agent_key].
-                                    counts[attr].data_columns.attr, attr)
-                for key, column in agent_bins[agent_key].counts[attr].\
+                                    counts[attr_key].data_columns.attr, attr)
+                for key, column in agent_bins[agent_key].counts[attr_key].\
                         data_columns.items():
                     self.assertIn(key, values)
                     self.assertIsInstance(column, counter.DataColumn)
@@ -390,17 +400,18 @@ class TestAgentsBin(ut.TestCase):
                     self.assertEqual(column, [])
                 for value in values:
                     self.assertIn(value,
-                                  agent_bins[agent_key].counts[attr].
+                                  agent_bins[agent_key].counts[attr_key].
                                     data_columns)
-                    self.assertIsInstance(agent_bins[agent_key].counts[attr].
+                    self.assertIsInstance(agent_bins[agent_key].
+                                            counts[attr_key].
                                             data_columns[value],
                                           counter.DataColumn)
-                    self.assertEqual(agent_bins[agent_key].counts[attr].
+                    self.assertEqual(agent_bins[agent_key].counts[attr_key].
                                          data_columns[value].attr_value,
                                      value)
-                    self.assertEqual(agent_bins[agent_key].counts[attr].
+                    self.assertEqual(agent_bins[agent_key].counts[attr_key].
                                      data_columns[value], [])
-                self.assertEqual(len(agent_bins[agent_key].counts[attr].
+                self.assertEqual(len(agent_bins[agent_key].counts[attr_key].
                                         data_columns), 3)
             self.assertEqual(len(agent_bins[agent_key].counts), 3)
         self.assertEqual(len(agent_bins), 3)
