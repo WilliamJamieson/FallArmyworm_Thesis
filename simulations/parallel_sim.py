@@ -23,7 +23,7 @@ import source.simulation.simulation as main_simulation
 num_steps     = 1800
 num_pregnant  = 100
 save_fig      = True
-base_save     = 'parallel_sim_25_gen_no_bt_only_resist'
+base_save     = 'parallel_sim_25_gen_no_bt_only_resist_adlib'
 
 num_simulation = 48
 num_cpu        = 16
@@ -41,7 +41,7 @@ class Simulator(object):
 
     grid        = [input_graph.graph(25),
                    input_graph.graph(10)]
-    attrs       = {0: input_tracking.genotype_death_attrs}
+    attrs       = {0: input_tracking.genotype_death_filters_attrs}
     steps       = [({keyword.female:   [keyword.move,
                                         keyword.reproduce],
                      keyword.male:     [keyword.move],
@@ -85,7 +85,7 @@ class Simulator(object):
                     input_develop.egg_development,
                     input_develop.larva_development,
                     input_develop.pupa_development,
-                    input_forage.starve,
+                    input_forage.ad_libitum,
                     input_forage.egg_forage,
                     input_forage.larva_forage,
                     input_forage.loss,
