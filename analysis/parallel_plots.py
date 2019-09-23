@@ -4,7 +4,11 @@ import bokeh.plotting     as plt
 import bokeh.layouts      as lay
 import bokeh.models       as mdl
 import bokeh.palettes     as palettes
-# import bokeh.models.tools as tools
+import bokeh.models.tools as tools
+
+import numpy                    as np
+import scipy.signal             as signal
+import statsmodels.tsa.seasonal as seasonal
 
 import dataclasses   as dclass
 import pandas        as pd
@@ -20,11 +24,13 @@ plot_height = 400
 
 colors = palettes.Set1[3]
 
+frequency_range = [62, 63, 64]
 
 
 save_file = 'parallel_timeseries_decomp.html'
 # source_name = 'long_sim_25_gen_no_im_bt_10_no_hetero.sqlite'
-source_name = 'parallel_sim_25_gen_no_bt_only_sus'
+# source_name = 'parallel_sim_25_gen_no_bt_only_sus'
+source_name = 'parallel_sim_50_gen_no_bt_only_sus'
 source_path = '/home/william/Dropbox/Research/Parallel_FallArmyworm/' \
               'simulations/'
 tables      = ['(0,)_egg',
@@ -474,7 +480,7 @@ class ReadData(object):
 
         return maxs
 
-    def process_dataframes(self, start: int) -> dict:
+    def process_dataframes(self, start: int) -> tuple:
         """
         Process all of the dataframes together
 
@@ -485,28 +491,68 @@ class ReadData(object):
             all the data frames cut down
         """
 
-        data = self.cut_run_dataframes(start)
+        data     = self.cut_run_dataframes(start)
+        num_runs = len(data)
 
         data['mean']    = self.mean_dataframe(data)
         data['median']  = self.median_dataframe(data)
-        data['std']     = self.std_dataframe(data)
-        data['q_lower'] = self.q_lower_dataframe(data)
+        # data['std']     = self.std_dataframe(data)
+        # data['q_lower'] = self.q_lower_dataframe(data)
         # data['q_upper'] = self.q_upper_dataframe(data)
-        data['min']     = self.min_dataframe(data)
-        data['max']     = self.max_dataframe(data)
+        # data['min']     = self.min_dataframe(data)
+        # data['max']     = self.max_dataframe(data)
 
-        return data
+        return data, num_runs
+
+    @staticmethod
+    def _seasonal_decompose(dataframe: hint.dataframe,
+                            frequency: int):
+        """
+        Decompose the data at the given seasonal frequency
+        Args:
+            dataframe: dataframe to use
+            frequency: seasonal frequency
+
+        Returns:
+            seasonal decomposition object
+        """
+
+        decomp = seasonal.seasonal_decompose(dataframe,
+                                             model='additive',
+                                             freq=frequency)
+        decomp.trend[   'index'] = range(len(decomp.trend))
+        decomp.seasonal['index'] = range(len(decomp.seasonal))
+        decomp.resid[   'index'] = range(len(decomp.resid))
+
+        return decomp
+
+    def seasonal_decompose(self, dataframe: hint.dataframe) -> dict:
+        """
+        Decompose the data into all frequencies within the limit
+
+        Args:
+            dataframe: the dataframe to use
+
+        Returns:
+            dictionary of frequency to data
+        """
+
+        season = {}
+        for frequency in frequency_range:
+            season[frequency] = self._seasonal_decompose(dataframe, frequency)
+
+        return season
 
 
-reader   = ReadData(source_name, source_path, tables)
-run_data = reader.process_dataframes(start_point)
+reader                   = ReadData(source_name, source_path, tables)
+run_data, number_of_runs = reader.process_dataframes(start_point)
 
 mean    = run_data['mean']
 median  = run_data['median']
-std     = run_data['std']
-q_lower = run_data['q_lower']
-min_val = run_data['min']
-max_val = run_data['max']
+# std     = run_data['std']
+# q_lower = run_data['q_lower']
+# min_val = run_data['min']
+# max_val = run_data['max']
 
 egg_mean    = mean[tables[0]]
 larva_mean  = mean[tables[1]]
@@ -518,6 +564,61 @@ larva_median  = median[tables[1]]
 pupa_median   = median[tables[2]]
 female_median = median[tables[3]]
 
+
+def periodogram_data(dataframe: hint.dataframe) -> hint.dataframes:
+    """
+    Create a periodogram of the data in the dataframe
+
+    Args:
+        dataframe: dataframe to create periodogram data
+
+    Returns:
+        periodogram dataframe
+    """
+
+    column_titles = ['genotype_resistant',
+                     'genotype_heterozygous',
+                     'genotype_susceptible']
+
+    data_dict = {}
+    for column_title in column_titles:
+        periodogram_dict = {}
+        frequency_data, power_data = signal.periodogram(dataframe[column_title])
+        period_data = (1 / frequency_data[1:]).tolist()
+        period_data.insert(0, np.inf)
+        periodogram_dict['frequency'] = frequency_data
+        periodogram_dict['power']     = power_data
+        periodogram_dict['period']    = period_data
+
+        periodogram_dataframe = pd.DataFrame.from_dict(periodogram_dict)
+        periodogram_dataframe['genotype'] = column_title.split('_')[1]
+
+        data_dict[column_title] = periodogram_dataframe
+
+    return data_dict
+
+
+egg_mean_periodogram    = periodogram_data(egg_mean)
+larva_mean_periodogram  = periodogram_data(larva_mean)
+pupa_mean_periodogram   = periodogram_data(pupa_mean)
+female_mean_periodogram = periodogram_data(female_mean)
+
+egg_median_periodogram    = periodogram_data(egg_median)
+larva_median_periodogram  = periodogram_data(larva_median)
+pupa_median_periodogram   = periodogram_data(pupa_median)
+female_median_periodogram = periodogram_data(female_median)
+
+
+egg_mean_decomp    = reader.seasonal_decompose(egg_mean)
+larva_mean_decomp  = reader.seasonal_decompose(larva_mean)
+pupa_mean_decomp   = reader.seasonal_decompose(pupa_mean)
+female_mean_decomp = reader.seasonal_decompose(female_mean)
+
+egg_median_decomp    = reader.seasonal_decompose(egg_median)
+larva_median_decomp  = reader.seasonal_decompose(larva_median)
+pupa_median_decomp   = reader.seasonal_decompose(pupa_median)
+female_median_decomp = reader.seasonal_decompose(female_median)
+
 egg_mean_source    = mdl.ColumnDataSource(egg_mean)
 larva_mean_source  = mdl.ColumnDataSource(larva_mean)
 pupa_mean_source   = mdl.ColumnDataSource(pupa_mean)
@@ -528,129 +629,511 @@ larva_median_source  = mdl.ColumnDataSource(larva_median)
 pupa_median_source   = mdl.ColumnDataSource(pupa_median)
 female_median_source = mdl.ColumnDataSource(female_median)
 
-egg_mean_plot = plt.figure(plot_width=plot_width, plot_height=plot_height)
-egg_mean_plot.title.text = 'Egg Mean Timeseries Data'
-egg_mean_plot.yaxis.axis_label = 'Mean Population'
-egg_mean_plot.xaxis.axis_label = 'time (days)'
-egg_mean_plot.line(x='index', y='genotype_resistant',
-                   source=egg_mean_source,
+
+def periodogram_data_source(periodogram_dataframe: dict) -> dict:
+    """
+    Convert the data into a data source for bokeh
+    Args:
+        periodogram_dataframe: the periodogram data
+
+    Returns:
+        dictionary of source data
+    """
+
+    data_sources = {}
+    for column_name, data_source in periodogram_dataframe.items():
+        data_sources[column_name] = mdl.ColumnDataSource(data_source)
+
+    return data_sources
+
+
+egg_mean_periodogram_sources    = periodogram_data_source(
+    egg_mean_periodogram)
+larva_mean_periodogram_sources  = periodogram_data_source(
+    larva_mean_periodogram)
+pupa_mean_periodogram_sources   = periodogram_data_source(
+    pupa_mean_periodogram)
+female_mean_periodogram_sources = periodogram_data_source(
+    female_mean_periodogram)
+
+egg_median_periodogram_sources    = periodogram_data_source(
+    egg_median_periodogram)
+larva_median_periodogram_sources  = periodogram_data_source(
+    larva_median_periodogram)
+pupa_median_periodogram_sources   = periodogram_data_source(
+    pupa_median_periodogram)
+female_median_periodogram_sources = periodogram_data_source(
+    female_median_periodogram)
+
+
+def seasonal_data_source(decomp_data: dict) -> dict:
+    """
+    Convert the decomp data into a data source for bokeh
+
+    Args:
+        decomp_data: the data source
+
+    Returns:
+        dictionary of tuples
+    """
+
+    data_sources = {}
+    for frequency, data_source in decomp_data.items():
+        data_sources[frequency] = (mdl.ColumnDataSource(data_source.trend),
+                                   mdl.ColumnDataSource(data_source.seasonal),
+                                   mdl.ColumnDataSource(data_source.resid))
+
+    return data_sources
+
+
+egg_mean_seasonal_sources    = seasonal_data_source(egg_mean_decomp)
+larva_mean_seasonal_sources  = seasonal_data_source(larva_mean_decomp)
+pupa_mean_seasonal_sources   = seasonal_data_source(pupa_mean_decomp)
+female_mean_seasonal_sources = seasonal_data_source(female_mean_decomp)
+
+egg_median_seasonal_sources    = seasonal_data_source(egg_median_decomp)
+larva_median_seasonal_sources  = seasonal_data_source(larva_median_decomp)
+pupa_median_seasonal_sources   = seasonal_data_source(pupa_median_decomp)
+female_median_seasonal_sources = seasonal_data_source(female_median_decomp)
+
+
+def periodogram_plotter(periodogram_mean_source, periodogram_median_source,
+                        life_stage_title: str):
+    """
+    Create a set of periodograms
+    Args:
+        periodogram_mean_source:   mean data periodogram
+        periodogram_median_source: median data periodogram
+        life_stage_title:          name for life stage
+
+    Returns:
+        a plot system to show
+    """
+
+    mean_plot = plt.figure()
+    mean_plot.title.text = '{} Mean Periodogram'.format(life_stage_title)
+    mean_plot.yaxis.axis_label = 'Power Spectral Density'
+    mean_plot.xaxis.axis_label = 'Frequency'
+    mean_plot.line(x='frequency', y='power',
+                   source=periodogram_mean_source['genotype_resistant'],
                    color=colors[0], legend='Resistant')
-egg_mean_plot.line(x='index', y='genotype_heterozygous',
-                   source=egg_mean_source,
+    mean_plot.line(x='frequency', y='power',
+                   source=periodogram_mean_source['genotype_heterozygous'],
                    color=colors[1], legend='Heterozygous')
-egg_mean_plot.line(x='index', y='genotype_susceptible',
-                   source=egg_mean_source,
-                   color=colors[0], legend='Susceptible')
+    mean_plot.line(x='frequency', y='power',
+                   source=periodogram_mean_source['genotype_susceptible'],
+                   color=colors[2], legend='Susceptible')
+    mean_hover = tools.HoverTool()
+    mean_hover.tooltips = [
+        ('Frequency',        '@frequency'),
+        ('Period',           '@period'),
+        ('Spectral Density', '@power'),
+        ('Genotype',         '@genotype')
+    ]
+    mean_plot.add_tools(mean_hover)
 
-larva_mean_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
-                             x_range=egg_mean_plot.x_range)
-larva_mean_plot.title.text = 'Larva Mean Timeseries Data'
-larva_mean_plot.yaxis.axis_label = 'Mean Population'
-larva_mean_plot.xaxis.axis_label = 'time (days)'
-larva_mean_plot.line(x='index', y='genotype_resistant',
-                     source=larva_mean_source,
+    median_plot = plt.figure()
+    median_plot.title.text = '{} Median Periodogram'.format(life_stage_title)
+    median_plot.yaxis.axis_label = 'Power Spectral Density'
+    median_plot.xaxis.axis_label = 'Frequency'
+    median_plot.line(x='frequency', y='power',
+                     source=periodogram_median_source['genotype_resistant'],
                      color=colors[0], legend='Resistant')
-larva_mean_plot.line(x='index', y='genotype_heterozygous',
-                     source=larva_mean_source,
+    median_plot.line(x='frequency', y='power',
+                     source=periodogram_median_source['genotype_heterozygous'],
                      color=colors[1], legend='Heterozygous')
-larva_mean_plot.line(x='index', y='genotype_susceptible',
-                     source=larva_mean_source,
-                     color=colors[0], legend='Susceptible')
+    median_plot.line(x='frequency', y='power',
+                     source=periodogram_median_source['genotype_susceptible'],
+                     color=colors[2], legend='Susceptible')
+    median_hover = tools.HoverTool()
+    median_hover.tooltips = [
+        ('Frequency', '@frequency'),
+        ('Period', '@period'),
+        ('Spectral Density', '@power'),
+        ('Genotype', '@genotype')
+    ]
+    median_plot.add_tools(median_hover)
 
-pupa_mean_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
-                            x_range=egg_mean_plot.x_range)
-pupa_mean_plot.title.text = 'Pupa Mean Timeseries Data'
-pupa_mean_plot.yaxis.axis_label = 'Mean Population'
-pupa_mean_plot.xaxis.axis_label = 'time (days)'
-pupa_mean_plot.line(x='index', y='genotype_resistant',
-                    source=pupa_mean_source,
-                    color=colors[0], legend='Resistant')
-pupa_mean_plot.line(x='index', y='genotype_heterozygous',
-                    source=pupa_mean_source,
-                    color=colors[1], legend='Heterozygous')
-pupa_mean_plot.line(x='index', y='genotype_susceptible',
-                    source=pupa_mean_source,
-                    color=colors[0], legend='Susceptible')
-
-female_mean_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
-                              x_range=egg_mean_plot.x_range)
-female_mean_plot.title.text = 'Female Mean Timeseries Data'
-female_mean_plot.yaxis.axis_label = 'Mean Population'
-female_mean_plot.xaxis.axis_label = 'time (days)'
-female_mean_plot.line(x='index', y='genotype_resistant',
-                      source=female_mean_source,
-                      color=colors[0], legend='Resistant')
-female_mean_plot.line(x='index', y='genotype_heterozygous',
-                      source=female_mean_source,
-                      color=colors[1], legend='Heterozygous')
-female_mean_plot.line(x='index', y='genotype_susceptible',
-                      source=female_mean_source,
-                      color=colors[0], legend='Susceptible')
-
-egg_median_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
-                             x_range=egg_mean_plot.x_range)
-egg_median_plot.title.text = 'Egg Median Timeseries Data'
-egg_median_plot.yaxis.axis_label = 'Median Population'
-egg_median_plot.xaxis.axis_label = 'time (days)'
-egg_median_plot.line(x='index', y='genotype_resistant',
-                     source=egg_median_source,
-                     color=colors[0], legend='Resistant')
-egg_median_plot.line(x='index', y='genotype_heterozygous',
-                     source=egg_median_source,
-                     color=colors[1], legend='Heterozygous')
-egg_median_plot.line(x='index', y='genotype_susceptible',
-                     source=egg_median_source,
-                     color=colors[0], legend='Susceptible')
-
-larva_median_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
-                               x_range=egg_mean_plot.x_range)
-larva_median_plot.title.text = 'Larva Median Timeseries Data'
-larva_median_plot.yaxis.axis_label = 'Median Population'
-larva_median_plot.xaxis.axis_label = 'time (days)'
-larva_median_plot.line(x='index', y='genotype_resistant',
-                       source=larva_median_source,
+    mean_log_plot = plt.figure(y_axis_type='log')
+    mean_log_plot.title.text = '{} Mean Log-Scale Periodogram'.\
+        format(life_stage_title)
+    mean_log_plot.yaxis.axis_label = 'log(Power Spectral Density)'
+    mean_log_plot.xaxis.axis_label = 'Frequency'
+    mean_log_plot.line(x='frequency', y='power',
+                       source=periodogram_mean_source['genotype_resistant'],
                        color=colors[0], legend='Resistant')
-larva_median_plot.line(x='index', y='genotype_heterozygous',
-                       source=larva_median_source,
+    mean_log_plot.line(x='frequency', y='power',
+                       source=periodogram_mean_source['genotype_heterozygous'],
                        color=colors[1], legend='Heterozygous')
-larva_median_plot.line(x='index', y='genotype_susceptible',
-                       source=larva_median_source,
-                       color=colors[0], legend='Susceptible')
+    mean_log_plot.line(x='frequency', y='power',
+                       source=periodogram_mean_source['genotype_susceptible'],
+                       color=colors[2], legend='Susceptible')
+    mean_log_hover = tools.HoverTool()
+    mean_log_hover.tooltips = [
+        ('Frequency', '@frequency'),
+        ('Period', '@period'),
+        ('Spectral Density', '@power'),
+        ('Genotype', '@genotype')
+    ]
+    mean_log_plot.add_tools(mean_log_hover)
 
-pupa_median_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
-                              x_range=egg_mean_plot.x_range)
-pupa_median_plot.title.text = 'Pupa Median Timeseries Data'
-pupa_median_plot.yaxis.axis_label = 'Median Population'
-pupa_median_plot.xaxis.axis_label = 'time (days)'
-pupa_median_plot.line(x='index', y='genotype_resistant',
-                      source=pupa_median_source,
-                      color=colors[0], legend='Resistant')
-pupa_median_plot.line(x='index', y='genotype_heterozygous',
-                      source=pupa_median_source,
-                      color=colors[1], legend='Heterozygous')
-pupa_median_plot.line(x='index', y='genotype_susceptible',
-                      source=pupa_median_source,
-                      color=colors[0], legend='Susceptible')
+    median_log_plot = plt.figure(y_axis_type='log')
+    median_log_plot.title.text = '{} Median Log-Scale Periodogram'. \
+        format(life_stage_title)
+    median_log_plot.yaxis.axis_label = 'log(Power Spectral Density)'
+    median_log_plot.xaxis.axis_label = 'Frequency'
+    median_log_plot.line(x='frequency', y='power',
+                         source=periodogram_median_source['genotype_resistant'],
+                         color=colors[0], legend='Resistant')
+    median_log_plot.line(x='frequency', y='power',
+                         source=periodogram_median_source['genotype_heterozygous'],
+                         color=colors[1], legend='Heterozygous')
+    median_log_plot.line(x='frequency', y='power',
+                         source=periodogram_median_source['genotype_susceptible'],
+                         color=colors[2], legend='Susceptible')
+    median_log_hover = tools.HoverTool()
+    median_log_hover.tooltips = [
+        ('Frequency', '@frequency'),
+        ('Period', '@period'),
+        ('Spectral Density', '@power'),
+        ('Genotype', '@genotype')
+    ]
+    median_log_plot.add_tools(median_log_hover)
 
-female_median_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
-                                x_range=egg_mean_plot.x_range)
-female_median_plot.title.text = 'Female Median Timeseries Data'
-female_median_plot.yaxis.axis_label = 'Median Population'
-female_median_plot.xaxis.axis_label = 'time (days)'
-female_median_plot.line(x='index', y='genotype_resistant',
-                        source=female_median_source,
+    return lay.gridplot([[mean_plot,     median_plot],
+                         [mean_log_plot, median_log_plot]],
+                        toolbar_location='left')
+
+
+larva_periodogram_title = mdl.Div(text='<h1>Larva Periodogram, '
+                                         '{} runs</h1>'.format(number_of_runs))
+larva_periodogram_plot = periodogram_plotter(larva_mean_periodogram_sources,
+                                             larva_median_periodogram_sources,
+                                             'Larva')
+
+
+def seasonal_data_plotter(timeseries_mean_source,   decomp_mean_source: dict,
+                          timeseries_median_source, decomp_median_source: dict,
+                          life_stage_title: str):
+    """
+    Create a plot of the seasonal data via frequencies
+    Args:
+        timeseries_mean_source:   original series source for mean
+        decomp_mean_source:       decomposition source   for mean
+        timeseries_median_source: original series source for median
+        decomp_median_source:     decomposition source   for median
+        life_stage_title:         name for life stage
+
+    Returns:
+        a plotting object
+    """
+
+    frequencies    = list(decomp_mean_source.keys())
+    base_frequency = frequencies.pop(0)
+
+    first_line = []
+    base_plot = plt.figure(plot_width=plot_width, plot_height=plot_height)
+    base_plot.title.text = '{} Timeseries Mean Data, Seasonal Frequency: {}'.\
+        format(life_stage_title, base_frequency)
+    base_plot.yaxis.axis_label = 'Population'
+    base_plot.xaxis.axis_label = 'time (days)'
+    base_plot.line(x='index', y='genotype_resistant',
+                   source=timeseries_mean_source,
+                   color=colors[0], legend='Resistant')
+    base_plot.line(x='index', y='genotype_heterozygous',
+                   source=timeseries_mean_source,
+                   color=colors[1], legend='Heterozygous')
+    base_plot.line(x='index', y='genotype_susceptible',
+                   source=timeseries_mean_source,
+                   color=colors[2], legend='Susceptible')
+    first_line.append(base_plot)
+
+    trend_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                            x_range=base_plot.x_range)
+    trend_plot.title.text = '{} Trend Mean Data, Seasonal Frequency: {}'. \
+        format(life_stage_title, base_frequency)
+    trend_plot.yaxis.axis_label = 'Population'
+    trend_plot.xaxis.axis_label = 'time (days)'
+    trend_plot.line(x='index', y='genotype_resistant',
+                    source=decomp_mean_source[base_frequency][0],
+                    color=colors[0], legend='Resistant')
+    trend_plot.line(x='index', y='genotype_heterozygous',
+                    source=decomp_mean_source[base_frequency][0],
+                    color=colors[1], legend='Heterozygous')
+    trend_plot.line(x='index', y='genotype_susceptible',
+                    source=decomp_mean_source[base_frequency][0],
+                    color=colors[2], legend='Susceptible')
+    first_line.append(trend_plot)
+
+    seasonal_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                               x_range=base_plot.x_range)
+    seasonal_plot.title.text = '{} Seasonality Mean Data, ' \
+                               'Seasonal Frequency: {}'. \
+        format(life_stage_title, base_frequency)
+    seasonal_plot.yaxis.axis_label = 'Population'
+    seasonal_plot.xaxis.axis_label = 'time (days)'
+    seasonal_plot.line(x='index', y='genotype_resistant',
+                       source=decomp_mean_source[base_frequency][1],
+                       color=colors[0], legend='Resistant')
+    seasonal_plot.line(x='index', y='genotype_heterozygous',
+                       source=decomp_mean_source[base_frequency][1],
+                       color=colors[1], legend='Heterozygous')
+    seasonal_plot.line(x='index', y='genotype_susceptible',
+                       source=decomp_mean_source[base_frequency][1],
+                       color=colors[2], legend='Susceptible')
+    first_line.append(seasonal_plot)
+
+    resid_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                            x_range=base_plot.x_range)
+    resid_plot.title.text = '{} Residual Mean Data, Seasonal Frequency: {}'. \
+        format(life_stage_title, base_frequency)
+    resid_plot.yaxis.axis_label = 'Population'
+    resid_plot.xaxis.axis_label = 'time (days)'
+    resid_plot.line(x='index', y='genotype_resistant',
+                    source=decomp_mean_source[base_frequency][2],
+                    color=colors[0], legend='Resistant')
+    resid_plot.line(x='index', y='genotype_heterozygous',
+                    source=decomp_mean_source[base_frequency][2],
+                    color=colors[1], legend='Heterozygous')
+    resid_plot.line(x='index', y='genotype_susceptible',
+                    source=decomp_mean_source[base_frequency][2],
+                    color=colors[2], legend='Susceptible')
+    first_line.append(resid_plot)
+
+    series_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                             x_range=base_plot.x_range)
+    series_plot.title.text = '{} Timeseries Median Data, ' \
+                             'Seasonal Frequency: {}'. \
+        format(life_stage_title, base_frequency)
+    series_plot.yaxis.axis_label = 'Population'
+    series_plot.xaxis.axis_label = 'time (days)'
+    series_plot.line(x='index', y='genotype_resistant',
+                     source=timeseries_median_source,
+                     color=colors[0], legend='Resistant')
+    series_plot.line(x='index', y='genotype_heterozygous',
+                     source=timeseries_median_source,
+                     color=colors[1], legend='Heterozygous')
+    series_plot.line(x='index', y='genotype_susceptible',
+                     source=timeseries_median_source,
+                     color=colors[2], legend='Susceptible')
+    first_line.append(series_plot)
+
+    trend_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                            x_range=base_plot.x_range)
+    trend_plot.title.text = '{} Trend Median Data, Seasonal Frequency: {}'. \
+        format(life_stage_title, base_frequency)
+    trend_plot.yaxis.axis_label = 'Population'
+    trend_plot.xaxis.axis_label = 'time (days)'
+    trend_plot.line(x='index', y='genotype_resistant',
+                    source=decomp_median_source[base_frequency][0],
+                    color=colors[0], legend='Resistant')
+    trend_plot.line(x='index', y='genotype_heterozygous',
+                    source=decomp_median_source[base_frequency][0],
+                    color=colors[1], legend='Heterozygous')
+    trend_plot.line(x='index', y='genotype_susceptible',
+                    source=decomp_median_source[base_frequency][0],
+                    color=colors[2], legend='Susceptible')
+    first_line.append(trend_plot)
+
+    seasonal_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                               x_range=base_plot.x_range)
+    seasonal_plot.title.text = '{} Seasonality Median Data, ' \
+                               'Seasonal Frequency: {}'. \
+        format(life_stage_title, base_frequency)
+    seasonal_plot.yaxis.axis_label = 'Population'
+    seasonal_plot.xaxis.axis_label = 'time (days)'
+    seasonal_plot.line(x='index', y='genotype_resistant',
+                       source=decomp_median_source[base_frequency][1],
+                       color=colors[0], legend='Resistant')
+    seasonal_plot.line(x='index', y='genotype_heterozygous',
+                       source=decomp_median_source[base_frequency][1],
+                       color=colors[1], legend='Heterozygous')
+    seasonal_plot.line(x='index', y='genotype_susceptible',
+                       source=decomp_median_source[base_frequency][1],
+                       color=colors[2], legend='Susceptible')
+    first_line.append(seasonal_plot)
+
+    resid_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                            x_range=base_plot.x_range)
+    resid_plot.title.text = '{} Residual Median Data, Seasonal Frequency: {}'. \
+        format(life_stage_title, base_frequency)
+    resid_plot.yaxis.axis_label = 'Population'
+    resid_plot.xaxis.axis_label = 'time (days)'
+    resid_plot.line(x='index', y='genotype_resistant',
+                    source=decomp_median_source[base_frequency][2],
+                    color=colors[0], legend='Resistant')
+    resid_plot.line(x='index', y='genotype_heterozygous',
+                    source=decomp_median_source[base_frequency][2],
+                    color=colors[1], legend='Heterozygous')
+    resid_plot.line(x='index', y='genotype_susceptible',
+                    source=decomp_median_source[base_frequency][2],
+                    color=colors[2], legend='Susceptible')
+    first_line.append(resid_plot)
+
+    grid_lines = [first_line]
+    for frequency in frequencies:
+        line_plots = []
+        series_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                                 x_range=base_plot.x_range)
+        series_plot.title.text = '{} Timeseries Mean Data, ' \
+                                 'Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        series_plot.yaxis.axis_label = 'Population'
+        series_plot.xaxis.axis_label = 'time (days)'
+        series_plot.line(x='index', y='genotype_resistant',
+                         source=timeseries_mean_source,
+                         color=colors[0], legend='Resistant')
+        series_plot.line(x='index', y='genotype_heterozygous',
+                         source=timeseries_mean_source,
+                         color=colors[1], legend='Heterozygous')
+        series_plot.line(x='index', y='genotype_susceptible',
+                         source=timeseries_mean_source,
+                         color=colors[2], legend='Susceptible')
+        line_plots.append(series_plot)
+
+        trend_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                                x_range=base_plot.x_range)
+        trend_plot.title.text = '{} Trend Mean Data, Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        trend_plot.yaxis.axis_label = 'Population'
+        trend_plot.xaxis.axis_label = 'time (days)'
+        trend_plot.line(x='index', y='genotype_resistant',
+                        source=decomp_mean_source[frequency][0],
                         color=colors[0], legend='Resistant')
-female_median_plot.line(x='index', y='genotype_heterozygous',
-                        source=female_median_source,
+        trend_plot.line(x='index', y='genotype_heterozygous',
+                        source=decomp_mean_source[frequency][0],
                         color=colors[1], legend='Heterozygous')
-female_median_plot.line(x='index', y='genotype_susceptible',
-                        source=female_median_source,
-                        color=colors[0], legend='Susceptible')
+        trend_plot.line(x='index', y='genotype_susceptible',
+                        source=decomp_mean_source[frequency][0],
+                        color=colors[2], legend='Susceptible')
+        line_plots.append(trend_plot)
 
-series_data_title = mdl.Div(text='<h1>48 Run Timeseries Data</h1>')
-series_data_plot = lay.gridplot([[egg_mean_plot,    egg_median_plot],
-                                 [larva_mean_plot,  larva_median_plot],
-                                 [pupa_mean_plot,   pupa_median_plot],
-                                 [female_mean_plot, female_median_plot]])
-plt.show(lay.column(series_data_title,
-                    series_data_plot))
+        seasonal_plot = plt.figure(plot_width=plot_width,
+                                   plot_height=plot_height,
+                                   x_range=base_plot.x_range)
+        seasonal_plot.title.text = '{} Seasonality Mean Data, ' \
+                                   'Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        seasonal_plot.yaxis.axis_label = 'Population'
+        seasonal_plot.xaxis.axis_label = 'time (days)'
+        seasonal_plot.line(x='index', y='genotype_resistant',
+                           source=decomp_mean_source[frequency][1],
+                           color=colors[0], legend='Resistant')
+        seasonal_plot.line(x='index', y='genotype_heterozygous',
+                           source=decomp_mean_source[frequency][1],
+                           color=colors[1], legend='Heterozygous')
+        seasonal_plot.line(x='index', y='genotype_susceptible',
+                           source=decomp_mean_source[frequency][1],
+                           color=colors[2], legend='Susceptible')
+        line_plots.append(seasonal_plot)
+
+        resid_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                                x_range=base_plot.x_range)
+        resid_plot.title.text = '{} Residual Mean Data, ' \
+                                'Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        resid_plot.yaxis.axis_label = 'Population'
+        resid_plot.xaxis.axis_label = 'time (days)'
+        resid_plot.line(x='index', y='genotype_resistant',
+                        source=decomp_mean_source[frequency][2],
+                        color=colors[0], legend='Resistant')
+        resid_plot.line(x='index', y='genotype_heterozygous',
+                        source=decomp_mean_source[frequency][2],
+                        color=colors[1], legend='Heterozygous')
+        resid_plot.line(x='index', y='genotype_susceptible',
+                        source=decomp_mean_source[frequency][2],
+                        color=colors[2], legend='Susceptible')
+        line_plots.append(resid_plot)
+
+        series_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                                 x_range=base_plot.x_range)
+        series_plot.title.text = '{} Timeseries Median Data, ' \
+                                 'Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        series_plot.yaxis.axis_label = 'Population'
+        series_plot.xaxis.axis_label = 'time (days)'
+        series_plot.line(x='index', y='genotype_resistant',
+                         source=timeseries_median_source,
+                         color=colors[0], legend='Resistant')
+        series_plot.line(x='index', y='genotype_heterozygous',
+                         source=timeseries_median_source,
+                         color=colors[1], legend='Heterozygous')
+        series_plot.line(x='index', y='genotype_susceptible',
+                         source=timeseries_median_source,
+                         color=colors[2], legend='Susceptible')
+        line_plots.append(series_plot)
+
+        trend_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                                x_range=base_plot.x_range)
+        trend_plot.title.text = '{} Trend Median Data, ' \
+                                'Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        trend_plot.yaxis.axis_label = 'Population'
+        trend_plot.xaxis.axis_label = 'time (days)'
+        trend_plot.line(x='index', y='genotype_resistant',
+                        source=decomp_median_source[frequency][0],
+                        color=colors[0], legend='Resistant')
+        trend_plot.line(x='index', y='genotype_heterozygous',
+                        source=decomp_median_source[frequency][0],
+                        color=colors[1], legend='Heterozygous')
+        trend_plot.line(x='index', y='genotype_susceptible',
+                        source=decomp_median_source[frequency][0],
+                        color=colors[2], legend='Susceptible')
+        line_plots.append(trend_plot)
+
+        seasonal_plot = plt.figure(plot_width=plot_width,
+                                   plot_height=plot_height,
+                                   x_range=base_plot.x_range)
+        seasonal_plot.title.text = '{} Seasonality Median Data, ' \
+                                   'Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        seasonal_plot.yaxis.axis_label = 'Population'
+        seasonal_plot.xaxis.axis_label = 'time (days)'
+        seasonal_plot.line(x='index', y='genotype_resistant',
+                           source=decomp_median_source[frequency][1],
+                           color=colors[0], legend='Resistant')
+        seasonal_plot.line(x='index', y='genotype_heterozygous',
+                           source=decomp_median_source[frequency][1],
+                           color=colors[1], legend='Heterozygous')
+        seasonal_plot.line(x='index', y='genotype_susceptible',
+                           source=decomp_median_source[frequency][1],
+                           color=colors[2], legend='Susceptible')
+        line_plots.append(seasonal_plot)
+
+        resid_plot = plt.figure(plot_width=plot_width, plot_height=plot_height,
+                                x_range=base_plot.x_range)
+        resid_plot.title.text = '{} Residual Median Data, ' \
+                                'Seasonal Frequency: {}'. \
+            format(life_stage_title, frequency)
+        resid_plot.yaxis.axis_label = 'Population'
+        resid_plot.xaxis.axis_label = 'time (days)'
+        resid_plot.line(x='index', y='genotype_resistant',
+                        source=decomp_median_source[frequency][2],
+                        color=colors[0], legend='Resistant')
+        resid_plot.line(x='index', y='genotype_heterozygous',
+                        source=decomp_median_source[frequency][2],
+                        color=colors[1], legend='Heterozygous')
+        resid_plot.line(x='index', y='genotype_susceptible',
+                        source=decomp_median_source[frequency][2],
+                        color=colors[2], legend='Susceptible')
+        line_plots.append(resid_plot)
+
+        grid_lines.append(line_plots)
+
+    return lay.gridplot(grid_lines,
+                        toolbar_location='left')
+
+
+larva_seasonal_data_title = mdl.Div(text='<h1>Larva Seasonal Decomposition '
+                                         'Timeseries Data, {} runs</h1>'.
+                                    format(number_of_runs))
+larva_seasonal_plot = seasonal_data_plotter(larva_mean_source,
+                                            larva_mean_seasonal_sources,
+                                            larva_median_source,
+                                            larva_median_seasonal_sources,
+                                            'Larva')
+
+plt.show(lay.column(larva_periodogram_title,
+                    larva_periodogram_plot,
+                    larva_seasonal_data_title,
+                    larva_seasonal_plot))

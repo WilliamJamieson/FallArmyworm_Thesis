@@ -20,12 +20,12 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
-num_steps     = 1800
+num_steps     = 900
 num_pregnant  = 100
 save_fig      = True
-base_save     = 'parallel_sim_25_gen_no_bt_only_resist_adlib'
+base_save     = 'parallel_sim_10_gen_no_bt_only_sus'
 
-num_simulation = 48
+num_simulation = 112
 num_cpu        = 16
 
 
@@ -85,7 +85,7 @@ class Simulator(object):
                     input_develop.egg_development,
                     input_develop.larva_development,
                     input_develop.pupa_development,
-                    input_forage.ad_libitum,
+                    input_forage.starve,
                     input_forage.egg_forage,
                     input_forage.larva_forage,
                     input_forage.loss,
@@ -128,7 +128,7 @@ class Simulator(object):
                   *self.input_models,
                   **self.input_variables)
 
-    def run(self, times: list) -> int:
+    def run(self, times: list) -> datetime.timedelta:
         """
         Run the simulation for each time
 
@@ -139,17 +139,19 @@ class Simulator(object):
             biomass data
         """
 
+        start_time = datetime.datetime.now()
         for time in times[1:]:
             print('     {} Simulation {}, Running step: {}'.
                   format(datetime.datetime.now(), self.run_number, time))
             self.simulation.step()
 
         self.simulation.database.dump(self.simulation)
+        end_time = datetime.datetime.now()
 
-        return self.run_number
+        return end_time - start_time
 
 
-def run_simulation(sim_number) -> int:
+def run_simulation(sim_number) -> datetime.timedelta:
     """
     Setup and run/save simulation
 
@@ -165,18 +167,18 @@ def run_simulation(sim_number) -> int:
                     (0,            0,            0),
                     (0,            0,            0),
                     (0,            0,            0),
-                    (num_pregnant, 0,            0))
+                    (0,            0,            num_pregnant))
 
     print('{} Run {} Setting Up Long Time Simulations'.
           format(datetime.datetime.now(), sim_number))
     simulator = Simulator(initial_pops, 0, sim_number)
     print('{} Run {} Running Long Time Simulations'.
           format(datetime.datetime.now(), sim_number))
-    simulator.run(t)
-
-    return sim_number
+    return simulator.run(t)
 
 
-sim_numbers = para.Parallel(n_jobs=num_cpu)(
+sim_times = para.Parallel(n_jobs=num_cpu)(
     para.delayed(run_simulation)(num) for num in range(num_simulation)
 )
+
+average_sim_time = sum(sim_times, datetime.timedelta(0)) / len(sim_times)

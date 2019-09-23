@@ -6,19 +6,19 @@ import bokeh.models       as mdl
 import bokeh.palettes     as palettes
 import bokeh.models.tools as tools
 
+import numpy                    as np
 import scipy.signal             as signal
 import statsmodels.tsa.seasonal as seasonal
 
 import dataclasses   as dclass
-import numpy         as np
 import pandas        as pd
 import sqlalchemy    as sql
 
 import source.hint as hint
 
 
-source_name = 'long_sim_25_gen_no_im_bt_10_no_hetero.sqlite'
-# source_name = 'parallel_sim_25_gen_no_bt_only_sus_0.sqlite'
+# source_name = 'long_sim_25_gen_no_im_bt_10_no_hetero.sqlite'
+source_name = 'parallel_sim_25_gen_no_bt_only_sus_0.sqlite'
 source_path = '/home/william/Dropbox/Research/Parallel_FallArmyworm/' \
               'simulations/'
 tables      = ['(0,)_egg',
@@ -28,9 +28,9 @@ tables      = ['(0,)_egg',
 
 save_file = 'timeseries_decomp.html'
 
-frequency       = 28
-sample_interval = 50
-sample_length   = 10
+frequency       = 62
+sample_interval = 62
+sample_length   = 1
 
 plt.output_file(save_file)
 
@@ -205,6 +205,28 @@ egg_source    = mdl.ColumnDataSource(egg)
 larva_source  = mdl.ColumnDataSource(larva)
 pupa_source   = mdl.ColumnDataSource(pupa)
 female_source = mdl.ColumnDataSource(female)
+
+larva_susceptible_peaks, _ = \
+    signal.find_peaks(larva['genotype_susceptible'])
+larva_susceptible_peaks_width = \
+    signal.peak_widths(larva['genotype_susceptible'], larva_susceptible_peaks)[0]
+larva_susceptible_peaks_values = [larva['genotype_susceptible'][index]
+                                  for index in larva_susceptible_peaks]
+larva_susceptible_valleys, _ = \
+    signal.find_peaks(-larva['genotype_susceptible'])
+larva_susceptible_valleys_values = [larva['genotype_susceptible'][index]
+                                    for index in larva_susceptible_valleys]
+
+larva_susceptible_peaks_data = \
+    pd.DataFrame.from_dict({'index': larva_susceptible_peaks,
+                            'peaks': larva_susceptible_peaks_values})
+larva_susceptible_peaks_source = \
+    mdl.ColumnDataSource(larva_susceptible_peaks_data)
+larva_susceptible_valleys_data = \
+    pd.DataFrame.from_dict({'index': larva_susceptible_valleys,
+                            'valleys': larva_susceptible_valleys_values})
+larva_susceptible_valleys_source = \
+    mdl.ColumnDataSource(larva_susceptible_valleys_data)
 
 egg_resistant_freq, egg_resistant_power = \
     signal.periodogram(egg['genotype_resistant'])
@@ -549,6 +571,12 @@ larva_plot.line(x='index', y='genotype_heterozygous',
 larva_plot.line(x='index', y='genotype_susceptible',
                 source=larva_source,
                 color=colors[2], legend='Susceptible')
+larva_plot.circle(x='index', y='peaks',
+                  source=larva_susceptible_peaks_source,
+                  color=colors[2], legend='Susceptible Peaks')
+larva_plot.triangle(x='index', y='valleys',
+                    source=larva_susceptible_valleys_source,
+                    color=colors[2], legend='Susceptible Valleys')
 
 pupa_plot = plt.figure(plot_width=1500, plot_height=400,
                         x_range=egg_plot.x_range)
