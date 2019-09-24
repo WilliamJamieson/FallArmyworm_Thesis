@@ -1,8 +1,6 @@
 import numpy             as np
 import scipy.optimize    as opt
 
-import data.input_data as input_data
-
 import source.keyword as keyword
 
 import source.biomass.models as models
@@ -266,119 +264,174 @@ def biomass(start_mass: float,
                    fin_time).parameters()
 
 
+def hetero(homo_s: float,
+           homo_r: float,
+           degree: float) -> float:
+    """
+    Calculate the heterozyous parameter using degree of dominance
+        SR = (SS + RR)/2 + D*(SS - RR)/2
+
+        SR = heterozyous
+        SS = susceptible
+        RR = resistant
+        D  = degree of dominance
+
+    Args:
+        homo_s: susceptible parameter
+        homo_r: resistant   parameter
+        degree: degree of dominance
+
+    Returns:
+        heterozygous parameter
+    """
+
+    avg = (homo_s + homo_r)/2
+    sub = (homo_s - homo_r)/2
+
+    return avg + (degree * sub)
+
+
 # Find the fit data
 #       Egg fit data
-egg_mass_data = egg_mass(input_data.egg_mass_number,
-                         input_data.egg_mass_samples)
-init_mass_homo_s = egg_mass_data[3]
-init_mass_homo_r = egg_mass_data[3] * input_data.homo_r_mass_factor
-init_mass_hetero = input_data.hetero(init_mass_homo_s,
-                                     init_mass_homo_r)
-mass_0           = {keyword.homo_s: init_mass_homo_s,
-                    keyword.homo_r: init_mass_homo_r,
-                    keyword.hetero: init_mass_hetero}
+def biomass_models(number, mass, factor, degree,
+                   mass_middle_homo_s,
+                   time_middle_homo_s,
+                   mass_middle_homo_r,
+                   time_middle_homo_r,
+                   mass_final_homo_s,
+                   time_final_homo_s,
+                   mass_final_homo_r,
+                   time_final_homo_r,
+                   mass_sigma):
+    """
+    Create the biomass models
+    Args:
+        number:             data on numbers of eggs in egg_mass
+        mass:               data on mass    of         egg_mass
+        factor:             factor of how resistant relates to susceptible
+        degree:             degree of dominance
+        mass_middle_homo_s: susceptible mid point mass
+        time_middle_homo_s: susceptible mid point time
+        mass_middle_homo_r: resistant   mid point mass
+        time_middle_homo_r: resistant   mid point time
+        mass_final_homo_s:  susceptible final     mass
+        time_final_homo_s:  susceptible final     time
+        mass_final_homo_r:  resistant   final     mass
+        time_final_homo_r:  resistant   final     time
+        mass_sigma:         standard deviation in adult mass
 
-#       Biomass fit data
-biomass_data_homo_r = biomass(init_mass_homo_r,
-                              input_data.mass_middle_r,
-                              input_data.time_middle_r,
-                              input_data.mass_final_r,
-                              input_data.time_final_r)
-biomass_data_homo_s = biomass(init_mass_homo_s,
-                              input_data.mass_middle_s,
-                              input_data.time_middle_s,
-                              input_data.mass_final_s,
-                              input_data.time_final_s)
-mass_const_homo_s = biomass_data_homo_s[3]
-mass_const_homo_r = biomass_data_homo_r[3]
-mass_const_hetero = input_data.hetero(mass_const_homo_s,
-                                      mass_const_homo_r)
-mass_constant     = {keyword.homo_s:  mass_const_homo_s,
-                     keyword.homo_r:  mass_const_homo_r,
-                     keyword.hetero:  mass_const_hetero}
+    Returns:
+        max_gut model,
+        growth  model,
+        init_num model,
+        init_mass model,
+        init_juvenile model,
+        init_mature model
+    """
+
+    # Egg fit
+    mass_data        = egg_mass(number, mass)
+    init_mass_homo_s = mass_data[3]
+    init_mass_homo_r = mass_data[3] * factor
+
+    # Larva fit
+    biomass_data_homo_s = biomass(init_mass_homo_s,
+                                  mass_middle_homo_s,
+                                  time_middle_homo_s,
+                                  mass_final_homo_s,
+                                  time_final_homo_s)
+    biomass_data_homo_r = biomass(init_mass_homo_r,
+                                  mass_middle_homo_r,
+                                  time_middle_homo_r,
+                                  mass_final_homo_r,
+                                  time_final_homo_r)
+
+    # Create the max_gut model
+    max_gut = models.MaxGut()
+
+    # Create the growth model
+    growth_alpha_homo_s = biomass_data_homo_s[0]
+    growth_alpha_homo_r = biomass_data_homo_r[0]
+    growth_alpha_hetero = hetero(growth_alpha_homo_s,
+                                 growth_alpha_homo_r,
+                                 degree)
+    growth_alpha        = {keyword.homo_s: growth_alpha_homo_s,
+                           keyword.homo_r: growth_alpha_homo_r,
+                           keyword.hetero: growth_alpha_hetero}
+    growth_beta_homo_s  = biomass_data_homo_s[1]
+    growth_beta_homo_r  = biomass_data_homo_r[1]
+    growth_beta_hetero  = hetero(growth_beta_homo_s,
+                                 growth_beta_homo_r,
+                                 degree)
+    growth_beta         = {keyword.homo_s: growth_beta_homo_s,
+                           keyword.homo_r: growth_beta_homo_r,
+                           keyword.hetero: growth_beta_hetero}
+    growth              = models.Growth(growth_alpha,
+                                        growth_beta)
+
+    # Create the initial mass models
+    #       init_num
+    init_num_lam = mass_data[0]
+    init_num     = models.InitNum(init_num_lam)
+    #       init_mass
+    init_mass_mu_homo_s  = mass_data[1]
+    init_mass_mu_homo_r  = mass_data[1] * factor
+    init_mass_mu_hetero  = hetero(init_mass_mu_homo_s,
+                                  init_mass_mu_homo_r,
+                                  degree)
+    init_mass_mu         = {keyword.homo_s: init_mass_mu_homo_s,
+                            keyword.homo_r: init_mass_mu_homo_r,
+                            keyword.hetero: init_mass_mu_hetero}
+    init_mass_sigma      = mass_data[2]
+    init_mass_max_homo_s = biomass_data_homo_s[2]
+    init_mass_max_homo_r = biomass_data_homo_r[2]
+    init_mass_max_hetero = hetero(init_mass_max_homo_s,
+                                  init_mass_max_homo_r,
+                                  degree)
+    init_mass_maximum    = {keyword.homo_s: init_mass_max_homo_s,
+                            keyword.homo_r: init_mass_max_homo_r,
+                            keyword.hetero: init_mass_max_hetero}
+    init_mass            = models.InitMass(init_mass_mu,
+                                           init_mass_sigma,
+                                           init_mass_maximum)
+    #       init_juvenile
+    init_juvenile_lam     = init_num_lam
+    init_juvenile_mu      = init_mass_mu
+    init_juvenile_sigma   = init_mass_sigma
+    init_juvenile_maximum = init_mass_maximum
+    init_juvenile         = models.InitJuvenile(init_juvenile_lam,
+                                                init_juvenile_mu,
+                                                init_juvenile_sigma,
+                                                init_juvenile_maximum)
+    #       init_mature
+    init_mature_mu_homo_s = mass_final_homo_s
+    init_mature_mu_homo_r = mass_final_homo_r
+    init_mature_mu_hetero = hetero(init_mature_mu_homo_s,
+                                   init_mature_mu_homo_r,
+                                   degree)
+    init_mature_mu        = {keyword.homo_s: init_mature_mu_homo_s,
+                             keyword.homo_r: init_mature_mu_homo_r,
+                             keyword.hetero: init_mature_mu_hetero}
+    init_mature_sigma     = mass_sigma
+    init_mature_maximum   = init_mass_maximum
+    init_mature           = models.InitMature(init_mature_mu,
+                                              init_mature_sigma,
+                                              init_mature_maximum)
+
+    return max_gut, growth, init_num, init_mass, init_juvenile, init_mature
 
 
-# Create the data points
-mid_point_r = (input_data.time_middle_r, input_data.mass_middle_r)
-mid_point_s = (input_data.time_middle_s, input_data.mass_middle_s)
-fin_point_r = (input_data.time_final_r,  input_data.mass_final_r)
-fin_point_s = (input_data.time_final_s,  input_data.mass_final_s)
-
-
-# Generate the input models
-#       max_gut
-max_gut = models.MaxGut()
-#       growth
-growth_alpha_homo_s = biomass_data_homo_s[0]
-growth_alpha_homo_r = biomass_data_homo_r[0]
-growth_alpha_hetero = input_data.hetero(growth_alpha_homo_s,
-                                        growth_alpha_homo_r)
-growth_alpha        = {keyword.homo_s:  growth_alpha_homo_s,
-                       keyword.homo_r:  growth_alpha_homo_r,
-                       keyword.hetero:  growth_alpha_hetero}
-growth_beta_homo_s  = biomass_data_homo_s[1]
-growth_beta_homo_r  = biomass_data_homo_r[1]
-growth_beta_hetero  = input_data.hetero(growth_beta_homo_s,
-                                        growth_beta_homo_r)
-growth_beta         = {keyword.homo_s:  growth_beta_homo_s,
-                       keyword.homo_r:  growth_beta_homo_r,
-                       keyword.hetero:  growth_beta_hetero}
-
-growth = models.Growth(growth_alpha,
-                       growth_beta)
-#       init_num
-init_num_lam = egg_mass_data[0]
-
-init_num     = models.InitNum(init_num_lam)
-#       init_mass
-init_mass_mu_homo_s  = egg_mass_data[1]
-init_mass_mu_homo_r  = egg_mass_data[1] * input_data.homo_r_mass_factor
-init_mass_mu_hetero  = input_data.hetero(init_mass_mu_homo_s,
-                                         init_mass_mu_homo_r)
-init_mass_mu         = {keyword.homo_s:  init_mass_mu_homo_s,
-                        keyword.homo_r:  init_mass_mu_homo_r,
-                        keyword.hetero:  init_mass_mu_hetero}
-init_mass_sigma      = egg_mass_data[2]
-init_mass_max_homo_s = biomass_data_homo_s[2]
-init_mass_max_homo_r = biomass_data_homo_r[2]
-init_mass_max_hetero = input_data.hetero(init_mass_max_homo_s,
-                                         init_mass_max_homo_r)
-init_mass_maximum    = {keyword.homo_s:  init_mass_max_homo_s,
-                        keyword.homo_r:  init_mass_max_homo_r,
-                        keyword.hetero:  init_mass_max_hetero}
-
-init_mass = models.InitMass(init_mass_mu,
-                            init_mass_sigma,
-                            init_mass_maximum)
-#       init_juvenile
-init_juvenile_lam     = init_num_lam
-init_juvenile_mu      = init_mass_mu
-init_juvenile_sigma   = init_mass_sigma
-init_juvenile_maximum = init_mass_maximum
-
-init_juvenile = models.InitJuvenile(init_juvenile_lam,
-                                    init_juvenile_mu,
-                                    init_juvenile_sigma,
-                                    init_juvenile_maximum)
-#       init_mature
-init_mature_mu_homo_s = input_data.mass_final_s
-init_mature_mu_homo_r = input_data.mass_final_r
-init_mature_mu_hetero = input_data.hetero(init_mature_mu_homo_s,
-                                          init_mature_mu_homo_r)
-init_mature_mu        = {keyword.homo_s:  init_mature_mu_homo_s,
-                         keyword.homo_r:  init_mature_mu_homo_r,
-                         keyword.hetero:  init_mature_mu_hetero}
-init_mature_sigma     = input_data.mass_sigma
-init_mature_maximum   = init_mass_maximum
-
-init_mature = models.InitMature(init_mature_mu,
-                                init_mature_sigma,
-                                init_mature_maximum)
 #       init_plant
-init_plant_mu      = input_data.leaf_mass_mu
-init_plant_sigma   = input_data.leaf_mass_sigma
-init_plant_maximum = input_data.leaf_mass_max
+def init_plant(mu, sigma, maximum):
+    """
+    Create an init plant mass
+    Args:
+        mu:      mean
+        sigma:   standard deviation
+        maximum: maximum value
 
-init_plant = models.InitPlant(init_plant_mu,
-                              init_plant_sigma,
-                              init_plant_maximum)
+    Returns:
+        an initial plant mass model
+    """
+
+    return models.InitPlant(mu, sigma, maximum)

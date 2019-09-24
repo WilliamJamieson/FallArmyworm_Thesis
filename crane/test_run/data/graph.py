@@ -1,12 +1,15 @@
-import pickle   as pickle
+import os
+import pickle as pickle
 
 import source.hint as hint
 
 
+file_path = os.path.dirname(os.path.abspath(__file__))
+
 # MUST be Adjusted for corrected paths
-hex_10x10 = '/home/william/Dropbox/Research/Parallel_FallArmyworm/data/hex_10x10.graph'
-hex_25x25 = '/home/william/Dropbox/Research/Parallel_FallArmyworm/data/hex_25x25.graph'
-hex_50x50 = '/home/william/Dropbox/Research/Parallel_FallArmyworm/data/hex_50x50.graph'
+hex_10x10 = '{}/{}'.format(file_path, 'hex_10x10.graph')
+hex_25x25 = '{}/{}'.format(file_path, 'hex_25x25.graph')
+hex_50x50 = '{}/{}'.format(file_path, 'hex_50x50.graph')
 
 
 def graph(side: int) -> hint.graph:

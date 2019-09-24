@@ -1,41 +1,75 @@
-import data.input_data as input_data
-
-import source.keyword as keyword
-
 import source.reproduction.models as models
 
 
 # Generate the input models
 #       init_sex
-sex_prob = input_data.female_prob
+def init_sex(prob):
+    """
+    Create an initial sex model
+    Args:
+        prob: probability of female
 
-init_sex = models.InitSex(sex_prob)
+    Returns:
+        an initial sex model
+    """
+
+    return models.InitSex(prob)
+
+
 #       mating
-mating_factor = input_data.mate_encounter
+def mating(factor):
+    """
+    Create a mating model
+    Args:
+        factor: encounter factor
 
-mating = models.Mating(mating_factor)
+    Returns:
+        a mating model
+    """
+
+    return models.Mating(factor)
+
 
 #       mate_radius
-radius = input_data.mate_radius
+def radius(rad):
+    """
+    Create a mate radius model
 
-mate_radius = models.Radius(radius)
+    Args:
+        rad: maximum radius
+
+    Returns:
+        a mate radius model
+    """
+
+    return models.Radius(rad)
+
 
 #       fecundity
-maximum = input_data.fecundity_maximum
-decay   = input_data.fecundity_decay
+def fecundity(maximum, decay):
+    """
+    Create a fecundity model
+    Args:
+        maximum: maximum fecundity
+        decay:   decay rate constant
 
-fecundity = models.Fecundity(maximum,
-                             decay)
+    Returns:
+        fecundity model
+    """
+
+    return models.Fecundity(maximum, decay)
+
 
 #       density
-eta   = input_data.density_eta
-gamma = input_data.density_gamma
+def density(eta, gamma):
+    """
+    Create a density model
+    Args:
+        eta:   constant
+        gamma: power
 
-density = models.Density(eta,
-                         gamma)
+    Returns:
+        density model
+    """
 
-#      fixed value inputs
-values = {keyword.trials:          input_data.trials,
-          keyword.limited:         input_data.limited,
-          keyword.lifetime_male:   input_data.lifetime_male,
-          keyword.lifetime_female: input_data.lifetime_female}
+    return models.Density(eta, gamma)

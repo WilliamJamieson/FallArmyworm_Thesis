@@ -1,61 +1,122 @@
-import data.input_data as input_data
-import data.biomass    as biomass
-
-import source.keyword as keyword
-
 import source.forage.models as models
 
 
 # Generate the input models
 #       plant_ad_libitum
-ad_libitum = models.PlantAdLibitum(biomass.max_gut)
+def ad_libitum(max_gut):
+    """
+    Create an ad libitum model
+    Args:
+        max_gut: max gut model
+
+    Returns:
+        forage model
+    """
+
+    return models.PlantAdLibitum(max_gut)
+
+
 #       plant_starve
-starve_mu    = input_data.starvation_mu
-starve_sigma = input_data.starvation_sigma
+def starve(mu, sigma, max_gut):
+    """
+    Create a starvation model
+    Args:
+        mu:      mean in starvation factor
+        sigma:   standard deviation in factor
+        max_gut: max gut model
 
-starve = models.PlantStarve(starve_mu,
-                            starve_sigma,
-                            biomass.max_gut)
+    Returns:
+        forage model
+    """
+
+    return models.PlantStarve(mu, sigma, max_gut)
+
+
 #       egg_forage
-egg_factor = input_data.egg_factor
+def egg(factor):
+    """
+    Create a egg forage model
 
-egg_forage = models.Egg(egg_factor)
+    Args:
+        factor: weight factor
+
+    Returns:
+        an egg forage model
+    """
+
+    return models.Egg(factor)
+
+
 #       larva_forage
-larva_factor = input_data.larva_factor
+def larva(factor):
+    """
+    Create a larva forage model
 
-larva_forage = models.Larva(larva_factor)
+    Args:
+        factor: weight factor
+
+    Returns:
+        an larva forage model
+    """
+
+    return models.Larva(factor)
 
 
 #       loss
-def mid(point):
-    return (1 - point) / point
+def loss(slope, mid, max_gut, egg_forage, larva_forage):
+    """
+    Calculate the loss of target model
+    Args:
+        slope:        loss slope
+        mid:          midpoint prob
+        max_gut:      max_gut model
+        egg_forage:   egg forage
+        larva_forage: larva forage
 
+    Returns:
+        a target loss model
+    """
 
-loss_slope = {keyword.egg_mass: input_data.egg_slope,
-              keyword.larva:    input_data.larva_slope}
-mid_egg   = mid(input_data.egg_mid)
-mid_larva = mid(input_data.larva_mid)
-loss_mid  = {keyword.egg_mass: mid_egg,
-             keyword.larva:    mid_larva}
+    return models.Loss(slope, mid, max_gut, egg_forage, larva_forage)
 
-
-loss = models.Loss(loss_slope,
-                   loss_mid,
-                   biomass.max_gut,
-                   egg_forage,
-                   larva_forage)
 
 #       fight
-fight_slope = input_data.fight_steepness
+def fight(slope):
+    """
+    Create a fight model
+    Args:
+        slope: slope of transition
 
-fight = models.Fight(fight_slope)
+    Returns:
+        fight model
+    """
+
+    return models.Fight(slope)
+
 
 #       encounter
-encounter_factor = input_data.cannibalism_encounter
+def encounter(factor):
+    """
+    Create an encounter model
+    Args:
+        factor: encounter control factor
 
-encounter = models.Encounter(encounter_factor)
+    Returns:
+        encounter model
+    """
+
+    return models.Encounter(factor)
+
 
 #       radius
-rad = input_data.cannibalism_radius
+def radius(rad):
+    """
+    Create an encounter radius model
+    Args:
+        rad: max radius
 
-radius = models.Radius(rad)
+    Returns:
+        radius model
+    """
+
+    return models.Radius(rad)

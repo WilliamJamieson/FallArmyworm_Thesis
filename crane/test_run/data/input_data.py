@@ -1,3 +1,6 @@
+import source.keyword as keyword
+
+
 dominance = 0
 
 
@@ -24,6 +27,39 @@ def hetero(homo_s: float,
     sub = (homo_s - homo_r)/2
 
     return avg + (dominance * sub)
+
+
+# save name
+save_name = 'parallel_sim_10_gen_no_bt_only_sus'
+
+# steps
+num_steps = 900
+
+
+# initial data
+num_egg_masses_homo_r = 0
+num_egg_masses_hetero = 0
+num_egg_masses_homo_s = 0
+
+num_larvae_homo_r = 0
+num_larvae_hetero = 0
+num_larvae_homo_s = 0
+
+num_pupae_homo_r = 0
+num_pupae_hetero = 0
+num_pupae_homo_s = 0
+
+num_adults_homo_r = 0
+num_adults_hetero = 0
+num_adults_homo_s = 0
+
+num_pregnant_homo_r = 0
+num_pregnant_hetero = 0
+num_pregnant_homo_s = 100
+
+
+# bt
+bt_prop = 0
 
 
 # Larva Mass Measurements
@@ -85,20 +121,58 @@ adult_move_scale = 1
 adult_move_shape = 1
 
 # Survival measurements
-larva_wild_lower_s = 0.9
-larva_wild_upper_s = 0.95
+larva_wild_lower_homo_s = 0.9
+larva_wild_lower_homo_r = 0.9
+larva_wild_lower_hetero = hetero(larva_wild_lower_homo_s,
+                                 larva_wild_lower_homo_r)
+larva_wild_lower        = {keyword.homo_s: larva_wild_lower_homo_s,
+                           keyword.homo_r: larva_wild_lower_homo_r,
+                           keyword.hetero: larva_wild_lower_hetero}
 
-larva_wild_lower_r = 0.9
-larva_wild_upper_r = 0.95
+larva_wild_upper_homo_s = 0.95
+larva_wild_upper_homo_r = 0.95
+larva_wild_upper_hetero = hetero(larva_wild_upper_homo_s,
+                                 larva_wild_upper_homo_r)
+larva_wild_upper        = {keyword.homo_s: larva_wild_upper_homo_s,
+                           keyword.homo_r: larva_wild_upper_homo_r,
+                           keyword.hetero: larva_wild_upper_hetero}
 
-larva_bt_lower_s = 0.4
-larva_bt_upper_s = 0.8
+larva_bt_lower_homo_s = 0.4
+larva_bt_lower_homo_r = 0.9
+larva_bt_lower_hetero = hetero(larva_bt_lower_homo_s,
+                                 larva_bt_lower_homo_r)
+larva_bt_lower        = {keyword.homo_s: larva_bt_lower_homo_s,
+                         keyword.homo_r: larva_bt_lower_homo_r,
+                         keyword.hetero: larva_bt_lower_hetero}
 
-larva_bt_lower_r = 0.9
-larva_bt_upper_r = 0.95
+larva_bt_upper_homo_s = 0.8
+larva_bt_upper_homo_r = 0.95
+larva_bt_upper_hetero = hetero(larva_bt_upper_homo_s,
+                               larva_bt_upper_homo_r)
+larva_bt_upper        = {keyword.homo_s: larva_bt_upper_homo_s,
+                         keyword.homo_r: larva_bt_upper_homo_r,
+                         keyword.hetero: larva_bt_upper_hetero}
 
-larva_sur_steep_s = 4
-larva_sur_steep_r = 4
+larva_lower = {keyword.not_bt: larva_wild_lower,
+               keyword.bt:     larva_bt_lower}
+larva_upper = {keyword.not_bt: larva_wild_upper,
+               keyword.bt:     larva_bt_upper}
+
+larva_inflection_homo_s = time_final_s/2
+larva_inflection_homo_r = time_final_r/2
+larva_inflection_hetero = hetero(larva_inflection_homo_s,
+                                 larva_inflection_homo_r)
+larva_inflection        = {keyword.homo_s: larva_inflection_homo_s,
+                           keyword.homo_r: larva_inflection_homo_r,
+                           keyword.hetero: larva_inflection_hetero}
+
+larva_sur_steep_homo_s = 4
+larva_sur_steep_homo_r = 4
+larva_sur_steep_hetero = hetero(larva_sur_steep_homo_s,
+                                larva_sur_steep_homo_r)
+larva_sur_steep        = {keyword.homo_s: larva_sur_steep_homo_s,
+                          keyword.homo_r: larva_sur_steep_homo_r,
+                          keyword.hetero: larva_sur_steep_hetero}
 
 egg_survive_prob = 0.95
 egg_lifetime     = 3
@@ -110,13 +184,27 @@ adult_survive_prob = 0.95
 adult_lifetime     = 10
 
 # Development measurements
-larva_mu_s      = mass_final_s
-larva_sigma_s   = 25
-larva_minimum_s = time_final_s
+larva_mu_homo_s      = mass_final_s
+larva_sigma_homo_s   = 25
+larva_minimum_homo_s = time_final_s
 
-larva_mu_r      = mass_final_r
-larva_sigma_r   = 25
-larva_minimum_r = time_final_r
+larva_mu_homo_r      = mass_final_r
+larva_sigma_homo_r   = 25
+larva_minimum_homo_r = time_final_r
+
+larva_mu_hetero      = hetero(larva_mu_homo_s, larva_mu_homo_r)
+larva_sigma_hetero   = hetero(larva_sigma_homo_s, larva_sigma_homo_r)
+larva_minimum_hetero = hetero(larva_minimum_homo_s, larva_minimum_homo_r)
+
+larva_mu      = {keyword.homo_s:  larva_mu_homo_s,
+                 keyword.homo_r:  larva_mu_homo_r,
+                 keyword.hetero:  larva_mu_hetero}
+larva_sigma   = {keyword.homo_s:  larva_sigma_homo_s,
+                 keyword.homo_r:  larva_sigma_homo_r,
+                 keyword.hetero:  larva_sigma_hetero}
+larva_minimum = {keyword.homo_s:  larva_minimum_homo_s,
+                 keyword.homo_r:  larva_minimum_homo_r,
+                 keyword.hetero:  larva_minimum_hetero}
 
 egg_mu      = 3
 egg_sigma   = 1
@@ -134,11 +222,22 @@ starvation_sigma = 0.05
 egg_factor            = 1
 larva_factor          = 1
 
-egg_slope   = 4
-larva_slope = 4
-egg_mid     = 0.9
-larva_mid   = 0.25
 
+def mid(point):
+    return (1 - point) / point
+
+
+egg_slope      = 4
+larva_slope    = 4
+egg_mid_prob   = 0.9
+egg_mid        = mid(egg_mid_prob)
+larva_mid_prob = 0.25
+larva_mid      = mid(larva_mid_prob)
+
+loss_slope = {keyword.egg_mass: egg_slope,
+              keyword.larva:    larva_slope}
+loss_mid   = {keyword.egg_mass: egg_mid,
+              keyword.larva:    larva_mid}
 
 # Cannibalism measurements
 fight_steepness       = 4
@@ -172,7 +271,8 @@ sigma_pupa  = 10
 mean_egg    = 300
 sigma_egg   = 10
 #   immigration
-lambda_adult = 3
-lambda_larva = 3
-lambda_pupa  = 3
-lambda_egg   = 3
+lambda_pregnant = 3
+lambda_adult    = 3
+lambda_larva    = 3
+lambda_pupa     = 3
+lambda_egg      = 3

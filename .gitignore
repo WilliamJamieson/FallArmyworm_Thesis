@@ -129,4 +129,5 @@ plots/*.png
 simulations/*.png
 simulations/*.sqlite
 analysis/*.html
+crane/*/data/*.graph
 /.dropbox
