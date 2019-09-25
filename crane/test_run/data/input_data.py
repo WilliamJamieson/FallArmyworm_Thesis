@@ -1,3 +1,4 @@
+import sys
 import source.keyword as keyword
 
 
@@ -30,7 +31,8 @@ def hetero(homo_s: float,
 
 
 # save name
-save_name = 'parallel_sim_10_gen_no_bt_only_sus'
+save_name = vars(sys.modules[__name__])['__package__'].split('.')[1]
+# save_name = 'parallel_sim_10_gen_no_bt_only_sus'
 
 # steps
 num_steps = 2
