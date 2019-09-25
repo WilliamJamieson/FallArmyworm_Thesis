@@ -43,6 +43,8 @@ try:
 except KeyError:
     save_path = os.path.dirname(os.path.abspath(__file__))
 
+print(save_path)
+
 # save_name = 'parallel_sim_10_gen_no_bt_only_sus'
 
 # steps
