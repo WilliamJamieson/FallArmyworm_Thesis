@@ -104,6 +104,8 @@ class Simulator(object):
                 self.save(time)
                 dump_time = datetime.datetime.now()
 
+        print('     {} Simulation {}, Complete Starting save'.
+              format(datetime.datetime.now(), self.run_number))
         self.simulation.database.dump(self.simulation)
         end_time = datetime.datetime.now()
 
