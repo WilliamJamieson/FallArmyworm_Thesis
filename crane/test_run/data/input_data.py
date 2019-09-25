@@ -70,7 +70,7 @@ adults_homo_s = 0
 
 pregnant_homo_r = 0
 pregnant_hetero = 0
-pregnant_homo_s = 100
+pregnant_homo_s = 1
 
 
 # bt
