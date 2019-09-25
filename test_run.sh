@@ -4,8 +4,8 @@
 #SBATCH --time=00:20:00
 #SBATCH --mem-per-cpu=2048
 #SBATCH --job-name=test_run
-#SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job.%J.err
-#SBATCH --output=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job.%J.out
+#SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.err
+#SBATCH --output=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.out
 
 mkdir -p "$WORK"/FallArmyworm_Thesis/"$SLURM_JOB_NAME"
 
