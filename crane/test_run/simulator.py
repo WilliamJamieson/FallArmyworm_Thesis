@@ -1,5 +1,4 @@
 import datetime
-import os
 
 import dataclasses as dclass
 import pickle      as pk
@@ -33,6 +32,7 @@ class Simulator(object):
     nums      = inputs.nums
     bt_prop   = inputs.bt_prop
     timesteps = inputs.timesteps
+    path_save = inputs.path_save
     base_save = inputs.base_save
 
     run_number: int
@@ -43,11 +43,10 @@ class Simulator(object):
     def __post_init__(self):
 
         if self.simulation is None:
-            file_path = os.path.dirname(os.path.abspath(__file__))
             save_name = '{}_{}{}'.format(self.base_save,
                                          self.run_number,
                                          '.sqlite')
-            self.data = (100, save_name, file_path)
+            self.data = (100, save_name, self.path_save)
 
             self.simulation = main_simulation.Simulation. \
                 setup(self.nums,

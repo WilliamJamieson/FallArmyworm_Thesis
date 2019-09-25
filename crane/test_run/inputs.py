@@ -141,4 +141,5 @@ nums = (
 
 bt_prop   = data.bt_prob
 timesteps = data.num_steps
+path_save = data.save_path
 base_save = data.save_name

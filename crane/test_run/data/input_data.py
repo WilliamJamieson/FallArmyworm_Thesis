@@ -1,4 +1,6 @@
+import os
 import sys
+
 import source.keyword as keyword
 
 
@@ -32,6 +34,15 @@ def hetero(homo_s: float,
 
 # save name
 save_name = vars(sys.modules[__name__])['__package__'].split('.')[1]
+
+try:
+    work_path = os.environ['WORK']
+    save_path = '{}/{}/{}'.format(work_path,
+                                  'FallArmyworm_Thesis',
+                                  save_name)
+except KeyError:
+    save_path = os.path.dirname(os.path.abspath(__file__))
+
 # save_name = 'parallel_sim_10_gen_no_bt_only_sus'
 
 # steps
