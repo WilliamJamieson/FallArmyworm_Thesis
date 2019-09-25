@@ -1,13 +1,3 @@
-# import crane.test_run.data.biomass      as biomass
-# import crane.test_run.data.tracking     as tracking
-# import crane.test_run.data.development  as development
-# import crane.test_run.data.forage       as forage
-# import crane.test_run.data.graph        as graph
-# import crane.test_run.data.migration    as migration
-# import crane.test_run.data.movement     as movement
-# import crane.test_run.data.reproduction as reproduction
-# import crane.test_run.data.survival     as survival
-
 import importlib
 import sys
 

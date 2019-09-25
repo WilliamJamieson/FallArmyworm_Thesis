@@ -33,33 +33,33 @@ def hetero(homo_s: float,
 save_name = 'parallel_sim_10_gen_no_bt_only_sus'
 
 # steps
-num_steps = 900
+num_steps = 2
 
 
 # initial data
-num_egg_masses_homo_r = 0
-num_egg_masses_hetero = 0
-num_egg_masses_homo_s = 0
+egg_masses_homo_r = 0
+egg_masses_hetero = 0
+egg_masses_homo_s = 0
 
-num_larvae_homo_r = 0
-num_larvae_hetero = 0
-num_larvae_homo_s = 0
+larvae_homo_r = 0
+larvae_hetero = 0
+larvae_homo_s = 0
 
-num_pupae_homo_r = 0
-num_pupae_hetero = 0
-num_pupae_homo_s = 0
+pupae_homo_r = 0
+pupae_hetero = 0
+pupae_homo_s = 0
 
-num_adults_homo_r = 0
-num_adults_hetero = 0
-num_adults_homo_s = 0
+adults_homo_r = 0
+adults_hetero = 0
+adults_homo_s = 0
 
-num_pregnant_homo_r = 0
-num_pregnant_hetero = 0
-num_pregnant_homo_s = 100
+pregnant_homo_r = 0
+pregnant_hetero = 0
+pregnant_homo_s = 100
 
 
 # bt
-bt_prop = 0
+bt_prob = 0
 
 
 # Larva Mass Measurements

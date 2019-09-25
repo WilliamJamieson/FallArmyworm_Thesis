@@ -18,11 +18,13 @@ class Database(object):
 
     spacing:   int
     file_name: str = ':memory:'
+    file_path: str = ''
     prev_dump: int = 0
     next_dump: int = 0
 
     def __post_init__(self):
-        self.next_dump = self.prev_dump + self.spacing
+        if self.next_dump == 0:
+            self.next_dump = self.prev_dump + self.spacing
 
     def sql_file_name(self, simulation: hint.simulation) -> str:
         """
@@ -36,7 +38,9 @@ class Database(object):
         """
 
         dialect = 'sqlite:///'
-        time    = '{}_to_{}_'.format(self.prev_dump, simulation.timestep)
+        time    = '{}/{}_to_{}_'.format(self.file_path,
+                                        self.prev_dump,
+                                        simulation.timestep)
 
         return '{}{}{}'.format(dialect, time, self.file_name)
 

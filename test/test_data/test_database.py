@@ -26,11 +26,13 @@ class TestDatabase(ut.TestCase):
         """Setup the tests"""
 
         self.spacing   = mk.MagicMock(spec=int)
+        self.file_path = mk.MagicMock(spec=str)
         self.file_name = mk.MagicMock(spec=str)
-        self.prev_dump = mk.MagicMock(spec= int)
+        self.prev_dump = mk.MagicMock(spec=int)
 
         self.Database = database.Database(self.spacing,
                                           self.file_name,
+                                          self.file_path,
                                           self.prev_dump)
 
     def test___init__(self):
@@ -39,6 +41,7 @@ class TestDatabase(ut.TestCase):
         self.assertIsInstance(self.Database, database.Database)
 
         self.assertEqual(self.Database.spacing,   self.spacing)
+        self.assertEqual(self.Database.file_path, self.file_path)
         self.assertEqual(self.Database.file_name, self.file_name)
         self.assertEqual(self.Database.prev_dump, self.prev_dump)
 
@@ -55,6 +58,7 @@ class TestDatabase(ut.TestCase):
         self.assertIsInstance(self.Database, database.Database)
 
         self.assertEqual(self.Database.spacing,   self.spacing)
+        self.assertEqual(self.Database.file_path, '')
         self.assertEqual(self.Database.file_name, ':memory:')
         self.assertEqual(self.Database.prev_dump, 0)
 
@@ -71,7 +75,9 @@ class TestDatabase(ut.TestCase):
         simulation = mk.create_autospec(SimulationTest, spec_set=True)
 
         dialect = 'sqlite:///'
-        time    = str(self.prev_dump) + '_to_' + str(simulation.timestep) + '_'
+        time    = str(self.file_path)      + '/'    + \
+                  str(self.prev_dump)      + '_to_' + \
+                  str(simulation.timestep) + '_'
 
         self.assertEqual(self.Database.sql_file_name(simulation),
                          dialect + time + str(self.file_name))
@@ -155,6 +161,7 @@ class TestDatabase(ut.TestCase):
         self.Database = database.Database.setup(data_tuple)
         self.assertIsInstance(self.Database, database.Database)
         self.assertEqual(self.Database.spacing,   self.spacing)
+        self.assertEqual(self.Database.file_path, '')
         self.assertEqual(self.Database.file_name, ':memory:')
         self.assertEqual(self.Database.prev_dump, 0)
         self.assertEqual(self.Database.next_dump,
@@ -164,10 +171,11 @@ class TestDatabase(ut.TestCase):
 
         self.spacing.reset_mock()
         # Spacing and file name
-        data_tuple = (self.spacing, self.file_name)
+        data_tuple = (self.spacing, self.file_name, self.file_path)
         self.Database = database.Database.setup(data_tuple)
         self.assertIsInstance(self.Database, database.Database)
         self.assertEqual(self.Database.spacing,   self.spacing)
+        self.assertEqual(self.Database.file_path, self.file_path)
         self.assertEqual(self.Database.file_name, self.file_name)
         self.assertEqual(self.Database.prev_dump, 0)
         self.assertEqual(self.Database.next_dump,

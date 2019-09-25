@@ -1,13 +1,14 @@
 import datetime
+import os
 
 import dataclasses as dclass
 import pickle      as pk
 
-import crane.test_run.inputs as inputs
-
 import source.hint as hint
 
 import source.simulation.simulation as main_simulation
+
+import crane.test_run.inputs as inputs
 
 
 @dclass.dataclass
@@ -42,10 +43,11 @@ class Simulator(object):
     def __post_init__(self):
 
         if self.simulation is None:
+            file_path = os.path.dirname(os.path.abspath(__file__))
             save_name = '{}_{}{}'.format(self.base_save,
                                          self.run_number,
                                          '.sqlite')
-            self.data = (100, save_name)
+            self.data = (100, save_name, file_path)
 
             self.simulation = main_simulation.Simulation. \
                 setup(self.nums,
@@ -86,12 +88,13 @@ class Simulator(object):
             biomass data
         """
 
+        start_time = datetime.datetime.now()
+        dump_time  = datetime.datetime.now()
+
         save_diff = datetime.timedelta(hours=5)
         times     = list(range(self.timesteps))
         run_times = times[self.step:].copy()
 
-        start_time = datetime.datetime.now()
-        dump_time  = datetime.datetime.now()
         for time in run_times:
             self.step = time
             print('     {} Simulation {}, Running step: {}'.
@@ -106,3 +109,22 @@ class Simulator(object):
         end_time = datetime.datetime.now()
 
         return end_time - start_time
+
+
+def run_simulation(sim_number) -> datetime.timedelta:
+    """
+    Setup and run a simulation
+
+    Args:
+        sim_number: simulation number of this run
+
+    Returns:
+        time of simulation
+    """
+
+    print('{} Run {} Setting Up Long Time Simulations'.
+          format(datetime.datetime.now(), sim_number))
+    simulator = Simulator(sim_number)
+    print('{} Run {} Running Long Time Simulations'.
+          format(datetime.datetime.now(), sim_number))
+    return simulator.run()
