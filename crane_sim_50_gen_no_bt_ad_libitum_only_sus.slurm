@@ -14,4 +14,4 @@ mkdir -p "$WORK"/FallArmyworm_Thesis/"$SLURM_JOB_NAME"
 module load anaconda
 conda activate fallarmyworm
 
-python /home/rebarber/wjamieson2/FallArmyworm_Thesis/crane_sim_50_gen_no_ad_libitum_bt_only_sus.py "$SLURM_ARRAY_TASK_ID"
+python /home/rebarber/wjamieson2/FallArmyworm_Thesis/crane_sim_50_gen_no_bt_ad_libitum_only_sus.py "$SLURM_ARRAY_TASK_ID"
