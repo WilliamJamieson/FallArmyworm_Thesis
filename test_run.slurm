@@ -4,6 +4,8 @@
 #SBATCH --time=00:20:00
 #SBATCH --mem-per-cpu=2048
 #SBATCH --job-name=test_run
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=wjamieson@huskers.unl.edu
 #SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.err
 #SBATCH --output=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.out
 
