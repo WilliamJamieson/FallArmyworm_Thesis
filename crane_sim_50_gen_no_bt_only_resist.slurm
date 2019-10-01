@@ -6,8 +6,8 @@
 #SBATCH --job-name=crane_sim_50_gen_no_bt_only_resist
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=wjamieson@huskers.unl.edu
-#SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.err
-#SBATCH --output=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.out
+#SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/%x/job_%x.%A_%a.err
+#SBATCH --output=/work/rebarber/wjamieson2/FallArmyworm_Thesis/%x/job_%x.%A_%a.out
 
 mkdir -p "$WORK"/FallArmyworm_Thesis/"$SLURM_JOB_NAME"
 
