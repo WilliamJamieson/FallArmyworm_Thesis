@@ -88,9 +88,9 @@ class Simulator(object):
         """
 
         start_time = datetime.datetime.now()
-        dump_time  = datetime.datetime.now()
-
-        save_diff = datetime.timedelta(hours=5)
+        # dump_time  = datetime.datetime.now()
+        #
+        # save_diff = datetime.timedelta(hours=5)
         times     = list(range(self.timesteps))
         run_times = times[self.step:].copy()
 
@@ -100,9 +100,9 @@ class Simulator(object):
                   format(datetime.datetime.now(), self.run_number, time))
             self.simulation.step()
 
-            if (datetime.datetime.now() - dump_time) >= save_diff:
-                self.save(time)
-                dump_time = datetime.datetime.now()
+            # if (datetime.datetime.now() - dump_time) >= save_diff:
+            #     self.save(time)
+            #     dump_time = datetime.datetime.now()
 
         print('     {} Simulation {}, Complete Starting save'.
               format(datetime.datetime.now(), self.run_number))

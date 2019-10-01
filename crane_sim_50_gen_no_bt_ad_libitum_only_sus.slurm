@@ -3,7 +3,7 @@
 #SBATCH --array=0-200      #Job array start-end
 #SBATCH --time=72:00:00    # Run time  hh:mm:22
 #SBATCH --mem-per-cpu=6144 # Max memory per cpu in Mb
-#SBATCH --job-name=crane_sim_50_gen_no_ad_libitum_bt_only_sus
+#SBATCH --job-name=crane_sim_50_gen_no_bt_ad_libitum_only_sus
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=wjamieson@huskers.unl.edu
 #SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.err
