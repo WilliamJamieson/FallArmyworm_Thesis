@@ -26,8 +26,8 @@ colors = palettes.Set1[3]
 
 frequency_range = [62, 63, 64]
 
-save_file   = 'test_run.html'
-source_name = 'test_run'
+source_name = os.path.basename(os.getcwd())
+save_file   = '{}.html'.format(source_name)
 
 egg    = '(0,)_egg'
 larva  = '(0,)_larva'
