@@ -56,6 +56,7 @@ observed = 'observed'
 trend    = 'trend'
 season   = 'seasonal'
 resid    = 'residual'
+comb     = 'comb'
 
 homo_r = 'genotype_resistant'
 hetero = 'genotype_heterozygous'
@@ -688,12 +689,14 @@ class ProcessData(object):
         print('{} Finished data processing'.format(datetime.datetime.now()))
 
     @staticmethod
-    def make_periodogram(dataframe: hint.dataframe) -> dict:
+    def make_periodogram(dataframe: hint.dataframe,
+                         label:     str) -> dict:
         """
         Create a periodogram of the dataframe
 
         Args:
             dataframe: dataframe to create data on
+            label:     label of data source
 
         Returns:
             periodogram dataframes
@@ -717,19 +720,24 @@ class ProcessData(object):
             periodogram_dict[freq]     = frequency_data
             periodogram_dict[power]    = power_data
             periodogram_dict[period]   = period_data
-            periodogram_dict[primary]  = primary_data
-            periodogram_dict[genotype] = column.split('_')[1]
 
-            data_dict[column] = periodogram_dict
+            periodogram_dataframe = pd.DataFrame.from_dict(periodogram_dict)
+            periodogram_dataframe[primary]  = primary_data
+            periodogram_dataframe[genotype] = column.split('_')[1]
+            periodogram_dataframe[comb]     = label
+
+            data_dict[column] = periodogram_dataframe
 
         return data_dict
 
-    def find_periodogram(self, dataframes: hint.dataframes) -> dict:
+    def find_periodogram(self, dataframes: hint.dataframes,
+                               label:      str) -> dict:
         """
         Create the periodograms for the given dataframes
 
         Args:
             dataframes: the dataframes for a given combined type
+            label:     label of data source
 
         Returns:
             periodograms
@@ -739,7 +747,7 @@ class ProcessData(object):
         for table_name, dataframe in dataframes.items():
             print('            {} Creating periodograms for table: {}'.
                   format(datetime.datetime.now(), table_name))
-            periodograms[table_name] = self.make_periodogram(dataframe)
+            periodograms[table_name] = self.make_periodogram(dataframe, label)
 
         return periodograms
 
@@ -760,7 +768,7 @@ class ProcessData(object):
         for label, dataframe in dataframes.items():
             print('        {} Creating {} series periodograms'.
                   format(datetime.datetime.now(), label))
-            periodograms[label] = self.find_periodogram(dataframe)
+            periodograms[label] = self.find_periodogram(dataframe, label)
 
         return periodograms
 
@@ -814,7 +822,7 @@ class ProcessData(object):
                          column))
             data        = dataframes[column]
             decomp_dict = {}
-            main_freq_float = periodograms[column][primary]
+            main_freq_float = periodograms[column][primary][0]
             if main_freq_float != np.inf:
                 main_freq   = int(main_freq_float)
                 print('                  {} using frequency {}'.
@@ -879,11 +887,133 @@ class ProcessData(object):
         return decomp
 
 
+@dclass.dataclass
+class PlotData(object):
+    """
+    Class to process plotting of data
+    """
+
+    data:        ProcessData
+    periodogram:        dict = dclass.field(default=dict)
+    sample_periodogram: dict = dclass.field(default=dict)
+
+    def __post_init__(self):
+        if not isinstance(self.periodogram, dict):
+            self.periodogram = self.periodogram_plotter(self.data.periodograms,
+                                                        'Complete Data')
+        if not isinstance(self.sample_periodogram, dict):
+            self.sample_periodogram = \
+                self.periodogram_plotter(self.data.sample_periodograms,
+                                         'Sample of {} Data'.
+                                         format(sample_size))
+
+    @staticmethod
+    def periodogram_source(dataframes: dict) -> dict:
+        """
+        Create a collection of data sources for a periodogram
+        Args:
+            dataframes: the data
+
+        Returns:
+            bokeh data sources
+        """
+
+        data_sources = {}
+        for label, data_table in dataframes.items():
+            table_sources = {}
+            for table_name, data_columns in data_table.items():
+                column_sources = {}
+                for column_name, data_column in data_columns.items():
+                    column_sources[column_name] = \
+                        mdl.ColumnDataSource(data_column)
+
+                table_sources[table_name] = column_sources
+            data_sources[label] = table_sources
+
+        return data_sources
+
+    def periodogram_plotter(self, dataframes: dict,
+                                  title:      str):
+        """
+        Create the bokeh plots for periodograms, mean and median
+
+        Args:
+            dataframes: the source data
+            title:      title of data
+
+        Returns:
+            Array of bokeh plots
+        """
+
+        data_sources = self.periodogram_source(dataframes)
+        plot_labels  = [mean, median]
+
+        table_plots = {}
+        for table_name in tables:
+            table_title = table_name.split('_')[1]
+            column_plots = {}
+            for column_name in columns:
+                column_title = column_name.split('_')[1]
+                regular_plot = plt.figure()
+                regular_plot.title.text = '{} Periodogram for {} genotype {}'.\
+                    format(title, table_title, column_title)
+                regular_plot.yaxis.axis_label = 'Power Spectral Density'
+                regular_plot.xaxis.axis_label = 'Frequency'
+                log_plot = plt.figure(y_axis_type='log')
+                log_plot.title.text = '{} Log-Scale Periodogram for {} ' \
+                                      'genotype {}'. \
+                    format(title, table_title, column_title)
+                log_plot.yaxis.axis_label = 'log(Power Spectral Density)'
+                log_plot.xaxis.axis_label = 'Frequency'
+
+                for index, label_name in enumerate(plot_labels):
+                    source = data_sources[label_name][table_name][column_name]
+
+                    regular_plot.line(x=freq, y=power, source=source,
+                                      color=colors[index],
+                                      legend=label_name)
+                    log_plot.line(x=freq, y=power, source=source,
+                                  color=colors[index],
+                                  legend=label_name)
+
+                regular_hover          = tools.HoverTool()
+                regular_hover.tooltips = [
+                    ('Frequency', '@freq'),
+                    ('Period', '@period'),
+                    ('Spectral Density', '@power'),
+                    ('Genotype', '@genotype'),
+                    ('Source', '@comb')
+                ]
+                regular_plot.add_tools(regular_hover)
+                log_hover          = tools.HoverTool()
+                log_hover.tooltips = [
+                    ('Frequency', '@freq'),
+                    ('Period', '@period'),
+                    ('Spectral Density', '@power'),
+                    ('Genotype', '@genotype'),
+                    ('Source', '@comb')
+                ]
+                log_plot.add_tools(log_hover)
+
+                column_plots[column_name] = [regular_plot, log_plot]
+            table_plots[table_name] = column_plots
+
+        return table_plots
+
 
 start_time = datetime.datetime.now()
 reader  = ReadData.setup(source_name, start_point, tables)
 process = ProcessData(reader)
+plots   = PlotData(process)
 end_time = datetime.datetime.now()
 elapsed_time = end_time - start_time
+
+periodogram_plots = [
+    plots.periodogram[larva][homo_s],
+    plots.sample_periodogram[larva][homo_s]
+]
+periodogram_lay = lay.gridplot(periodogram_plots,
+                               toolbar_location='left')
+plt.show(periodogram_lay)
 
 print('Analysis elapsed time: {}'.format(elapsed_time))
