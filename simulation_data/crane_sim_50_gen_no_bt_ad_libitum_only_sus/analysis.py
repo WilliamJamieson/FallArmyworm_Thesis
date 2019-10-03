@@ -19,7 +19,7 @@ import sqlalchemy    as sql
 import source.hint as hint
 
 
-start_point = 500
+start_point = 200
 
 plot_width  = 1500
 plot_height = 400
@@ -254,7 +254,7 @@ class ReadData(object):
 
         dialect = 'sqlite:///'
 
-        return '{}{}'.format(dialect, file_name)
+        return '{}data/{}'.format(dialect, file_name)
 
     def read(self, table_name: str,
                    file_name: str) -> hint.dataframe:

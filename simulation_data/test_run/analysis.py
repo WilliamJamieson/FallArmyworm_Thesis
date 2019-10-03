@@ -173,7 +173,7 @@ class ReadData(object):
 
         dialect = 'sqlite:///'
 
-        return '{}{}'.format(dialect, file_name)
+        return '{}data/{}'.format(dialect, file_name)
 
     def read(self, table_name: str,
                    file_name: str) -> hint.dataframe:
