@@ -19,7 +19,7 @@ import sqlalchemy    as sql
 import source.hint as hint
 
 
-start_point = 0
+start_point = 500
 
 plot_width  = 1500
 plot_height = 400
@@ -52,11 +52,12 @@ power    = 'power'
 period   = 'period'
 primary  = 'primary'
 genotype = 'genotype'
+comb     = 'comb'
+
 observed = 'observed'
 trend    = 'trend'
 season   = 'seasonal'
 resid    = 'residual'
-comb     = 'comb'
 
 homo_r = 'genotype_resistant'
 hetero = 'genotype_heterozygous'
@@ -141,7 +142,7 @@ class ReadData(object):
             list of all the files
         """
 
-        files = os.listdir('.')
+        files = os.listdir('./data')
         files = [f for f in files if self.base_name in f]
         files = [f for f in files if 'sqlite'       in f]
 
@@ -796,19 +797,19 @@ class ProcessData(object):
             observed: decomp.observed,
             trend:    decomp.trend,
             season:   decomp.seasonal,
-            resid:    decomp.resid,
-            freq:     frequency
+            resid:    decomp.resid
+            # freq:     frequency
         }
 
         return decomp_dict
 
-    def find_seasonal_decompose(self, dataframes:   dict,
+    def find_seasonal_decompose(self, dataframe:    hint.dataframe,
                                       periodograms: dict) -> dict:
         """
         Find the seasonal decompose of the dataframe with label, title
 
         Args:
-            dataframes:   dataframes for combined data
+            dataframe:   dataframes for combined data
             periodograms: periodogram data for combined
 
         Returns:
@@ -820,7 +821,6 @@ class ProcessData(object):
             print('               {} Decomposing column {}'.
                   format(datetime.datetime.now(),
                          column))
-            data        = dataframes[column]
             decomp_dict = {}
             main_freq_float = periodograms[column][primary][0]
             if main_freq_float != np.inf:
@@ -828,7 +828,7 @@ class ProcessData(object):
                 print('                  {} using frequency {}'.
                       format(datetime.datetime.now(),
                              main_freq))
-                decomp_dict[main_freq] = self.seasonal_decompose(data,
+                decomp_dict[main_freq] = self.seasonal_decompose(dataframe,
                                                                  main_freq)
 
                 for index in range(1, freq_width + 1):
@@ -836,7 +836,7 @@ class ProcessData(object):
                     print('                  {} using frequency {}'.
                           format(datetime.datetime.now(),
                                  frequency))
-                    decomp_dict[frequency] = self.seasonal_decompose(data,
+                    decomp_dict[frequency] = self.seasonal_decompose(dataframe,
                                                                      frequency)
                     frequency = main_freq - index
                     if frequency >= 0:
@@ -844,8 +844,12 @@ class ProcessData(object):
                               format(datetime.datetime.now(),
                                      frequency))
                         decomp_dict[frequency] = \
-                            self.seasonal_decompose(data, frequency)
-                decomp[column] = decomp_dict
+                            self.seasonal_decompose(dataframe, frequency)
+
+                freqs = list(decomp_dict.keys())
+                freqs.sort()
+
+                decomp[column] = {f: decomp_dict[f] for f in freqs}
             else:
                 print('                  {} no decomposition infinite '
                       'frequency'. format(datetime.datetime.now()))
@@ -897,6 +901,9 @@ class PlotData(object):
     periodogram:        dict = dclass.field(default=dict)
     sample_periodogram: dict = dclass.field(default=dict)
 
+    decompose:        dict = dclass.field(default=dict)
+    sample_decompose: dict = dclass.field(default=dict)
+
     def __post_init__(self):
         if not isinstance(self.periodogram, dict):
             self.periodogram = self.periodogram_plotter(self.data.periodograms,
@@ -907,10 +914,20 @@ class PlotData(object):
                                          'Sample of {} Data'.
                                          format(sample_size))
 
+        if not isinstance(self.decompose, dict):
+            self.decompose = self.seasonal_plotter(self.data.decompose,
+                                                        'Complete Data')
+        if not isinstance(self.sample_decompose, dict):
+            self.sample_decompose = \
+                self.seasonal_plotter(self.data.sample_decompose,
+                                      'Sample of {} Data'.
+                                      format(sample_size))
+
     @staticmethod
     def periodogram_source(dataframes: dict) -> dict:
         """
         Create a collection of data sources for a periodogram
+
         Args:
             dataframes: the data
 
@@ -1001,6 +1018,153 @@ class PlotData(object):
         return table_plots
 
 
+    @staticmethod
+    def get_seasonal_source(dataframes: dict) -> dict:
+        """
+        Get the seasonal data sources
+
+        Args:
+            dataframes: the data
+
+        Returns:
+            bokeh data sources
+        """
+
+        data_sources = {}
+        for label, data_table in dataframes.items():
+            table_sources = {}
+            for table_name, data_columns in data_table.items():
+                columns_sources = {}
+                for column_name, data_column in data_columns.items():
+                    column_sources = {}
+                    for frequency, freq_data in data_column.items():
+                        freq_sources = {}
+                        for name, data_source in freq_data.items():
+                            freq_sources[name] = \
+                                mdl.ColumnDataSource(data_source)
+
+                        column_sources[frequency] = freq_sources
+                    columns_sources[column_name] = column_sources
+                table_sources[table_name] = columns_sources
+            data_sources[label] = table_sources
+
+        return data_sources
+
+    def seasonal_source(self, dataframes: dict) -> dict:
+        """
+        Process the seasonal source so that mean/median are on inside
+        Args:
+            dataframes: the source data
+
+        Returns:
+            data sources in correct order
+        """
+
+        data_sources = self.get_seasonal_source(dataframes)
+
+        mean_source   = data_sources[mean]
+        median_source = data_sources[median]
+
+        table_dict = {}
+        for table_name in tables:
+            column_dict = {}
+            for column_name in columns:
+                if (column_name in mean_source[table_name]) and \
+                        (column_name in median_source[table_name]):
+                    mean_freq_source   = mean_source[  table_name][column_name]
+                    median_freq_source = median_source[table_name][column_name]
+
+                    freq_dict = {}
+                    for freq_name, mean_freq in mean_freq_source.items():
+                        if freq_name in median_freq_source:
+                            median_freq = mean_freq_source[freq_name]
+                            decomp_dict = {}
+                            for decomp_name, mean_decomp in mean_freq.items():
+                                median_decomp = median_freq[decomp_name]
+                                decomp_dict[decomp_name] = {
+                                    mean:   mean_decomp,
+                                    median: median_decomp
+                                }
+                            freq_dict[freq_name] = decomp_dict
+                    column_dict[column_name] = freq_dict
+            table_dict[table_name] = column_dict
+
+        return table_dict
+
+
+    def seasonal_plotter(self, dataframes: dict,
+                               title:      str) -> dict:
+        """
+        Create all of the seasonal plots
+
+            dataframes: the source data
+            title:      title of data
+
+        Returns:
+            dictionaries of bokeh plots
+        """
+
+        data_sources = self.seasonal_source(dataframes)
+        plot_labels  = [mean, median]
+
+        table_plots = {}
+        for table_name, table_source in data_sources.items():
+            table_title = table_name.split('_')[1]
+            column_plots = {}
+            for column_name, column_source in table_source.items():
+                column_title = column_name.split('_')[1]
+                freq_plots = {}
+                for freq_name, freq_source in column_source.items():
+                    decomp_names = list(freq_source.keys())
+
+                    base_name   = decomp_names.pop(0)
+                    base_source = freq_source[base_name]
+
+                    base_plot = plt.figure(plot_width=plot_width,
+                                           plot_height=plot_height)
+                    base_plot.title.text = '{} {} timeseries ' \
+                                           'for {} genotype {}, ' \
+                                             'seasonal frequency: {}'. \
+                        format(title, base_name, table_title, column_title,
+                               freq_name)
+                    base_plot.yaxis.axis_label = 'Population'
+                    base_plot.xaxis.axis_label = 'time (days)'
+                    for index, label_name in enumerate(plot_labels):
+                        source = base_source[label_name]
+                        base_plot.line(x='index', y=column_name, source=source,
+                                       color=colors[index],
+                                       legend=label_name)
+
+                    decomp_plots = [base_plot]
+                    for decomp_name in decomp_names:
+                        decomp_source = freq_source[decomp_name]
+                        decomp_plot = plt.figure(plot_width=plot_width,
+                                                 plot_height=plot_height)
+                        decomp_plot.title.text = '{} {} timeseries ' \
+                                                 'for {} genotype {}, ' \
+                                                 'seasonal frequency: {}'. \
+                            format(title, decomp_name, table_title,
+                                   column_title, freq_name)
+                        decomp_plot.yaxis.axis_label = 'Population'
+                        decomp_plot.xaxis.axis_label = 'time (days)'
+                        for index, label_name in enumerate(plot_labels):
+                            source = decomp_source[label_name]
+                            decomp_plot.line(x='index', y=column_name,
+                                             source=source,
+                                             color=colors[index],
+                                             legend=label_name)
+
+                        decomp_plots.append(decomp_plot)
+
+                    freq_plots[freq_name] = \
+                        lay.gridplot([decomp_plots],
+                                      toolbar_location='left')
+                column_plots[column_name] = freq_plots
+            table_plots[table_name] = column_plots
+
+        return table_plots
+
+
 start_time = datetime.datetime.now()
 reader  = ReadData.setup(source_name, start_point, tables)
 process = ProcessData(reader)
@@ -1008,12 +1172,30 @@ plots   = PlotData(process)
 end_time = datetime.datetime.now()
 elapsed_time = end_time - start_time
 
+periodogram_title = mdl.Div(text='<h1>Larva Periodogram Data, {} runs</h1>'.
+                                    format(len(reader.dataframes)))
 periodogram_plots = [
     plots.periodogram[larva][homo_s],
     plots.sample_periodogram[larva][homo_s]
 ]
 periodogram_lay = lay.gridplot(periodogram_plots,
                                toolbar_location='left')
-plt.show(periodogram_lay)
+
+seasonal_title = mdl.Div(text='<h1>Larva Seasonal Decomposition Data, '
+                              '{} runs</h1>'.
+                            format(len(reader.dataframes)))
+sample_seasonal_title = mdl.Div(text='<h1>Larva Seasonal Decomposition Data, '
+                                     '{} runs</h1>'.
+                                format(sample_size))
+seasonal_plots = [seasonal_title]
+seasonal_plots.extend(list(plots.decompose[larva][homo_s].values()))
+seasonal_plots.append(sample_seasonal_title)
+seasonal_plots.extend(list(plots.sample_decompose[larva][homo_s].values()))
+seasonal_plots = tuple(seasonal_plots)
+seasonal_lay   = lay.column(*seasonal_plots)
+
+layout = lay.column(periodogram_title, periodogram_lay, seasonal_lay)
+
+plt.show(layout)
 
 print('Analysis elapsed time: {}'.format(elapsed_time))

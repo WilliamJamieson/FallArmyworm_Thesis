@@ -131,8 +131,9 @@ simulations/*.sqlite
 analysis/*.html
 crane/*/data/*.graph
 /.dropbox
-simulation_data/*/*.sqlite
-simulation_data/*/*.err
-simulation_data/*/*.out
+simulation_data/*/data/*.sqlite
+simulation_data/*/data/*.err
+simulation_data/*/data/*.out
 simulation_data/*/*.data
+simulation_data/*/*.html
 simulation_data/*.tar.gz

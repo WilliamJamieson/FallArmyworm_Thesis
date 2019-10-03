@@ -76,7 +76,7 @@ class ReadData(object):
             list of all the files
         """
 
-        files = os.listdir('.')
+        files = os.listdir('./data')
         files = [f for f in files if self.base_name in f]
         files = [f for f in files if 'sqlite'       in f]
 
