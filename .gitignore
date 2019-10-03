@@ -134,3 +134,5 @@ crane/*/data/*.graph
 simulation_data/*/*.sqlite
 simulation_data/*/*.err
 simulation_data/*/*.out
+simulation_data/*/*.data
+simulation_data/*.tar.gz
