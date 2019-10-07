@@ -67,7 +67,7 @@ max_gut, growth, init_num, init_mass, init_juvenile, init_mature = \
                            data.mass_final_s,
                            data.time_final_s,
                            data.mass_final_r,
-                           data.mass_final_s,
+                           data.time_final_r,
                            data.mass_sigma)
 forage_egg   = forage.egg(data.egg_factor)
 forage_larva = forage.larva(data.larva_factor)

@@ -155,7 +155,7 @@ larva_wild_upper        = {keyword.homo_s: larva_wild_upper_homo_s,
 larva_bt_lower_homo_s = 0.4
 larva_bt_lower_homo_r = 0.9
 larva_bt_lower_hetero = hetero(larva_bt_lower_homo_s,
-                                 larva_bt_lower_homo_r)
+                               larva_bt_lower_homo_r)
 larva_bt_lower        = {keyword.homo_s: larva_bt_lower_homo_s,
                          keyword.homo_r: larva_bt_lower_homo_r,
                          keyword.hetero: larva_bt_lower_hetero}
@@ -207,9 +207,12 @@ larva_mu_homo_r      = mass_final_r
 larva_sigma_homo_r   = 25
 larva_minimum_homo_r = time_final_r
 
-larva_mu_hetero      = hetero(larva_mu_homo_s, larva_mu_homo_r)
-larva_sigma_hetero   = hetero(larva_sigma_homo_s, larva_sigma_homo_r)
-larva_minimum_hetero = hetero(larva_minimum_homo_s, larva_minimum_homo_r)
+larva_mu_hetero      = hetero(larva_mu_homo_s,
+                              larva_mu_homo_r)
+larva_sigma_hetero   = hetero(larva_sigma_homo_s,
+                              larva_sigma_homo_r)
+larva_minimum_hetero = hetero(larva_minimum_homo_s,
+                              larva_minimum_homo_r)
 
 larva_mu      = {keyword.homo_s:  larva_mu_homo_s,
                  keyword.homo_r:  larva_mu_homo_r,
