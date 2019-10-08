@@ -1,8 +1,8 @@
 #!/bin/sh
 
-#SBATCH --array=0-200      #Job array start-end
-#SBATCH --time=72:00:00    # Run time  hh:mm:22
-#SBATCH --mem-per-cpu=6144 # Max memory per cpu in Mb
+#SBATCH --array=0-199      #Job array start-end
+#SBATCH --time=96:00:00    # Run time  hh:mm:ss
+#SBATCH --mem-per-cpu=8192 # Max memory per cpu in Mb
 #SBATCH --job-name=crane_sim_50_gen_50_bt_ad_libitum
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=wjamieson@huskers.unl.edu
