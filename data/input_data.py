@@ -41,7 +41,7 @@ mass_sigma = 0.1
 
 # Egg_mass measurements
 egg_mass_samples = [10.4,
-                    14.2,
+                    14.3,
                     12.8,
                     14.9,
                     14.7,

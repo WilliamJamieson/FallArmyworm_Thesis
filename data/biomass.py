@@ -270,6 +270,10 @@ def biomass(start_mass: float,
 #       Egg fit data
 egg_mass_data = egg_mass(input_data.egg_mass_number,
                          input_data.egg_mass_samples)
+print('Mean number of eggs: {}'.format(egg_mass_data[0]))
+print('Mean mass of egg_mass: {}'.format(egg_mass_data[1]))
+print('STD  mass  of egg_mass: {}'.format(egg_mass_data[2]))
+
 init_mass_homo_s = egg_mass_data[3]
 init_mass_homo_r = egg_mass_data[3] * input_data.homo_r_mass_factor
 init_mass_hetero = input_data.hetero(init_mass_homo_s,
