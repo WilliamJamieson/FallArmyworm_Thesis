@@ -45,7 +45,7 @@ use_hetero = False
 plot_width  = 800
 plot_height = 500
 
-colors    = palettes.Set1[3]
+colors    = palettes.Category10[3]
 save_file = 'develop_plots.html'
 
 
@@ -402,186 +402,187 @@ def create_plots(save_name=None):
     hist_plot.legend.location = 'top_left'
 
 
-    layout = lay.column(egg_plot, larva_plot, hist_plot)
+    # layout = lay.column(egg_plot, larva_plot, hist_plot)
+    # plt.show(layout)
+
+
+    t            = list(range(num_steps_pupae))
+    initial_pops = ((0,          0,          0),
+                    (0,          0,          0),
+                    (num_pupae, num_pupae, num_pupae),
+                    (0,          0,          0),
+                    (0,          0,          0))
+    steps_pupa = [({keyword.pupa:  [keyword.develop,
+                                    keyword.advance_age]},)]
+    print('{} Running Development Pupa simulations'.
+          format(datetime.datetime.now()))
+    pupa_pupa  = []
+    pupa_adult = []
+    for num in range(trials):
+        print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
+        simulator_pupa = Simulator(initial_pops, 1, steps_pupa)
+        simulator_pupa.run(t)
+        dataframes_pupa = simulator_pupa.simulation.agents.dataframes()
+        pupa_pupa.append(dataframes_pupa['(0, 0)_pupa'])
+        pupa_adult.append(dataframes_pupa['(0, 0)_female'])
+
+    pupa_pupa_mean  = mean_data(pupa_pupa)
+    pupa_adult_mean = mean_data(pupa_adult)
+
+    pupa_pupa_source  = mdl.ColumnDataSource(pupa_pupa_mean)
+    pupa_adult_source = mdl.ColumnDataSource(pupa_adult_mean)
+
+    pupa_plot = plt.figure(plot_width=plot_width,
+                           plot_height=plot_height)
+    pupa_plot.title.text       = 'Pupa Development, Number of Trials: {}'.\
+        format(trials)
+    pupa_plot.yaxis.axis_label = 'population'
+    pupa_plot.xaxis.axis_label = 'time (days)'
+
+    pupa_plot.line(x='index', y='genotype_resistant',
+                   source=pupa_pupa_source,
+                   color=colors[0],
+                   legend='Resistant Pupa')
+    if use_hetero:
+        pupa_plot.line(x='index', y='genotype_heterozygous',
+                       source=pupa_pupa_source,
+                       color=colors[1],
+                       legend='Heterozygous Pupa')
+    pupa_plot.line(x='index', y='genotype_susceptible',
+                   source=pupa_pupa_source,
+                   color=colors[2],
+                   legend='Susceptible Pupa')
+
+    pupa_plot.line(x='index', y='genotype_resistant',
+                   source=pupa_adult_source,
+                   color=colors[0], line_dash='dashed',
+                   legend='Resistant Adult')
+    if use_hetero:
+        pupa_plot.line(x='index', y='genotype_heterozygous',
+                       source=pupa_adult_source,
+                       color=colors[1], line_dash='dashed',
+                       legend='Heterozygous Adult')
+    pupa_plot.line(x='index', y='genotype_susceptible',
+                   source=pupa_adult_source,
+                   color=colors[2], line_dash='dashed',
+                   legend='Susceptible Adult')
+
+    pupa_plot.legend.location = 'center_right'
+
+
+    # layout = lay.column(egg_plot, larva_plot, pupa_plot, hist_plot)
+    # plt.show(layout)
+
+
+    t              = list(range(num_steps))
+    initial_pops = ((num_eggs,   num_eggs,   num_eggs),
+                    (0,          0,          0),
+                    (0,          0,          0),
+                    (0,          0,          0),
+                    (0,          0,          0))
+    steps_full = [({keyword.egg:   [keyword.develop,
+                                    keyword.advance_age],
+                    keyword.larva: [keyword.consume,
+                                    keyword.grow,
+                                    keyword.develop,
+                                    keyword.advance_age,
+                                    keyword.reset],
+                    keyword.pupa:  [keyword.develop,
+                                    keyword.advance_age]},)]
+    print('{} Running Development Full simulations'.
+          format(datetime.datetime.now()))
+    full_egg   = []
+    full_larva = []
+    full_pupa  = []
+    full_adult = []
+    for num in range(trials):
+        print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
+        simulator_full = Simulator(initial_pops, 1, steps_full)
+        simulator_full.run(t)
+        dataframes_full = simulator_full.simulation.agents.dataframes()
+        full_egg.  append(dataframes_full['(0, 0)_egg'])
+        full_larva.append(dataframes_full['(0, 0)_larva'])
+        full_pupa. append(dataframes_full['(0, 0)_pupa'])
+        full_adult.append(dataframes_full['(0, 0)_female'])
+
+    full_egg_mean   = mean_data(full_egg)
+    full_larva_mean = mean_data(full_larva)
+    full_pupa_mean  = mean_data(full_pupa)
+    full_adult_mean = mean_data(full_adult)
+
+    full_egg_source   = mdl.ColumnDataSource(full_egg_mean)
+    full_larva_source = mdl.ColumnDataSource(full_larva_mean)
+    full_pupa_source  = mdl.ColumnDataSource(full_pupa_mean)
+    full_adult_source = mdl.ColumnDataSource(full_adult_mean)
+
+    full_plot = plt.figure(plot_width=plot_width,
+                           plot_height=plot_height)
+    full_plot.title.text       = 'Full Life-Cycle Development, ' \
+                                 'Number of Trials: {}'.format(trials)
+    full_plot.yaxis.axis_label = 'population'
+    full_plot.xaxis.axis_label = 'time (days)'
+
+    full_plot.line(x='index', y='genotype_resistant',
+                   source=full_egg_source,
+                   color=colors[0],
+                   legend='Resistant Egg')
+    if use_hetero:
+        full_plot.line(x='index', y='genotype_heterozygous',
+                       source=full_egg_source,
+                       color=colors[1],
+                       legend='Heterozygous Egg')
+    full_plot.line(x='index', y='genotype_susceptible',
+                   source=full_egg_source,
+                   color=colors[2],
+                   legend='Susceptible Egg')
+
+    full_plot.line(x='index', y='genotype_resistant',
+                   source=full_larva_source,
+                   color=colors[0], line_dash='dashed',
+                   legend='Resistant Larva')
+    if use_hetero:
+        full_plot.line(x='index', y='genotype_heterozygous',
+                       source=full_larva_source,
+                       color=colors[1], line_dash='dashed',
+                       legend='Heterozygous Larva')
+    full_plot.line(x='index', y='genotype_susceptible',
+                   source=full_larva_source,
+                   color=colors[2], line_dash='dashed',
+                   legend='Susceptible Larva')
+
+    full_plot.line(x='index', y='genotype_resistant',
+                   source=full_pupa_source,
+                   color=colors[0], line_dash='dotted',
+                   legend='Resistant Pupa')
+    if use_hetero:
+        full_plot.line(x='index', y='genotype_heterozygous',
+                       source=full_pupa_source,
+                       color=colors[1], line_dash='dotted',
+                       legend='Heterozygous Pupa')
+    full_plot.line(x='index', y='genotype_susceptible',
+                   source=full_pupa_source,
+                   color=colors[2], line_dash='dotted',
+                   legend='Susceptible Pupa')
+
+    full_plot.line(x='index', y='genotype_resistant',
+                   source=full_adult_source,
+                   color=colors[0], line_dash='dashdot',
+                   legend='Resistant Adult')
+    if use_hetero:
+        full_plot.line(x='index', y='genotype_heterozygous',
+                       source=full_adult_source,
+                       color=colors[1], line_dash='dashdot',
+                       legend='Heterozygous Adult')
+    full_plot.line(x='index', y='genotype_susceptible',
+                   source=full_adult_source,
+                   color=colors[2], line_dash='dashdot',
+                   legend='Susceptible Adult')
+
+    full_plot.legend.location = 'center_right'
+
+
+    layout = lay.column(egg_plot, larva_plot, pupa_plot, full_plot, hist_plot)
     plt.show(layout)
 
-
-    # t            = list(range(num_steps_pupae))
-    # initial_pops = ((0,          0,          0),
-    #                 (0,          0,          0),
-    #                 (num_pupae, num_pupae, num_pupae),
-    #                 (0,          0,          0),
-    #                 (0,          0,          0))
-    # steps_pupa = [({keyword.pupa:  [keyword.develop,
-    #                                 keyword.advance_age]},)]
-    # print('{} Running Development Pupa simulations'.
-    #       format(datetime.datetime.now()))
-    # pupa_pupa  = []
-    # pupa_adult = []
-    # for num in range(trials):
-    #     print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
-    #     simulator_pupa = Simulator(initial_pops, 1, steps_pupa)
-    #     simulator_pupa.run(t)
-    #     dataframes_pupa = simulator_pupa.simulation.agents.dataframes()
-    #     pupa_pupa.append(dataframes_pupa['(0, 0)_pupa'])
-    #     pupa_adult.append(dataframes_pupa['(0, 0)_female'])
-    #
-    # pupa_pupa_mean  = mean_data(pupa_pupa)
-    # pupa_adult_mean = mean_data(pupa_adult)
-    #
-    # pupa_pupa_source  = mdl.ColumnDataSource(pupa_pupa_mean)
-    # pupa_adult_source = mdl.ColumnDataSource(pupa_adult_mean)
-    #
-    # pupa_plot = plt.figure(plot_width=plot_width,
-    #                        plot_height=plot_height)
-    # pupa_plot.title.text       = 'Pupa Development, Number of Trials: {}'.\
-    #     format(trials)
-    # pupa_plot.yaxis.axis_label = 'population'
-    # pupa_plot.xaxis.axis_label = 'time (days)'
-    #
-    # pupa_plot.line(x='index', y='genotype_resistant',
-    #                source=pupa_pupa_source,
-    #                color=colors[0],
-    #                legend='Resistant Pupa')
-    # if use_hetero:
-    #     pupa_plot.line(x='index', y='genotype_heterozygous',
-    #                    source=pupa_pupa_source,
-    #                    color=colors[1],
-    #                    legend='Heterozygous Pupa')
-    # pupa_plot.line(x='index', y='genotype_susceptible',
-    #                source=pupa_pupa_source,
-    #                color=colors[2],
-    #                legend='Susceptible Pupa')
-    #
-    # pupa_plot.line(x='index', y='genotype_resistant',
-    #                source=pupa_adult_source,
-    #                color=colors[0], line_dash='dashed',
-    #                legend='Resistant Adult')
-    # if use_hetero:
-    #     pupa_plot.line(x='index', y='genotype_heterozygous',
-    #                    source=pupa_adult_source,
-    #                    color=colors[1], line_dash='dashed',
-    #                    legend='Heterozygous Adult')
-    # pupa_plot.line(x='index', y='genotype_susceptible',
-    #                source=pupa_adult_source,
-    #                color=colors[2], line_dash='dashed',
-    #                legend='Susceptible Adult')
-    #
-    # pupa_plot.legend.location = 'center_right'
-    #
-    #
-    # # layout = lay.column(egg_plot, larva_plot, pupa_plot, hist_plot)
-    # # plt.show(layout)
-    #
-    #
-    # t              = list(range(num_steps))
-    # initial_pops = ((num_eggs,   num_eggs,   num_eggs),
-    #                 (0,          0,          0),
-    #                 (0,          0,          0),
-    #                 (0,          0,          0),
-    #                 (0,          0,          0))
-    # steps_full = [({keyword.egg:   [keyword.develop,
-    #                                 keyword.advance_age],
-    #                 keyword.larva: [keyword.consume,
-    #                                 keyword.grow,
-    #                                 keyword.develop,
-    #                                 keyword.advance_age,
-    #                                 keyword.reset],
-    #                 keyword.pupa:  [keyword.develop,
-    #                                 keyword.advance_age]},)]
-    # print('{} Running Development Full simulations'.
-    #       format(datetime.datetime.now()))
-    # full_egg   = []
-    # full_larva = []
-    # full_pupa  = []
-    # full_adult = []
-    # for num in range(trials):
-    #     print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
-    #     simulator_full = Simulator(initial_pops, 1, steps_full)
-    #     simulator_full.run(t)
-    #     dataframes_full = simulator_full.simulation.agents.dataframes()
-    #     full_egg.  append(dataframes_full['(0, 0)_egg'])
-    #     full_larva.append(dataframes_full['(0, 0)_larva'])
-    #     full_pupa. append(dataframes_full['(0, 0)_pupa'])
-    #     full_adult.append(dataframes_full['(0, 0)_female'])
-    #
-    # full_egg_mean   = mean_data(full_egg)
-    # full_larva_mean = mean_data(full_larva)
-    # full_pupa_mean  = mean_data(full_pupa)
-    # full_adult_mean = mean_data(full_adult)
-    #
-    # full_egg_source   = mdl.ColumnDataSource(full_egg_mean)
-    # full_larva_source = mdl.ColumnDataSource(full_larva_mean)
-    # full_pupa_source  = mdl.ColumnDataSource(full_pupa_mean)
-    # full_adult_source = mdl.ColumnDataSource(full_adult_mean)
-    #
-    # full_plot = plt.figure(plot_width=plot_width,
-    #                        plot_height=plot_height)
-    # full_plot.title.text       = 'Full Life-Cycle Development, ' \
-    #                              'Number of Trials: {}'.format(trials)
-    # full_plot.yaxis.axis_label = 'population'
-    # full_plot.xaxis.axis_label = 'time (days)'
-    #
-    # full_plot.line(x='index', y='genotype_resistant',
-    #                source=full_egg_source,
-    #                color=colors[0],
-    #                legend='Resistant Egg')
-    # if use_hetero:
-    #     full_plot.line(x='index', y='genotype_heterozygous',
-    #                    source=full_egg_source,
-    #                    color=colors[1],
-    #                    legend='Heterozygous Egg')
-    # full_plot.line(x='index', y='genotype_susceptible',
-    #                source=full_egg_source,
-    #                color=colors[2],
-    #                legend='Susceptible Egg')
-    #
-    # full_plot.line(x='index', y='genotype_resistant',
-    #                source=full_larva_source,
-    #                color=colors[0], line_dash='dashed',
-    #                legend='Resistant Larva')
-    # if use_hetero:
-    #     full_plot.line(x='index', y='genotype_heterozygous',
-    #                    source=full_larva_source,
-    #                    color=colors[1], line_dash='dashed',
-    #                    legend='Heterozygous Larva')
-    # full_plot.line(x='index', y='genotype_susceptible',
-    #                source=full_larva_source,
-    #                color=colors[2], line_dash='dashed',
-    #                legend='Susceptible Larva')
-    #
-    # full_plot.line(x='index', y='genotype_resistant',
-    #                source=full_pupa_source,
-    #                color=colors[0], line_dash='dotted',
-    #                legend='Resistant Pupa')
-    # if use_hetero:
-    #     full_plot.line(x='index', y='genotype_heterozygous',
-    #                    source=full_pupa_source,
-    #                    color=colors[1], line_dash='dotted',
-    #                    legend='Heterozygous Pupa')
-    # full_plot.line(x='index', y='genotype_susceptible',
-    #                source=full_pupa_source,
-    #                color=colors[2], line_dash='dotted',
-    #                legend='Susceptible Pupa')
-    #
-    # full_plot.line(x='index', y='genotype_resistant',
-    #                source=full_adult_source,
-    #                color=colors[0], line_dash='dashdot',
-    #                legend='Resistant Adult')
-    # if use_hetero:
-    #     full_plot.line(x='index', y='genotype_heterozygous',
-    #                    source=full_adult_source,
-    #                    color=colors[1], line_dash='dashdot',
-    #                    legend='Heterozygous Adult')
-    # full_plot.line(x='index', y='genotype_susceptible',
-    #                source=full_adult_source,
-    #                color=colors[2], line_dash='dashdot',
-    #                legend='Susceptible Adult')
-    #
-    # full_plot.legend.location = 'center_right'
-    #
-    #
-    # layout = lay.column(egg_plot, larva_plot, pupa_plot, full_plot, hist_plot)
-    # plt.show(layout)
 
 create_plots()

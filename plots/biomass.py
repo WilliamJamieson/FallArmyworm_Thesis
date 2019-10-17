@@ -34,7 +34,7 @@ use_hetero = False
 plot_width  = 800
 plot_height = 500
 
-colors    = palettes.Set1[3]
+colors    = palettes.Category10[3]
 save_file = 'biomass_plots.html'
 
 plt.output_file(save_file)
