@@ -192,8 +192,9 @@ data_tuple_spacing = typing.Tuple[int]
 data_tuple_name    = typing.Tuple[int, str, str]
 data_tuple         = typing.Union[data_tuple_spacing, data_tuple_name]
 #       Counter Hints
-dataframe  = pd.DataFrame
-dataframes = typing.Dict[str, dataframe]
+dataframe      = pd.DataFrame
+dataframes     = typing.Dict[str, dataframe]
+dataframe_list = typing.List[dataframe]
 
 data_list        = typing.List[int]
 data_column      = 'main_counter.DataColumn'
