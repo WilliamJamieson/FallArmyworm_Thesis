@@ -23,27 +23,10 @@ class BaseTime(models.Model):
 
     mu:      float
     sigma:   float
-    minimum: float
-
-    def _prob(self, age: int) -> float:
-        """
-        Get a probability to test against
-
-        Args:
-            age: time agent has existed
-
-        Returns:
-            a probability of development
-        """
-
-        if self.minimum <= age:
-            return stats.norm.cdf(age, loc=self.mu, scale=self.sigma)
-        else:
-            return 0
 
     def __call__(self, mass:     float,
-                 age:      int,
-                 genotype: str) -> bool:
+                       age:      int,
+                       genotype: str) -> bool:
         """
         Determine if an agent develops
 
@@ -56,7 +39,8 @@ class BaseTime(models.Model):
             if egg develops or not
         """
 
-        return rnd.random() <= self._prob(age)
+        return rnd.random() <= stats.norm.cdf(age,
+                                              loc=self.mu, scale=self.sigma)
 
 
 @dclass.dataclass
@@ -108,32 +92,6 @@ class Larva(models.Model):
 
     mu:      hint.variable
     sigma:   hint.variable
-    minimum: hint.variable
-
-    def _prob(self, mass:     float,
-                    age:      int,
-                    genotype: str) -> float:
-        """
-        Get a probability to test against
-
-        Args:
-            mass:     mass of larva
-            age:      time larva has existed
-            genotype: genotype of larva
-
-        Returns:
-            a probability of development
-        """
-
-        minimum = self.minimum[genotype]
-
-        if minimum <= age:
-            mu    = self.mu[genotype]
-            sigma = self.sigma[genotype]
-
-            return stats.norm.cdf(mass, loc=mu, scale=sigma)
-        else:
-            return 0
 
     def __call__(self, mass:     float,
                        age:      int,
@@ -150,4 +108,8 @@ class Larva(models.Model):
             if egg develops or not
         """
 
-        return rnd.random() <= self._prob(mass, age, genotype)
+        mu = self.mu[genotype]
+        sigma = self.sigma[genotype]
+
+
+        return rnd.random() <= stats.norm.cdf(mass, loc=mu, scale=sigma)

@@ -47,11 +47,11 @@ def init_mass(mu_0_egg_ss:  float,
                            sig_0_egg)
 
 
-def init_larva(mu_0_larva_ss:  float,
-               mu_0_larva_rr:  float,
-               sig_0_larva_ss: float,
-               sig_0_larva_rr: float,
-               dominance:      float):
+def init_juvenile(mu_0_larva_ss:  float,
+                  mu_0_larva_rr:  float,
+                  sig_0_larva_ss: float,
+                  sig_0_larva_rr: float,
+                  dominance:      float):
     """
     Create an init_mass model for larva
 
