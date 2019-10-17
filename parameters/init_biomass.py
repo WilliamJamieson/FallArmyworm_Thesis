@@ -94,23 +94,3 @@ mu_0_mature_ss  = data.mu_0_mature_ss
 sig_0_mature_ss = data.sig_0_mature_ss
 mu_0_mature_rr  = data.mu_0_mature_rr
 sig_0_mature_rr = data.sig_0_mature_rr
-
-
-# Print data points
-if data.print_data:
-    print('Init_egg_mass data')
-    print('    lam_0_egg: {}'.format(lam_0_egg))
-    print('    mu_0_egg_ss: {}, sig_0_egg_ss: {}'.
-          format(mu_0_egg_ss, sig_0_egg_ss))
-    print('    mu_0_egg_rr: {}, sig_0_egg_rr: {}'.
-          format(mu_0_egg_rr, sig_0_egg_rr))
-    print('Init_larva data')
-    print('    mu_0_larva_ss: {}, sig_0_larva_ss: {}'.
-          format(mu_0_larva_ss, sig_0_larva_ss))
-    print('    mu_0_larva_rr: {}, sig_0_larva_rr: {}'.
-          format(mu_0_larva_rr, sig_0_larva_rr))
-    print('Init_mature data')
-    print('    mu_0_mature_ss: {}, sig_0_mature_ss: {}'.
-          format(mu_0_mature_ss, sig_0_mature_ss))
-    print('    mu_0_mature_rr: {}, sig_0_mature_rr: {}'.
-          format(mu_0_mature_rr, sig_0_mature_rr))

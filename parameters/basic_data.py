@@ -1,8 +1,7 @@
 # Included here are data points from a wide array of studies
-print_data = True
 
 
-# Whiteford et. al. 1988 (egg_mass data)
+# Whiteford et.al. 1988 (egg_mass data)
 egg_mass_mean_number_eggs = [
     164.4,
     112.8,
@@ -41,6 +40,45 @@ mu_0_mature_rr  = 100
 sig_0_mature_rr = 10
 
 
+# Veenestra et.al. 1995 (Growth_ss data points)
+growth_times_ss = [
+    8.0,
+    15.6
+]
+growth_times_sem_ss = [
+    0.0,
+    0.2
+]
+growth_mass_ss = [
+    54.4,
+    156.0
+]
+growth_mass_sem_ss = [
+    3.7,
+    5.1
+]
+growth_samples_ss = 40
+
+# Prasifka et.al. 2009 (Growth_rr data points)
+growth_times_rr = [
+    10.0,
+    24.3
+]
+growth_times_sem_rr = [
+    0.0,
+    0.4
+]
+growth_mass_rr = [
+    37.4,
+    145.4
+]
+growth_mass_sem_rr = [
+    3.1,
+    5.9
+]
+growth_samples_rr = 40
+
+
 # Egg development Sparks 1979
 mu_egg_dev  = 3.0
 sig_egg_dev = 1.0
@@ -51,7 +89,7 @@ pupa_duration_pitre_1983 = [
     10.8,
     9.6
 ]
-# Adamczyk 2001 (Pupation duration)
+# Adamczyk .et.al. 2001 (Pupation duration)
 pupa_duration_adamczyk_2001 = [
     8.43,
     7.88,
