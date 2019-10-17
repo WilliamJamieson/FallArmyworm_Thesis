@@ -1,4 +1,5 @@
 import parameters.development  as dev
+import parameters.forage       as forage
 import parameters.growth       as growth
 import parameters.init_biomass as init_bio
 
@@ -33,6 +34,12 @@ max_mass_ss = growth.max_mass_ss
 alpha_rr    = growth.alpha_rr
 beta_rr     = growth.beta_rr
 max_mass_rr = growth.max_mass_rr
+
+# List out the forage parameters
+forage_steps    = forage.forage_steps
+theta_adlibitum = forage.theta_adlibitum
+theta_scarce    = forage.theta_scarce
+sig_scarce      = forage.sig_scarce
 
 # List out development parameters
 mu_egg_dev  = dev.mu_egg

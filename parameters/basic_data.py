@@ -1,5 +1,8 @@
 # Included here are data points from a wide array of studies
 
+
+hourly_steps = 12
+
 mu_leaf  = 10000
 sig_leaf = 0.001
 
@@ -80,6 +83,13 @@ growth_mass_sem_rr = [
     5.9
 ]
 growth_samples_rr = 40
+
+
+# Empirical scarcity factors
+theta_adlibitum = 1
+theta_scarce    = 0.8
+
+sig_scarce      = 5.0
 
 
 # Egg development Sparks 1979

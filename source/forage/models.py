@@ -21,6 +21,8 @@ class PlantBase(models.Model):
 
     model_key = keyword.plant_forage
 
+    steps: int
+
     def __call__(self, mass:     float,
                        plant:    float,
                        genotype: str,
@@ -60,7 +62,7 @@ class PlantAdLibitum(PlantBase):
     max_gut: hint.max_gut
 
     def __call__(self, mass:     float,
-                       plant:     float,
+                       plant:    float,
                        genotype: str,
                        bt:       str) -> float:
         """
@@ -76,7 +78,7 @@ class PlantAdLibitum(PlantBase):
             biomass which can be foraged
         """
 
-        return self.max_gut(mass)*5
+        return self.max_gut(mass) / self.steps
 
 
 @dclass.dataclass
@@ -97,42 +99,24 @@ class PlantStarve(PlantBase):
         __call__: call the model
     """
 
-    mu:    float
-    sigma: float
+    theta:   float
+    sigma:   float
     max_gut: hint.max_gut
 
-    def _lower(self) -> float:
+    def _mu(self, mass: float) -> float:
         """
-        Get lower bound on distribution
+        Get the mean amount of food that can be consumed
+
+        Args:
+            mass: mass of the larva
 
         Returns:
-            lower bound on distribution
+            mean amount of food
         """
 
-        return (-self.mu)/self.sigma
+        factor = self.theta / self.steps
 
-    def _upper(self) -> float:
-        """
-        Get upper bound on distribution
-
-        Returns:
-            upper bound on distribution
-        """
-
-        return (1 - self.mu)/self.sigma
-
-    def _sample(self) -> float:
-        """
-        Sample from the distribution
-
-        Returns:
-            sample from the distribution
-        """
-
-        lower = self._lower()
-        upper = self._upper()
-
-        return stats.truncnorm.rvs(lower, upper, loc=self.mu, scale=self.sigma)
+        return factor * self.max_gut(mass)
 
     def __call__(self, mass:     float,
                        plant:    float,
@@ -151,14 +135,8 @@ class PlantStarve(PlantBase):
             biomass which can be foraged
         """
 
-        gut_mass = self.max_gut(mass)
-
-        if gut_mass <= plant:
-            food = gut_mass
-        else:
-            food = plant
-
-        return float(self._sample() * food)
+        return float(stats.truncnorm.rvs(0, np.inf,
+                                         loc=self._mu(mass), scale=self.sigma))
 
 
 @dclass.dataclass
