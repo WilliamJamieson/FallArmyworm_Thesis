@@ -47,11 +47,10 @@ egg_mass_mean_mass = [
 ss_to_rr_mass_scale = 0.8
 
 # Empirical Mature data
-# TODO: Fill these in with proper data points
-mu_0_mature_ss  = 100
-sig_0_mature_ss = 10
-mu_0_mature_rr  = 100
-sig_0_mature_rr = 10
+mu_0_mature_ss  = 139.475
+sig_0_mature_ss = 18.111
+mu_0_mature_rr  = 113.717
+sig_0_mature_rr = 23.215
 
 
 # Veenestra et.al. 1995 (Growth_ss data points)

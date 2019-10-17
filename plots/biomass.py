@@ -12,7 +12,7 @@ import parameters.basic_data       as base_data
 import parameters.data_tracking    as tracking
 import parameters.model_parameters as param
 
-import models.development  as dev
+# import models.development  as dev
 import models.dominance    as dom
 import models.forage       as forage
 import models.growth       as growth
@@ -621,7 +621,6 @@ starve_plot.line(t, biomass_data_homo_s[8],
 
 starve_plot.legend.location = "bottom_right"
 
-layout = lay.column(euler_plot, rk4_plot, adlib_plot, starve_plot)
 #
 # print('{} Running Development simulations'.
 #       format(datetime.datetime.now()))
@@ -641,4 +640,5 @@ layout = lay.column(euler_plot, rk4_plot, adlib_plot, starve_plot)
 print('RR pupation: {}'.format(fin_point_rr))
 print('SS pupation: {}'.format(fin_point_ss))
 
+layout = lay.column(euler_plot, rk4_plot, adlib_plot, starve_plot)
 plt.show(layout)
