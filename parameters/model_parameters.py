@@ -22,6 +22,9 @@ sig_0_mature_ss = init_bio.sig_0_mature_ss
 mu_0_mature_rr  = init_bio.mu_0_mature_rr
 sig_0_mature_rr = init_bio.sig_0_mature_rr
 
+mu_leaf  = init_bio.mu_leaf
+sig_leaf = init_bio.sig_leaf
+
 # List out the growth parameters
 alpha_ss    = growth.alpha_ss
 beta_ss     = growth.beta_ss
@@ -63,6 +66,8 @@ if print_data:
           format(mu_0_mature_ss, sig_0_mature_ss))
     print('    mu_0_mature_rr: {}, sig_0_mature_rr: {}'.
           format(mu_0_mature_rr, sig_0_mature_rr))
+    print('    mu_leaf: {}, sig_leaf: {}'.
+          format(mu_leaf, sig_leaf))
 
     # Print the growth
     print('Growth parameters')

@@ -729,7 +729,7 @@ class TestEggMass(ut.TestCase):
             self.assertEqual(self.simulation.models.
                                 __getitem__.return_value.call_args_list,
                              [mk.call(mother),
-                              mk.call(number, mother)])
+                              mk.call(mother)])
             self.assertEqual(self.simulation.models.
                                  __getitem__.call_args_list,
                              [mk.call(keyword.init_num),
@@ -815,8 +815,8 @@ class TestEggMass(ut.TestCase):
 
                 self.assertEqual(self.simulation.models.
                                  __getitem__.return_value.call_args_list,
-                                 [mk.call(   parents[index_i][0]),
-                                  mk.call(3, parents[index_i][0])])
+                                 [mk.call(parents[index_i][0]),
+                                  mk.call(parents[index_i][0])])
                 self.assertEqual(self.simulation.models.
                                  __getitem__.call_args_list,
                                  [mk.call(keyword.init_num),
@@ -895,7 +895,7 @@ class TestEggMass(ut.TestCase):
             self.assertEqual(self.simulation.models.
                              __getitem__.return_value.call_args_list,
                              [mk.call(adult.genotype),
-                              mk.call(number, adult.genotype)])
+                              mk.call(adult.genotype)])
             self.assertEqual(self.simulation.models.
                              __getitem__.call_args_list,
                              [mk.call(keyword.init_num),

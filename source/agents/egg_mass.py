@@ -356,7 +356,7 @@ class EggMass(agent.Agent):
         new = cls.empty(unique_id, simulation, location)
 
         number    = simulation.models[keyword.init_num](mother)
-        mass      = simulation.models[keyword.init_mass](number, mother)
+        mass      = simulation.models[keyword.init_mass](mother)
         genotypes = new.genotypes(number, mother, father)
         new.eggs  = Eggs.initialize(new, genotypes, mass)
 

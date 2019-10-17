@@ -94,3 +94,8 @@ mu_0_mature_ss  = data.mu_0_mature_ss
 sig_0_mature_ss = data.sig_0_mature_ss
 mu_0_mature_rr  = data.mu_0_mature_rr
 sig_0_mature_rr = data.sig_0_mature_rr
+
+
+# Pass through the init_leaf parameters
+mu_leaf  = data.mu_leaf
+sig_leaf = data.sig_leaf

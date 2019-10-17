@@ -1,5 +1,8 @@
 # Included here are data points from a wide array of studies
 
+mu_leaf  = 10000
+sig_leaf = 0.001
+
 
 # Whiteford et.al. 1988 (egg_mass data)
 egg_mass_mean_number_eggs = [
