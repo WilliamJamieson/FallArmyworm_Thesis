@@ -226,7 +226,7 @@ class Loss(models.Model):
 
     model_key = keyword.loss
 
-    slope: hint.variable
+    slope: float
     mid:   hint.variable
 
     max_gut:      hint.max_gut
@@ -277,7 +277,7 @@ class Loss(models.Model):
         """
 
         d = self._diff(mass, target_mass, genotype, target_key)
-        r = self.slope[target_key]
+        r = self.slope
         q = self.mid[  target_key]
 
         return 1 / (q * np.exp(-r*d) + 1)
@@ -326,7 +326,7 @@ class Fight(models.Model):
 
     slope: float
 
-    def _prob(self, mass0: float,
+    def prob(self, mass0: float,
                     mass1: float) -> float:
         """
         Evaluate the logistic model for probability
@@ -357,7 +357,7 @@ class Fight(models.Model):
             if mass0 larva wins
         """
 
-        return rnd.random() <= self._prob(mass0, mass1)
+        return rnd.random() <= self.prob(mass0, mass1)
 
 
 @dclass.dataclass

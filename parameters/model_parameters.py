@@ -45,6 +45,16 @@ theta_adlibitum = forage.theta_adlibitum
 theta_scarce    = forage.theta_scarce
 sig_scarce      = forage.sig_scarce
 
+fight_slope           = forage.fight_slope
+cannibalism_radius    = forage.cannibalism_radius
+cannibalism_encounter = forage.cannibalism_encounter
+
+egg_factor   = forage.egg_factor
+larva_factor = forage.larva_factor
+
+loss_slope = forage.loss_slope
+mid        = forage.mid
+
 # List out development parameters
 mu_egg_dev  = dev.mu_egg
 sig_egg_dev = dev.sig_egg

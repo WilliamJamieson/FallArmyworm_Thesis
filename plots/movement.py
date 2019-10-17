@@ -1,10 +1,8 @@
 import datetime
 import dataclasses       as dclass
 import numpy             as np
-# import matplotlib.pyplot as plt
 
 import bokeh.plotting as plt
-import bokeh.layouts  as lay
 import bokeh.models   as mdl
 import bokeh.palettes as palettes
 

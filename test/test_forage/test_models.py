@@ -240,7 +240,7 @@ class TestLoss(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.slope = mk.MagicMock(spec=dict)
+        self.slope = mk.MagicMock(spec=float)
         self.mid   = mk.MagicMock(spec=dict)
 
         self.max_gut      = mk.MagicMock(spec=biomass.MaxGut)
@@ -333,18 +333,14 @@ class TestLoss(ut.TestCase):
                 self.assertEqual(self.mid.__getitem__.call_args_list,
                                  [mk.call(target_key)])
                 self.assertEqual(mkExp.call_args_list,
-                                 [mk.call(self.slope.__getitem__.return_value.
+                                 [mk.call(self.slope.
                                             __neg__.return_value.
                                             __mul__.return_value)])
-                self.assertEqual(self.slope.__getitem__.return_value.
-                                    __neg__.return_value.
+                self.assertEqual(self.slope.__neg__.return_value.
                                     __mul__.call_args_list,
                                  [mk.call(mkDiff.return_value)])
-                self.assertEqual(self.slope.__getitem__.return_value.
-                                    __neg__.call_args_list,
+                self.assertEqual(self.slope.__neg__.call_args_list,
                                  [mk.call()])
-                self.assertEqual(self.slope.__getitem__.call_args_list,
-                                 [mk.call(target_key)])
                 self.assertEqual(mkDiff.call_args_list,
                                  [mk.call(self.Loss, mass, target_mass,
                                           genotype, target_key)])
@@ -406,14 +402,14 @@ class TestFight(ut.TestCase):
 
         self.assertTrue(dclass.is_dataclass(self.Fight))
 
-    def test__prob(self):
+    def test_prob(self):
         """test get the probability"""
 
         mass0 = mk.MagicMock(spec=float)
         mass1 = mk.MagicMock(spec=float)
 
         with mk.patch.object(spcl, 'expit', autospec=True) as mkExpit:
-            self.assertEqual(self.Fight._prob(mass0, mass1),
+            self.assertEqual(self.Fight.prob(mass0, mass1),
                              mkExpit.return_value)
             self.assertEqual(mkExpit.call_args_list,
                              [mk.call(self.slope.__mul__.return_value)])
@@ -428,7 +424,7 @@ class TestFight(ut.TestCase):
         mass0 = mk.MagicMock(spec=float)
         mass1 = mk.MagicMock(spec=float)
 
-        with mk.patch.object(model.Fight, '_prob', autospec=True) as mkProb:
+        with mk.patch.object(model.Fight, 'prob', autospec=True) as mkProb:
             with mk.patch.object(rnd, 'random') as mkRND:
                 mkRND.return_value.__le__.side_effect = [True, False]
 

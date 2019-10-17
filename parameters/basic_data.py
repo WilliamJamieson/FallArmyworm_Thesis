@@ -99,12 +99,28 @@ theta_scarce    = 0.8
 sig_scarce      = 1.0
 
 
+# Empirical cannibalism factors
+fight_slope           = 4
+cannibalism_radius    = 0
+cannibalism_encounter = 1
+
+loss_slope = 4
+egg_loss   = 0.9
+larva_loss = 0.25
+
+
+# Empirical consumption factors
+egg_factor   = 1
+larva_factor = 1
+
+
 # Empirical movement factors
 larva_scale = 1
 larva_shape = 10
 
 adult_scale = 1
 adult_shape = 1
+
 
 
 # Egg development Sparks 1979
