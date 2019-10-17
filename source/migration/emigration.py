@@ -69,7 +69,6 @@ class Emigration(object):
         else:
             return population
 
-
     def _agents(self, agents: hint.agents) -> hint.agent_list:
         """
         Get the current agents

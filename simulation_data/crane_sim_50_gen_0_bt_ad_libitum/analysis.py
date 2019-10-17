@@ -133,7 +133,6 @@ class ReadData(object):
 
             return new
 
-
     def get_file_list(self) -> list:
         """
         Get list of all the files with base name
@@ -181,7 +180,6 @@ class ReadData(object):
             if len(file_list) != files_per_run:
                 raise TypeError('Run {} does not have enough files'.
                                 format(run_num))
-
 
         return file_dict
 
@@ -377,7 +375,6 @@ class ReadData(object):
             new[table_name] = self.cut_dataframe(dataframe)
 
         return new
-
 
     def get_dataframes(self) -> dict:
         """
@@ -670,7 +667,6 @@ class ProcessData(object):
 
     def __post_init__(self):
         """Setup the other stuff"""
-
 
         print('{} Processing Combined Data'.format(datetime.datetime.now()))
         if not isinstance(self.periodograms, dict):
@@ -1017,7 +1013,6 @@ class PlotData(object):
 
         return table_plots
 
-
     @staticmethod
     def get_seasonal_source(dataframes: dict) -> dict:
         """
@@ -1090,7 +1085,6 @@ class PlotData(object):
             table_dict[table_name] = column_dict
 
         return table_dict
-
 
     def seasonal_plotter(self, dataframes: dict,
                                title:      str) -> dict:
