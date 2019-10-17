@@ -1,19 +1,23 @@
 import datetime
-import dataclasses       as dclass
-# import matplotlib.pyplot as plt
-import numpy             as np
-import scipy.stats       as stats
+import dataclasses as dclass
+import numpy       as np
+import scipy.stats as stats
 
-import bokeh.plotting     as plt
-import bokeh.layouts      as lay
-import bokeh.models       as mdl
-import bokeh.palettes     as palettes
-import bokeh.models.tools as tools
+import bokeh.plotting as plt
+import bokeh.layouts  as lay
+import bokeh.models   as mdl
+import bokeh.palettes as palettes
 
-import data.biomass       as input_biomass
-import data.data_tracking as input_tracking
-import data.forage        as input_forage
-import data.reproduction  as input_repro
+import parameters.basic_data       as base_data
+import parameters.data_tracking    as tracking
+import parameters.model_parameters as param
+
+import models.development  as dev
+import models.dominance    as dom
+import models.forage       as forage
+import models.growth       as growth
+import models.init_biomass as init_bio
+import models.reproduction as repro
 
 import source.hint    as hint
 import source.keyword as keyword
@@ -22,9 +26,10 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
-trials    = 1000
-num_steps = 40
-save_fig  = True
+dominance  = 0
+trials     = 1000
+num_steps  = 40
+use_hetero = False
 
 plot_width  = 800
 plot_height = 500
@@ -33,6 +38,22 @@ colors    = palettes.Set1[3]
 save_file = 'biomass_plots.html'
 
 plt.output_file(save_file)
+
+alpha      = dom.dom(param.alpha_ss,
+                     param.alpha_rr,
+                     dominance)
+beta       = dom.dom(param.beta_ss,
+                     param.beta_rr,
+                     dominance)
+max_mass   = dom.dom(param.max_mass_ss,
+                     param.max_mass_rr,
+                     dominance)
+mass_const = dom.dom(param.mass_const_ss,
+                     param.mass_const_rr,
+                     dominance)
+mass_0     = dom.dom(param.mu_0_larva_ss,
+                     param.mu_0_larva_rr,
+                     dominance)
 
 
 @dclass.dataclass
@@ -92,31 +113,31 @@ class West(object):
 
         return values
 
+    @classmethod
+    def exact(cls, genotype: str,
+                   times:    list) -> np.array:
+        """
+        Run an exact West et.al. model for the phenotype and times given:
 
-def exact(genotype: str,
-          times:   list) -> np.array:
-    """
-    Run an exact West et.al. model for the phenotype and times given:
+        Args:
+            genotype: genotype to use
+            times:    times to run model at
 
-    Args:
-        genotype: genotype to use
-        times:    times to run model at
+        Returns:
+            list of values for model at times
+        """
 
-    Returns:
-        list of values for model at times
-    """
+        a             = alpha[     genotype]
+        mass_constant = mass_const[genotype]
+        m_0           = mass_0[    genotype]
 
-    alpha      = input_biomass.growth_alpha[ genotype]
-    mass_const = input_biomass.mass_constant[genotype]
-    mass_0     = input_biomass.mass_0[       genotype]
+        west = cls(a, mass_constant, m_0)
 
-    west = West(alpha, mass_const, mass_0)
-
-    return np.array(west.run(times))
+        return np.array(west.run(times))
 
 
 @dclass.dataclass
-class EulerApprox(object):
+class Approx(object):
     """
     Class to simulate the West model with Euler's method:
         equation simulated:
@@ -189,27 +210,27 @@ class EulerApprox(object):
 
         return values
 
+    @classmethod
+    def euler(cls, genotype: str,
+                   times:    list) -> np.array:
+        """
+        Run an Euler simulation for the West et.al. model
 
-def euler(genotype: str,
-          times:    list) -> np.array:
-    """
-    Run an Euler simulation for the West et.al. model
+        Args:
+            genotype: genotype to use
+            times:    times to approximate at
 
-    Args:
-        genotype: genotype to use
-        times:    times to approximate at
+        Returns:
+            list of approximate values using Euler's method
+        """
 
-    Returns:
-        list of approximate values using Euler's method
-    """
+        a   = alpha[ genotype]
+        b   = beta[  genotype]
+        m_0 = mass_0[genotype]
 
-    alpha  = input_biomass.growth_alpha[genotype]
-    beta   = input_biomass.growth_beta[ genotype]
-    mass_0 = input_biomass.mass_0[      genotype]
+        euler_method = cls(a, b, m_0)
 
-    euler_method = EulerApprox(alpha, beta, mass_0)
-
-    return np.array(euler_method.run(times))
+        return np.array(euler_method.run(times))
 
 
 @dclass.dataclass
@@ -224,27 +245,43 @@ class Simulator(object):
 
     grid        = [(keyword.hexagon, 1, 1, True),
                    (keyword.hexagon, 1, 1, True)]
-    attrs       = {0: input_tracking.genotype_attrs}
+    attrs       = {0: tracking.genotype_attrs}
     data        = (np.inf,)
-    steps       = [({keyword.larva: [keyword.consume,
-                                     keyword.grow,
-                                     keyword.reset]},)]
     emigration  = []
     immigration = []
 
-    input_models = [input_biomass.max_gut,
-                    input_biomass.growth,
-                    input_biomass.init_num,
-                    input_biomass.init_mass,
-                    input_biomass.init_juvenile,
-                    input_biomass.init_mature,
-                    input_biomass.init_plant,
-                    input_repro.init_sex]
-    input_variables = input_repro.values
+    input_models = [growth.max_gut(),
+                    growth.growth(param.alpha_ss,
+                                  param.alpha_rr,
+                                  param.beta_ss,
+                                  param.beta_rr,
+                                  dominance),
+                    init_bio.init_num(param.lam_0_egg),
+                    init_bio.init_mass(param.mu_0_egg_ss,
+                                       param.mu_0_egg_rr,
+                                       param.sig_0_egg_ss,
+                                       param.sig_0_egg_rr,
+                                       dominance),
+                    init_bio.init_juvenile(param.mu_0_larva_ss,
+                                           param.mu_0_larva_rr,
+                                           param.sig_0_larva_ss,
+                                           param.sig_0_larva_rr,
+                                           dominance),
+                    init_bio.init_mature(param.mu_0_mature_ss,
+                                         param.mu_0_mature_rr,
+                                         param.sig_0_mature_ss,
+                                         param.sig_0_mature_rr,
+                                         dominance),
+                    init_bio.init_plant(param.mu_leaf,
+                                        param.sig_leaf),
+                    repro.init_sex(param.female_prob)]
+    input_variables = param.repro_values
 
     nums:       hint.init_pops
     bt_prop:    float
     forage:     hint.forage_plant
+    develop:    callable        = None
+    steps:      list            = None
     simulation: hint.simulation = None
 
     def __post_init__(self):
@@ -252,6 +289,14 @@ class Simulator(object):
         input_models.append(self.forage)
 
         inputs = tuple(input_models)
+
+        if self.develop is not None:
+            self.input_models.append(self.develop)
+
+        if self.steps is None:
+            self.steps = [({keyword.larva: [keyword.consume,
+                                            keyword.grow,
+                                            keyword.reset]},)]
 
         self.simulation = main_simulation.Simulation.\
             setup(self.nums,
@@ -330,20 +375,30 @@ def extract_data(data: np.ndarray) -> tuple:
     return mean, std, lower, upper, sem, sem_lower, sem_upper, q_lower, q_upper
 
 
-fin_time_homo_r = mdl.Span(location=input_biomass.fin_point_r[0],
+fin_point_rr = (
+    base_data.growth_times_rr[1] - base_data.growth_times_sem_rr[1],
+    base_data.growth_mass_rr[ 1] + base_data.growth_mass_sem_rr[ 1]
+)
+fin_point_ss = (
+    base_data.growth_times_ss[1] - base_data.growth_times_sem_ss[1],
+    base_data.growth_mass_ss[ 1] + base_data.growth_mass_sem_ss[ 1]
+)
+
+
+fin_time_homo_r = mdl.Span(location=fin_point_rr[0],
                            dimension='height',
                            line_color=colors[0],
                            line_dash='dotted')
-fin_mass_homo_r = mdl.Span(location=input_biomass.fin_point_r[1],
+fin_mass_homo_r = mdl.Span(location=fin_point_rr[1],
                            dimension='width',
                            line_color=colors[0],
                            line_dash='dotted')
 
-fin_time_homo_s = mdl.Span(location=input_biomass.fin_point_s[0],
+fin_time_homo_s = mdl.Span(location=fin_point_ss[0],
                            dimension='height',
                            line_color=colors[2],
                            line_dash='dotted')
-fin_mass_homo_s = mdl.Span(location=input_biomass.fin_point_s[1],
+fin_mass_homo_s = mdl.Span(location=fin_point_ss[1],
                            dimension='width',
                            line_color=colors[2],
                            line_dash='dotted')
@@ -351,14 +406,14 @@ fin_mass_homo_s = mdl.Span(location=input_biomass.fin_point_s[1],
 # Generate the ad libitum plots
 t            = list(range(num_steps))
 print('{} Running Exact simulations'.format(datetime.datetime.now()))
-exact_homo_r = exact(keyword.homo_r, t)
-exact_hetero = exact(keyword.hetero, t)
-exact_homo_s = exact(keyword.homo_s, t)
+exact_homo_r = West.exact(keyword.homo_r, t)
+exact_hetero = West.exact(keyword.hetero, t)
+exact_homo_s = West.exact(keyword.homo_s, t)
 
 print('{} Running Euler simulations'.format(datetime.datetime.now()))
-euler_homo_r = euler(keyword.homo_r, t)
-euler_hetero = euler(keyword.hetero, t)
-euler_homo_s = euler(keyword.homo_s, t)
+euler_homo_r = Approx.euler(keyword.homo_r, t)
+euler_hetero = Approx.euler(keyword.hetero, t)
+euler_homo_s = Approx.euler(keyword.homo_s, t)
 
 euler_plot = plt.figure(plot_width=plot_width,
                         plot_height=plot_height)
@@ -377,12 +432,13 @@ euler_plot.line(t, exact_homo_r,
 euler_plot.circle(t, euler_homo_r,
                   color=colors[0],
                   legend='Model Resistant')
-euler_plot.line(t, exact_hetero,
-                color=colors[1],
-                legend='Exact Heterozygous')
-euler_plot.circle(t, euler_hetero,
-                  color=colors[1],
-                  legend='Model Heterozygous')
+if use_hetero:
+    euler_plot.line(t, exact_hetero,
+                    color=colors[1],
+                    legend='Exact Heterozygous')
+    euler_plot.circle(t, euler_hetero,
+                      color=colors[1],
+                      legend='Model Heterozygous')
 euler_plot.line(t, exact_homo_s,
                 color=colors[2],
                 legend='Exact Susceptible')
@@ -390,12 +446,12 @@ euler_plot.circle(t, euler_homo_s,
                   color=colors[2],
                   legend='Model Susceptible')
 
-euler_plot.x([input_biomass.fin_point_r[0]],
-             [input_biomass.fin_point_r[1]],
+euler_plot.x([fin_point_rr[0]],
+             [fin_point_rr[1]],
              color=colors[0], size=20,
              legend='Resistant Pupation')
-euler_plot.x([input_biomass.fin_point_s[0]],
-             [input_biomass.fin_point_s[1]],
+euler_plot.x([fin_point_ss[0]],
+             [fin_point_ss[1]],
              color=colors[2], size=20,
              legend='Susceptible Pupation')
 
@@ -409,7 +465,7 @@ initial_pops = ((0, 0, 0),
                 (0, 0, 0))
 simulator_bt = Simulator(initial_pops,
                          1,
-                         input_forage.ad_libitum)
+                         forage.adlibitum(1))
 biomass_bt  = simulator_bt.run(t)
 biomass_bt_homo_r = biomass_bt[:, 0]
 biomass_bt_hetero = biomass_bt[:, 1]
@@ -432,12 +488,13 @@ rk4_plot.line(t, exact_homo_r,
 rk4_plot.circle(t, biomass_bt_homo_r,
                 color=colors[0],
                 legend='Model Resistant')
-rk4_plot.line(t, exact_hetero,
-              color=colors[1],
-              legend='Exact Heterozygous')
-rk4_plot.circle(t, biomass_bt_hetero,
-                color=colors[1],
-                legend='Model Heterozygous')
+if use_hetero:
+    rk4_plot.line(t, exact_hetero,
+                  color=colors[1],
+                  legend='Exact Heterozygous')
+    rk4_plot.circle(t, biomass_bt_hetero,
+                    color=colors[1],
+                    legend='Model Heterozygous')
 rk4_plot.line(t, exact_homo_s,
               color=colors[2],
               legend='Exact Susceptible')
@@ -445,12 +502,12 @@ rk4_plot.circle(t, biomass_bt_homo_s,
                 color=colors[2],
                 legend='Model Susceptible')
 
-rk4_plot.x([input_biomass.fin_point_r[0]],
-           [input_biomass.fin_point_r[1]],
+rk4_plot.x([fin_point_rr[0]],
+           [fin_point_rr[1]],
            color=colors[0], size=20,
            legend='Resistant Pupation')
-rk4_plot.x([input_biomass.fin_point_s[0]],
-           [input_biomass.fin_point_s[1]],
+rk4_plot.x([fin_point_ss[0]],
+           [fin_point_ss[1]],
            color=colors[2], size=20,
            legend='Susceptible Pupation')
 
@@ -464,7 +521,10 @@ initial_pops = ((0,      0,      0),
                 (0,      0,      0))
 print('{} Running Stochastic ad libitum simulations'.
       format(datetime.datetime.now()))
-adlibitum = Simulator(initial_pops, 1, input_forage.ad_libitum)
+adlibitum = Simulator(initial_pops, 1,
+                      forage.starvation(1,
+                                        param.theta_adlibitum,
+                                        param.sig_scarce))
 adlib     = adlibitum.run(t)
 adlib_homo_r = adlib[:, :trials]
 adlib_hetero = adlib[:, trials: 2*trials]
@@ -489,14 +549,15 @@ adlib_plot.line(t, biomass_adlib_homo_r[7],
 adlib_plot.line(t, biomass_adlib_homo_r[8],
                 color=colors[0], line_dash='dashed')
 
-adlib_plot.line(t, biomass_adlib_hetero[0],
-                color=colors[1],
-                legend='Mean Heterozygous')
-adlib_plot.line(t, biomass_adlib_hetero[7],
-                color=colors[1], line_dash='dashed',
-                legend='95% Confidence Heterozygous')
-adlib_plot.line(t, biomass_adlib_hetero[8],
-                color=colors[1], line_dash='dashed')
+if use_hetero:
+    adlib_plot.line(t, biomass_adlib_hetero[0],
+                    color=colors[1],
+                    legend='Mean Heterozygous')
+    adlib_plot.line(t, biomass_adlib_hetero[7],
+                    color=colors[1], line_dash='dashed',
+                    legend='95% Confidence Heterozygous')
+    adlib_plot.line(t, biomass_adlib_hetero[8],
+                    color=colors[1], line_dash='dashed')
 
 adlib_plot.line(t, biomass_adlib_homo_s[0],
                 color=colors[2],
@@ -511,8 +572,11 @@ adlib_plot.legend.location = "bottom_right"
 
 print('{} Running Stochastic Starvation simulations'.
       format(datetime.datetime.now()))
-stochastic = Simulator(initial_pops, 1, input_forage.starve)
-starve     = stochastic.run(t)
+stochastic = Simulator(initial_pops, 1,
+                       forage.starvation(1,
+                                         param.theta_scarce,
+                                         param.sig_scarce))
+starve        = stochastic.run(t)
 starve_homo_r = starve[:, :trials]
 starve_hetero = starve[:, trials: 2*trials]
 starve_homo_s = starve[:, 2*trials:]
@@ -536,14 +600,15 @@ starve_plot.line(t, biomass_data_homo_r[7],
 starve_plot.line(t, biomass_data_homo_r[8],
                  color=colors[0], line_dash='dashed')
 
-starve_plot.line(t, biomass_data_hetero[0],
-                 color=colors[1],
-                 legend='Mean Heterozygous')
-starve_plot.line(t, biomass_data_hetero[7],
-                 color=colors[1], line_dash='dashed',
-                 legend='95% Confidence Heterozygous')
-starve_plot.line(t, biomass_data_hetero[8],
-                 color=colors[1], line_dash='dashed')
+if use_hetero:
+    starve_plot.line(t, biomass_data_hetero[0],
+                     color=colors[1],
+                     legend='Mean Heterozygous')
+    starve_plot.line(t, biomass_data_hetero[7],
+                     color=colors[1], line_dash='dashed',
+                     legend='95% Confidence Heterozygous')
+    starve_plot.line(t, biomass_data_hetero[8],
+                     color=colors[1], line_dash='dashed')
 
 starve_plot.line(t, biomass_data_homo_s[0],
                  color=colors[2],
@@ -557,55 +622,23 @@ starve_plot.line(t, biomass_data_homo_s[8],
 starve_plot.legend.location = "bottom_right"
 
 layout = lay.column(euler_plot, rk4_plot, adlib_plot, starve_plot)
+#
+# print('{} Running Development simulations'.
+#       format(datetime.datetime.now()))
+# steps = [({keyword.larva: [keyword.consume,
+#                            keyword.grow,
+#                            keyword.develop,
+#                            keyword.reset]},)]
+#
+# develop = Simulator(initial_pops, 1, forage.adlibitum(1),
+#                     dev.larva_dev(param.mu_larva_dev_ss,
+#                                   param.mu_larva_dev_rr,
+#                                   param.sig_larva_dev_ss,
+#                                   param.sig_larva_dev_rr,
+#                                   dominance))
+# develop.run(t)
+
+print('RR pupation: {}'.format(fin_point_rr))
+print('SS pupation: {}'.format(fin_point_ss))
 
 plt.show(layout)
-
-# plt.figure()
-# # #       Plot model
-# # plt.plot(t, data_homo_r[0], 'b:', label='Model Resistant')
-# # plt.plot(t, data_hetero[0], 'r:', label='Model Heterozygous')
-# # plt.plot(t, data_homo_s[0], 'k:', label='Model Susceptible')
-# #       Plot means
-# plt.plot(t, biomass_data_homo_r[0], 'b', label='Mean Resistant')
-# plt.plot(t, biomass_data_hetero[0], 'r', label='Mean Heterozygous')
-# plt.plot(t, biomass_data_homo_s[0], 'k', label='Mean Susceptible')
-# # #       Plot min/max
-# # plt.plot(t, biomass_data_homo_r[2], 'b--', label='Min/Max Resistant')
-# # plt.plot(t, biomass_data_homo_r[3], 'b--')
-# # plt.plot(t, biomass_data_hetero[2], 'r--', label='Min/Max Heterozygous')
-# # plt.plot(t, biomass_data_hetero[3], 'r--')
-# # plt.plot(t, biomass_data_homo_s[2], 'k--', label='Min/Max Susceptible')
-# # plt.plot(t, biomass_data_homo_s[3], 'k--')
-# # #       Plot SEM interval
-# # plt.plot(t, biomass_data_homo_r[5], 'b--',
-# #          label='95% Confidence Resistant')
-# # plt.plot(t, biomass_data_homo_r[6], 'b--')
-# # plt.plot(t, biomass_data_hetero[5], 'r--',
-# #          label='95% Confidence Heterozygous')
-# # plt.plot(t, biomass_data_hetero[6], 'r--')
-# # plt.plot(t, biomass_data_homo_s[5], 'k--',
-# #          label='95% Confidence Susceptible')
-# # plt.plot(t, biomass_data_homo_s[6], 'k--')
-# #       Plot Quantile interval
-# plt.plot(t, biomass_data_homo_r[7], 'b--', label='95% Confidence Resistant')
-# plt.plot(t, biomass_data_homo_r[8], 'b--')
-# plt.plot(t, biomass_data_hetero[7], 'r--', label='95% Confidence Heterozygous')
-# plt.plot(t, biomass_data_hetero[8], 'r--')
-# plt.plot(t, biomass_data_homo_s[7], 'k--', label='95% Confidence Susceptible')
-# plt.plot(t, biomass_data_homo_s[8], 'k--')
-# # #       Plot pupation data
-# # plt.axhline(input_biomass.fin_point_r[1], color='b', linestyle=':')
-# # plt.axvline(input_biomass.fin_point_r[0], color='b', linestyle=':',
-# #             label='Resistant Pupation')
-# # plt.axhline(input_biomass.fin_point_s[1], color='k', linestyle=':')
-# # plt.axvline(input_biomass.fin_point_s[0], color='k', linestyle=':',
-# #             label='Susceptible Pupation')
-# #       Add plot labels
-# plt.legend()
-# plt.xlabel('time (days)')
-# plt.ylabel('mass (mg)')
-# plt.title('Larva Starvation Growth {} Trials'.format(trials))
-# #       Show/save plot
-# if save_fig:
-#     plt.savefig('Starvation_Growth.png')
-# plt.show()

@@ -28,13 +28,15 @@ mu_leaf  = init_bio.mu_leaf
 sig_leaf = init_bio.sig_leaf
 
 # List out the growth parameters
-alpha_ss    = growth.alpha_ss
-beta_ss     = growth.beta_ss
-max_mass_ss = growth.max_mass_ss
+alpha_ss      = growth.alpha_ss
+beta_ss       = growth.beta_ss
+max_mass_ss   = growth.max_mass_ss
+mass_const_ss = growth.mass_const_ss
 
-alpha_rr    = growth.alpha_rr
-beta_rr     = growth.beta_rr
-max_mass_rr = growth.max_mass_rr
+alpha_rr      = growth.alpha_rr
+beta_rr       = growth.beta_rr
+max_mass_rr   = growth.max_mass_rr
+mass_const_rr = growth.mass_const_rr
 
 # List out the forage parameters
 forage_steps    = forage.forage_steps
@@ -55,6 +57,7 @@ mu_larva_dev_rr  = dev.mu_larva_rr
 sig_larva_dev_rr = dev.sig_larva_rr
 
 # List out reproduction parameters
+female_prob  = repro.female_prob
 repro_values = repro.values
 
 

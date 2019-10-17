@@ -210,10 +210,12 @@ growth_rr = Growth.parameters(init_bio.mu_0_larva_rr,
                               data.growth_mass_rr,
                               data.growth_mass_sem_rr)
 
-alpha_ss    = growth_ss[0]
-beta_ss     = growth_ss[1]
-max_mass_ss = growth_ss[2]
+alpha_ss      = growth_ss[0]
+beta_ss       = growth_ss[1]
+max_mass_ss   = growth_ss[2]
+mass_const_ss = growth_ss[3]
 
-alpha_rr    = growth_rr[0]
-beta_rr     = growth_rr[1]
-max_mass_rr = growth_rr[2]
+alpha_rr      = growth_rr[0]
+beta_rr       = growth_rr[1]
+max_mass_rr   = growth_rr[2]
+mass_const_rr = growth_rr[3]

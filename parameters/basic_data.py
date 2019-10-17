@@ -12,6 +12,8 @@ lifetime_female = True
 lifetime_male   = False
 limited         = True
 
+female_prob = 0.5
+
 
 # Whiteford et.al. 1988 (egg_mass data)
 egg_mass_mean_number_eggs = [
@@ -92,10 +94,10 @@ growth_samples_rr = 40
 
 
 # Empirical scarcity factors
-theta_adlibitum = 1
+theta_adlibitum = 0.95
 theta_scarce    = 0.8
 
-sig_scarce      = 5.0
+sig_scarce      = 1.0
 
 
 # Egg development Sparks 1979
