@@ -1,14 +1,15 @@
 import datetime
-import dataclasses       as dclass
-import numpy             as np
+import dataclasses  as dclass
+import numpy        as np
 
 import bokeh.plotting as plt
-import bokeh.models   as mdl
+import bokeh.layouts  as lay
 import bokeh.palettes as palettes
 
 import parameters.data_tracking    as tracking
 import parameters.model_parameters as param
 
+import models.development  as dev
 import models.forage       as forage
 import models.graph        as graph
 import models.growth       as growth
@@ -24,11 +25,13 @@ import source.simulation.simulation as main_simulation
 
 # Plotting parameters
 dominance  = 0
+trials     = 10
+
 k_lower    = 2
 k_upper    = 6
 num_k      = 9
 
-num_steps  = 30
+num_steps  = 40
 num_eggs   = 10
 num_larvae = 1000
 save_fig   = True
@@ -124,8 +127,9 @@ class Simulator(object):
     attrs       = {1: tracking.genotype_attrs}
     data        = (np.inf,)
     steps       = [({keyword.larva: [keyword.move,
-                                     keyword.consume]}, 24),
+                                     keyword.consume]}, param.forage_steps),
                    ({keyword.larva: [keyword.grow,
+                                     keyword.develop,
                                      keyword.reset]},)]
     emigration  = []
     immigration = []
@@ -157,25 +161,34 @@ class Simulator(object):
                     repro.init_sex(param.female_prob),
                     move.larva(param.larva_scale,
                                param.larva_shape),
-                    forage.starvation(1,
-                                      param.theta_scarce,
+                    forage.starvation(param.forage_steps,
+                                      param.theta_adlibitum,
                                       param.sig_scarce),
                     forage.egg(param.egg_factor),
                     forage.larva(param.larva_factor),
                     forage.fight(param.fight_slope),
                     forage.radius(param.cannibalism_radius),
-                    forage.encounter(param.cannibalism_encounter),
+                    # forage.encounter(param.cannibalism_encounter),
                     forage.loss(param.loss_slope,
                                 param.mid,
                                 param.egg_factor,
-                                param.larva_factor)]
+                                param.larva_factor),
+                    dev.larva_dev(param.mu_larva_dev_ss,
+                                  param.mu_larva_dev_rr,
+                                  param.sig_larva_dev_ss,
+                                  param.sig_larva_dev_rr,
+                                  dominance)]
     input_variables = param.repro_values
 
     nums:       hint.init_pops
     bt_prop:    float
+    encounter:  float
     simulation: hint.simulation = None
 
     def __post_init__(self):
+
+        input_models = self.input_models.copy()
+        input_models.append(forage.encounter(self.encounter))
 
         self.simulation = main_simulation.Simulation. \
             setup(self.nums,
@@ -186,10 +199,10 @@ class Simulator(object):
                   self.steps,
                   self.emigration,
                   self.immigration,
-                  *self.input_models,
+                  *input_models,
                   **self.input_variables)
 
-    def run(self, times: list) -> None:
+    def run_sim(self, times: list) -> None:
         """
         Run the simulation for each time
 
@@ -200,11 +213,176 @@ class Simulator(object):
             biomass data
         """
 
-        for time in times[1:]:
-            print('     {} Running step: {}'.
-                  format(datetime.datetime.now(), time))
+        for _ in times[1:]:
             self.simulation.step()
 
+    def get_start_data(self, data_key: str) -> int:
+        """
+        Get the start population of larvae
+
+        Args:
+            data_key: the genotype table key
+
+        Returns:
+            the number of larvae at start
+        """
+
+        dataframes = self.simulation.agents.dataframes()
+
+        larva  = dataframes['(0, 0)_larva']
+        column = larva[data_key]
+
+        return int(column[0])
+
+    def get_final_data(self, data_key:  str) -> int:
+        """
+        Get the final population of pupae
+
+        Args:
+            data_key: the genotype table key
+
+        Returns:
+            the number of pupae at the end
+        """
+
+        dataframes = self.simulation.agents.dataframes()
+
+        timestep = self.simulation.timestep
+        pupa     = dataframes['(0, 0)_pupa']
+        column   = pupa[data_key]
+        value    = column[timestep]
+
+        return int(value)
+
+    @classmethod
+    def run(cls, rho:        float,
+                 times:      list,
+                 data_key:   str,
+                 nums:       hint.init_pops) -> tuple:
+        """
+        Run a bunch of trials
+        Args:
+            rho:        encounter constant
+            times:      time interval
+            data_key:   column key
+            nums:       init_population
+
+        Returns:
+            value of cannibalism rate constant
+        """
+
+        print('    {} Starting run for rho: {}'.
+              format(datetime.datetime.now(), rho))
+        start_data = []
+        end_data   = []
+        for trial_num in range(trials):
+            print('        {} running trial: {}'.
+                  format(datetime.datetime.now(), trial_num))
+            sim = cls(nums, 1, rho)
+            sim.run_sim(times)
+            start_data.append(sim.get_start_data(data_key))
+            end_data.  append(sim.get_final_data(data_key))
+
+        start_pop = np.mean(start_data)
+        end_pop   = np.mean(end_data)
+
+        prop = end_pop/start_pop
+
+        return - np.log(prop) / start_pop, prop
+
+    @classmethod
+    def rho(cls, rhos:     np.array,
+                 times:    list,
+                 data_key: str,
+                 nums:     hint.init_pops) -> tuple:
+        """
+        Run trials for each rho value
+
+        Args:
+            rhos:     list of encounter constants
+            times:    time interval
+            data_key: data key
+            nums:     init population
+
+        Returns:
+            list of corresponding values for cannibalism
+        """
+
+        cannib = []
+        prop   = []
+        for rho in rhos:
+            rho_cannib, rho_prop = cls.run(rho, times, data_key, nums)
+
+            cannib.append(rho_cannib)
+            prop.  append(rho_prop)
+
+        return cannib, prop
+
+
+t            = list(range(num_steps))
+# encounters = [0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 2, 3]
+encounters = np.logspace(0, 3, 20)
+print('{} Running Cannibalism simulations for RR'.
+      format(datetime.datetime.now()))
+initial_pops = ((0,          0, 0),
+                (num_larvae, 0, 0),
+                (0,          0, 0),
+                (0,          0, 0),
+                (0,          0, 0))
+cannib_rr, prop_rr = Simulator.rho(encounters,
+                                   t, 'genotype_resistant',
+                                   initial_pops)
+print('{} Running Cannibalism simulations for SS'.
+      format(datetime.datetime.now()))
+initial_pops = ((0, 0, 0),
+                (0, 0, num_larvae),
+                (0, 0, 0),
+                (0, 0, 0),
+                (0, 0, 0))
+cannib_ss, prop_ss = Simulator.rho(encounters,
+                                   t, 'genotype_susceptible',
+                                   initial_pops)
+
+cannib_plot = plt.figure(plot_width=plot_width,
+                         plot_height=plot_height,
+                         x_axis_type='log')
+cannib_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
+                         'Cannibalism Constant, Number of Trials: {}'.\
+    format(trials)
+cannib_plot.xaxis.axis_label = 'encounter constant'
+cannib_plot.yaxis.axis_label = 'cannibalism constant'
+
+cannib_plot.circle(encounters, cannib_rr,
+                   color=colors[0], size=10,
+                   legend='Resistant')
+cannib_plot.circle(encounters, cannib_ss,
+                   color=colors[2], size=10,
+                   legend='Susceptible')
+cannib_plot.line(encounters, cannib_rr,
+                 color=colors[0])
+cannib_plot.line(encounters, cannib_ss,
+                 color=colors[2])
+
+prop_plot = plt.figure(plot_width=plot_width,
+                       plot_height=plot_height,
+                       x_axis_type='log')
+prop_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
+                       'Survival Proportion, Number of Trials: {}'. \
+    format(trials)
+prop_plot.xaxis.axis_label = 'encounter constant'
+prop_plot.yaxis.axis_label = 'survival proportion'
+
+prop_plot.circle(encounters, prop_rr,
+                 color=colors[0], size=10,
+                 legend='Resistant')
+prop_plot.circle(encounters, prop_ss,
+                 color=colors[2], size=10,
+                 legend='Susceptible')
+
+prop_plot.line(encounters, prop_rr,
+               color=colors[0])
+prop_plot.line(encounters, prop_ss,
+               color=colors[2])
 
 
 k_values = np.linspace(k_lower, k_upper, num_k)
@@ -225,71 +403,5 @@ for index, k_slope in enumerate(k_values):
 
 fight_plot.legend.location = 'top_left'
 
-plt.show(fight_plot)
-
-
-
-# t            = list(range(num_steps))
-# initial_pops = ((num_eggs,   num_eggs,   num_eggs),
-#                 (num_larvae, num_larvae, num_larvae),
-#                 (0,          0,          0),
-#                 (0,          0,          0),
-#                 (0,          0,          0))
-# print('{} Running Cannibalism Bt simulations'.
-#       format(datetime.datetime.now()))
-# simulator_bt = Simulator(initial_pops, 1)
-# simulator_bt.run(t)
-# dataframes_bt = simulator_bt.simulation.agents.dataframes()
-# egg_bt   = dataframes_bt['(0, 0)_egg']
-# larva_bt = dataframes_bt['(0, 0)_larva']
-# print('{} Running Cannibalism Not Bt simulations'.
-#       format(datetime.datetime.now()))
-# simulator_not_bt = Simulator(initial_pops, 0)
-# simulator_not_bt.run(t)
-# dataframes_not_bt = simulator_not_bt.simulation.agents.dataframes()
-# egg_not_bt   = dataframes_not_bt['(0, 0)_egg']
-# larva_not_bt = dataframes_not_bt['(0, 0)_larva']
-#
-# # Plots
-# # Not Bt
-# plt.figure()
-# egg_not_bt['genotype_resistant'].   plot(color='b', label='Egg Resistant')
-# egg_not_bt['genotype_heterozygous'].plot(color='r', label='Egg Heterozygous')
-# egg_not_bt['genotype_susceptible']. plot(color='k', label='Egg Susceptible')
-#
-# larva_not_bt['genotype_resistant'].   plot(color='b', linestyle='--',
-#                                            label='Larva Resistant')
-# larva_not_bt['genotype_heterozygous'].plot(color='r', linestyle='--',
-#                                            label='Larva Heterozygous')
-# larva_not_bt['genotype_susceptible']. plot(color='k', linestyle='--',
-#                                            label='Larva Susceptible')
-# #       Add plot labels
-# plt.legend()
-# plt.xlabel('time (days)')
-# plt.ylabel('population')
-# plt.title('Cannibalism on Non-Bt plant')
-# #       Show/save plot
-# if save_fig:
-#     plt.savefig('Cannibalism_not_bt.png')
-# plt.show()
-# # Not Bt
-# plt.figure()
-# egg_bt['genotype_resistant'].   plot(color='b', label='Egg Resistant')
-# egg_bt['genotype_heterozygous'].plot(color='r', label='Egg Heterozygous')
-# egg_bt['genotype_susceptible']. plot(color='k', label='Egg Susceptible')
-#
-# larva_bt['genotype_resistant'].   plot(color='b', linestyle='--',
-#                                        label='Larva Resistant')
-# larva_bt['genotype_heterozygous'].plot(color='r', linestyle='--',
-#                                        label='Larva Heterozygous')
-# larva_bt['genotype_susceptible']. plot(color='k', linestyle='--',
-#                                        label='Larva Susceptible')
-# #       Add plot labels
-# plt.legend()
-# plt.xlabel('time (days)')
-# plt.ylabel('population')
-# plt.title('Cannibalism on Bt plant')
-# #       Show/save plot
-# if save_fig:
-#     plt.savefig('Cannibalism_bt.png')
-# plt.show()
+layout = lay.column(fight_plot, cannib_plot, prop_plot)
+plt.show(layout)
