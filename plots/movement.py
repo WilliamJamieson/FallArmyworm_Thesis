@@ -1,13 +1,21 @@
 import datetime
 import dataclasses       as dclass
 import numpy             as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
-import data.biomass       as input_biomass
-import data.data_tracking as input_tracking
-import data.graph         as input_graph
-import data.movement      as input_move
-import data.reproduction  as input_repro
+import bokeh.plotting as plt
+import bokeh.layouts  as lay
+import bokeh.models   as mdl
+import bokeh.palettes as palettes
+
+import parameters.data_tracking    as tracking
+import parameters.model_parameters as param
+
+import models.graph        as graph
+import models.growth       as growth
+import models.init_biomass as init_bio
+import models.movement     as move
+import models.reproduction as repro
 
 import source.hint    as hint
 import source.keyword as keyword
@@ -16,19 +24,24 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
+larva_grid = 25
+adult_grid = 50
+
+dominance  = 0
 num_steps  = 15
-num_larvae = 1
-num_adults = 1
+num_larvae = 3
+num_adults = 3
 save_fig   = True
 
 
-width  = 0.5
-length = 0.5
-colors = ['b', 'r', 'k']
+plot_width  = 800
+plot_height = 500
+
+colors    = palettes.Category10[9]
+save_file = 'move_plots.html'
 
 
-sex_model = input_repro.init_sex
-sex_model.prob = 1.0
+sex_model = repro.init_sex(1)
 
 
 @dclass.dataclass
@@ -41,27 +54,44 @@ class Simulator(object):
         forage: the plant forage model
     """
 
-    # grid        = [(keyword.hexagon, 1, 1, True),
-    #                (keyword.hexagon, 1, 1, True)]
-    attrs       = {1: input_tracking.genotype_attrs,
-                   2: input_tracking.genotype_attrs}
+    attrs       = {1: tracking.genotype_attrs,
+                   2: tracking.genotype_attrs}
     data        = (np.inf,)
     steps       = [({keyword.larva:  [keyword.move],
                      keyword.female: [keyword.move]},)]
     emigration  = []
     immigration = []
 
-    input_models = [input_biomass.max_gut,
-                    input_biomass.growth,
-                    input_biomass.init_num,
-                    input_biomass.init_mass,
-                    input_biomass.init_juvenile,
-                    input_biomass.init_mature,
-                    input_biomass.init_plant,
-                    input_move.larva_movement,
-                    input_move.adult_movement,
-                    sex_model]
-    input_variables = input_repro.values
+    input_models = [growth.max_gut(),
+                    growth.growth(param.alpha_ss,
+                                  param.alpha_rr,
+                                  param.beta_ss,
+                                  param.beta_rr,
+                                  dominance),
+                    init_bio.init_num(param.lam_0_egg),
+                    init_bio.init_mass(param.mu_0_egg_ss,
+                                       param.mu_0_egg_rr,
+                                       param.sig_0_egg_ss,
+                                       param.sig_0_egg_rr,
+                                       dominance),
+                    init_bio.init_juvenile(param.mu_0_larva_ss,
+                                           param.mu_0_larva_rr,
+                                           param.sig_0_larva_ss,
+                                           param.sig_0_larva_rr,
+                                           dominance),
+                    init_bio.init_mature(param.mu_0_mature_ss,
+                                         param.mu_0_mature_rr,
+                                         param.sig_0_mature_ss,
+                                         param.sig_0_mature_rr,
+                                         dominance),
+                    init_bio.init_plant(param.mu_leaf,
+                                        param.sig_leaf),
+                    sex_model,
+                    move.larva(param.larva_scale,
+                               param.larva_shape),
+                    move.adult(param.adult_scale,
+                               param.adult_shape)]
+    input_variables = param.repro_values
 
     nums:       hint.init_pops
     grid:       hint.grid_generators
@@ -196,56 +226,6 @@ def convert_xy_location(locations: hint.locations,
     return plant_locs, leaf_locs
 
 
-def convert_xy_arrow(xy_data: list) -> list:
-    """
-    Convert a list of xy points to a list of arrow stuff
-    Args:
-        xy_data: list of xy points
-
-    Returns:
-        list of arrow tuples
-    """
-
-    arrows = []
-    for index in range(len(xy_data) - 1):
-        start = xy_data[index]
-        end   = xy_data[index + 1]
-
-        if len(start) < 2:
-            break
-        else:
-            arrow = (start[0],
-                     start[1],
-                     end[0] - start[0],
-                     end[1] - start[1])
-            arrows.append(arrow)
-
-    return arrows
-
-
-def convert_arrow(locations: hint.locations,
-                  side_p:    int,
-                  side_l:    int) -> tuple:
-    """
-    Convert the locations to arrow data
-    Args:
-        locations: list of locations
-        side_p:    grid side of plant grid
-        side_l:    grid side of leaf  grid
-
-    Returns:
-        (plant_arrows, leaf_arrows)
-    """
-
-    plant_locations, leaf_locations = convert_xy_location(locations,
-                                                          side_p,
-                                                          side_l)
-    plant_arrows = convert_xy_arrow(plant_locations)
-    leaf_arrows  = convert_xy_arrow(leaf_locations)
-
-    return plant_arrows, leaf_arrows
-
-
 def invert_data(location_data: list,
                 num_agents:    int) -> list:
     """
@@ -288,7 +268,7 @@ def convert(location_data: list,
     plant_arrows  = []
     leaf_arrows   = []
     for agent_data in new_data:
-        plant_arrow, leaf_arrow = convert_arrow(agent_data, side_p, side_l)
+        plant_arrow, leaf_arrow = convert_xy_location(agent_data, side_p, side_l)
         plant_arrows.append(plant_arrow)
         leaf_arrows.append(leaf_arrow)
 
@@ -296,100 +276,105 @@ def convert(location_data: list,
 
 
 t            = list(range(num_steps))
+print('Running Larva')
 initial_pops = ((0,          0,          0),
                 (num_larvae, num_larvae, num_larvae),
                 (0,          0,          0),
                 (0,          0,          0),
                 (0,          0,          0))
 grid         = [(keyword.hexagon, 1, 1, True),
-                input_graph.graph(25)]
-simulator_larva_bt = Simulator(initial_pops, grid, 1)
-larva_bt, adult_bt = simulator_larva_bt.run(t)
+                graph.graph(larva_grid)]
+simulator_larva = Simulator(initial_pops, grid, 1)
+larva_larva, adult_larva = simulator_larva.run(t)
 
-larva_plant, larva_leaf = convert(larva_bt, 3*num_larvae, 1, 25)
-# Plot
-plt.figure()
-plt.xlim((-1, 25))
-plt.ylim((-1, 25))
-#   Plot Data
-plot_arrows  = []
-legend_names = []
+larva_plant, larva_leaf = convert(larva_larva, 3*num_larvae, 1, larva_grid)
+
+
+plt.output_file('larva_' + save_file)
+larva_plot = plt.figure(plot_width=plot_width,
+                        plot_height=plot_height,
+                        x_range=(0, larva_grid),
+                        y_range=(0, larva_grid))
+larva_plot.title.text = 'Larva Movement, ' \
+                        '(x_m={}, a={})'.format(param.larva_scale,
+                                                param.larva_shape)
+larva_plot.yaxis.axis_label = 'distance (~cm)'
+larva_plot.xaxis.axis_label = 'distance (~cm)'
+
+larva_legend_items = []
 for agent_index in range(3*num_larvae):
     points = larva_leaf[agent_index].copy()
-    point  = points.pop(0)
-    legend_name = 'Larva {}'.format(agent_index)
-    plot_arrow = plt.arrow(point[0],
-                           point[1],
-                           point[2],
-                           point[3],
-                           head_width=width,
-                           head_length=length,
-                           length_includes_head=True,
-                           color=colors[agent_index],
-                           label=legend_name)
-    plot_arrows.append(plot_arrow)
-    legend_names.append(legend_name)
-    for point in points:
-        plt.arrow(point[0], point[1], point[2], point[3],
-                               head_width=width,
-                               head_length=length,
-                               length_includes_head=True,
-                               color=colors[agent_index])
 
-plt.legend(plot_arrows, legend_names)
-plt.xlabel('distance (cm)')
-plt.ylabel('distance (cm)')
-plt.title('Larva Movement on a Plant')
-#   Show/save plot
-if save_fig:
-    plt.savefig('larva_movement.png')
-plt.show()
+    start_point = points.pop(0)
+    larva_circle = larva_plot.circle([[start_point[0]]], [[start_point[1]]],
+                                     color=colors[agent_index], size=10)
+    larva_legend_items.append(('Larva {}'.format(agent_index), [larva_circle]))
 
+    for end_point in points:
+        larva_arrow = mdl.Arrow(end=mdl.VeeHead(fill_color=colors[agent_index],
+                                                line_color=colors[agent_index],
+                                                size=10),
+                                line_color=colors[agent_index],
+                                x_start=start_point[0], y_start=start_point[1],
+                                x_end=end_point[0], y_end=end_point[1])
+        larva_plot.add_layout(larva_arrow)
+
+        start_point = end_point
+
+larva_legend = mdl.Legend(items=larva_legend_items, location='top_right')
+larva_plot.add_layout(larva_legend, 'right')
+
+
+plt.show(larva_plot)
+
+
+plt.output_file('adult_' + save_file)
+print('Running Adult')
 initial_pops = ((0,          0,          0),
                 (0,          0,          0),
                 (0,          0,          0),
                 (0,          0,          0),
                 (num_adults, num_adults, num_adults))
-grid         = [input_graph.graph(25),
+grid         = [graph.graph(adult_grid),
                 (keyword.hexagon, 1, 1, True)]
-simulator_adult_bt = Simulator(initial_pops, grid, 1)
-larva_bt, adult_bt = simulator_adult_bt.run(t)
+simulator_adult = Simulator(initial_pops, grid, 1)
+larva_adult, adult_adult = simulator_adult.run(t)
 
-adult_plant, adult_leaf = convert(adult_bt, 3*num_adults, 25, 1)
-# Plot
-plt.figure()
-plt.xlim((-1, 25))
-plt.ylim((-1, 25))
-#   Plot Data
-plot_arrows  = []
-legend_names = []
+adult_plant, adult_leaf = convert(adult_adult, 3*num_adults, adult_grid, 1)
+
+
+adult_plot = plt.figure(plot_width=plot_width,
+                        plot_height=plot_height,
+                        x_range=(0, adult_grid),
+                        y_range=(0, adult_grid))
+adult_plot.title.text = 'Adult Movement, ' \
+                        '(x_m={}, a={})'.format(param.adult_shape,
+                                                param.adult_scale)
+adult_plot.yaxis.axis_label = 'distance (~m)'
+adult_plot.xaxis.axis_label = 'distance (~m)'
+
+adult_legend_items = []
 for agent_index in range(3*num_adults):
     points = adult_plant[agent_index].copy()
-    point  = points.pop(0)
-    legend_name = 'Adult {}'.format(agent_index)
-    plot_arrow = plt.arrow(point[0],
-                           point[1],
-                           point[2],
-                           point[3],
-                           head_width=width,
-                           head_length=length,
-                           length_includes_head=True,
-                           color=colors[agent_index],
-                           label=legend_name)
-    plot_arrows.append(plot_arrow)
-    legend_names.append(legend_name)
-    for point in points:
-        plt.arrow(point[0], point[1], point[2], point[3],
-                  head_width=width,
-                  head_length=length,
-                  length_includes_head=True,
-                  color=colors[agent_index])
 
-plt.legend(plot_arrows, legend_names)
-plt.xlabel('distance (m)')
-plt.ylabel('distance (m)')
-plt.title('Adult Movement on in a Field')
-#   Show/save plot
-if save_fig:
-    plt.savefig('adult_movement.png')
-plt.show()
+    start_point = points.pop(0)
+    adult_circle = adult_plot.circle([[start_point[0]]], [[start_point[1]]],
+                                     color=colors[agent_index], size=10)
+    adult_legend_items.append(('Adult {}'.format(agent_index), [adult_circle]))
+
+    for end_point in points:
+        adult_arrow = mdl.Arrow(end=mdl.VeeHead(fill_color=colors[agent_index],
+                                                line_color=colors[agent_index],
+                                                size=10),
+                                line_color=colors[agent_index],
+                                x_start=start_point[0], y_start=start_point[1],
+                                x_end=end_point[0], y_end=end_point[1])
+        adult_plot.add_layout(adult_arrow)
+
+        start_point = end_point
+
+adult_legend = mdl.Legend(items=adult_legend_items, location='top_right')
+adult_plot.add_layout(adult_legend, 'right')
+
+
+plt.show(adult_plot)

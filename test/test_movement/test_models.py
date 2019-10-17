@@ -17,12 +17,10 @@ class TestLevy(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.loc   = mk.MagicMock(spec=float)
         self.scale = mk.MagicMock(spec=float)
         self.shape = mk.MagicMock(spec=float)
 
-        self.Levy = model.Levy(self.loc,
-                               self.scale,
+        self.Levy = model.Levy(self.scale,
                                self.shape)
 
     def test___init__(self):
@@ -31,7 +29,6 @@ class TestLevy(ut.TestCase):
         self.assertIsInstance(self.Levy, models.Model)
         self.assertIsInstance(self.Levy, model.Levy)
 
-        self.assertEqual(self.Levy.loc,   self.loc)
         self.assertEqual(self.Levy.scale, self.scale)
         self.assertEqual(self.Levy.shape, self.shape)
 
@@ -50,8 +47,7 @@ class TestLevy(ut.TestCase):
                 self.assertEqual(mkFloat.call_args_list,
                                  [mk.call(mkRVS.return_value)])
                 self.assertEqual(mkRVS.call_args_list,
-                                 [mk.call(self.shape,
-                                          loc=self.loc, scale=self.scale)])
+                                 [mk.call(self.shape, self.scale)])
 
 
 class TestLarva(ut.TestCase):
@@ -60,12 +56,10 @@ class TestLarva(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.loc   = mk.MagicMock(spec=float)
         self.scale = mk.MagicMock(spec=float)
         self.shape = mk.MagicMock(spec=float)
 
-        self.Larva = model.Larva(self.loc,
-                                 self.scale,
+        self.Larva = model.Larva(self.scale,
                                  self.shape)
 
     def test___init__(self):
@@ -75,7 +69,6 @@ class TestLarva(ut.TestCase):
         self.assertIsInstance(self.Larva, model.Levy)
         self.assertIsInstance(self.Larva, model.Larva)
 
-        self.assertEqual(self.Larva.loc,   self.loc)
         self.assertEqual(self.Larva.scale, self.scale)
         self.assertEqual(self.Larva.shape, self.shape)
 
@@ -90,12 +83,10 @@ class TestAdult(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.loc   = mk.MagicMock(spec=float)
         self.scale = mk.MagicMock(spec=float)
         self.shape = mk.MagicMock(spec=float)
 
-        self.Adult = model.Adult(self.loc,
-                                 self.scale,
+        self.Adult = model.Adult(self.scale,
                                  self.shape)
 
     def test___init__(self):
@@ -105,7 +96,6 @@ class TestAdult(ut.TestCase):
         self.assertIsInstance(self.Adult, model.Levy)
         self.assertIsInstance(self.Adult, model.Adult)
 
-        self.assertEqual(self.Adult.loc,   self.loc)
         self.assertEqual(self.Adult.scale, self.scale)
         self.assertEqual(self.Adult.shape, self.shape)
 

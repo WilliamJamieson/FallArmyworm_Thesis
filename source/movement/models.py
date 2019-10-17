@@ -23,7 +23,6 @@ class Levy(models.Model):
         setup: setup the model
     """
 
-    loc:   float
     scale: float
     shape: float
 
@@ -40,8 +39,7 @@ class Levy(models.Model):
             the distance to travel
         """
 
-        return float(stats.pareto.rvs(self.shape,
-                                      loc=self.loc, scale=self.scale))
+        return float(stats.pareto.rvs(self.shape, self.scale))
 
 
 @dclass.dataclass

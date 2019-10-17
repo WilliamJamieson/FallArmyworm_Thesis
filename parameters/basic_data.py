@@ -99,6 +99,14 @@ theta_scarce    = 0.8
 sig_scarce      = 1.0
 
 
+# Empirical movement factors
+larva_scale = 1
+larva_shape = 10
+
+adult_scale = 1
+adult_shape = 1
+
+
 # Egg development Sparks 1979
 mu_egg_dev  = 3.0
 sig_egg_dev = 1.0

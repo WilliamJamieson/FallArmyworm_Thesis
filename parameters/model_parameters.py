@@ -2,6 +2,7 @@ import parameters.development  as dev
 import parameters.forage       as forage
 import parameters.growth       as growth
 import parameters.init_biomass as init_bio
+import parameters.movement     as move
 import parameters.reproduction as repro
 
 
@@ -60,6 +61,12 @@ sig_larva_dev_rr = dev.sig_larva_rr
 female_prob  = repro.female_prob
 repro_values = repro.values
 
+# List out movement parameters
+larva_scale = move.larva_scale
+larva_shape = move.larva_shape
+adult_scale = move.adult_scale
+adult_shape = move.adult_shape
+
 
 # Print data to console
 if print_data:
@@ -100,3 +107,10 @@ if print_data:
           format(mu_larva_dev_ss, sig_larva_dev_ss))
     print('    mu_larva_dev_rr: {}, sig_larva_dev_rr: {}'.
           format(mu_larva_dev_rr, sig_larva_dev_rr))
+
+    # Print the movement
+    print('Movement parameters')
+    print('    larva_scale: {}, larva_shape: {}'.
+          format(larva_scale, larva_shape))
+    print('    adult_scale: {}, adult_shape: {}'.
+          format(adult_scale, adult_shape))
