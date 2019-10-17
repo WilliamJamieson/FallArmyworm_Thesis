@@ -6,6 +6,12 @@ hourly_steps = 12
 mu_leaf  = 10000
 sig_leaf = 0.001
 
+# Reproduction mating settings
+trials          = 5
+lifetime_female = True
+lifetime_male   = False
+limited         = True
+
 
 # Whiteford et.al. 1988 (egg_mass data)
 egg_mass_mean_number_eggs = [

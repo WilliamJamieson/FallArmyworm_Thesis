@@ -2,6 +2,7 @@ import parameters.development  as dev
 import parameters.forage       as forage
 import parameters.growth       as growth
 import parameters.init_biomass as init_bio
+import parameters.reproduction as repro
 
 
 print_data = True
@@ -52,6 +53,9 @@ mu_larva_dev_ss  = dev.mu_larva_ss
 sig_larva_dev_ss = dev.sig_larva_ss
 mu_larva_dev_rr  = dev.mu_larva_rr
 sig_larva_dev_rr = dev.sig_larva_rr
+
+# List out reproduction parameters
+repro_values = repro.values
 
 
 # Print data to console
