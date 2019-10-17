@@ -138,3 +138,6 @@ simulation_data/*/*.data
 simulation_data/*/*.html
 simulation_data/*.tar.gz
 simulation_data/*.zip
+
+models/*.graph
+plots/*.html
