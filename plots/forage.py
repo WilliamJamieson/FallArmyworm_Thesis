@@ -2,6 +2,8 @@ import datetime
 import dataclasses  as dclass
 import numpy        as np
 
+import joblib as para
+
 import bokeh.plotting as plt
 import bokeh.layouts  as lay
 import bokeh.palettes as palettes
@@ -23,9 +25,12 @@ import source.keyword as keyword
 import source.simulation.simulation as main_simulation
 
 
+num_cpu = 8
+
+
 # Plotting parameters
 dominance  = 0
-trials     = 10
+trials     = 20
 
 k_lower    = 2
 k_upper    = 6
@@ -271,6 +276,37 @@ class Simulator(object):
             value of cannibalism rate constant
         """
 
+        # print('    {} Starting run for rho: {}'.
+        #       format(datetime.datetime.now(), rho))
+        #
+        # def trial_run(trial_num: int) -> tuple:
+        #     """
+        #     Function to parallelize
+        #
+        #     Args:
+        #         trial_num: number of the trial
+        #
+        #     Returns:
+        #         start_pop, end_pop
+        #     """
+        #
+        #     print('        {} running trial: {}'.
+        #           format(datetime.datetime.now(), trial_num))
+        #     sim = cls(nums, 1, rho)
+        #     sim.run_sim(times)
+        #
+        #     return sim.get_start_data(data_key), sim.get_final_data(data_key)
+        #
+        # sim_data = para.Parallel(n_jobs=num_cpu)(
+        #     para.delayed(trial_run)(trial_num) for trial_num in range(trials)
+        # )
+        #
+        # start_data = []
+        # end_data   = []
+        # for data_point in sim_data:
+        #     start_data.append(data_point[0])
+        #     end_data.  append(data_point[1])
+
         print('    {} Starting run for rho: {}'.
               format(datetime.datetime.now(), rho))
         start_data = []
@@ -343,11 +379,30 @@ cannib_ss, prop_ss = Simulator.rho(encounters,
                                    t, 'genotype_susceptible',
                                    initial_pops)
 
+cannib_log = plt.figure(plot_width=plot_width,
+                        plot_height=plot_height,
+                        x_axis_type='log')
+cannib_log.title.text = 'Cannibalism Encounter Constant vs. ' \
+                         'Cannibalism Constant, ' \
+                        'Number of Trials: {}'.format(trials)
+cannib_log.xaxis.axis_label = 'encounter constant'
+cannib_log.yaxis.axis_label = 'cannibalism constant'
+
+cannib_log.circle(encounters, cannib_rr,
+                  color=colors[0], size=10,
+                  legend='Resistant')
+cannib_log.circle(encounters, cannib_ss,
+                  color=colors[2], size=10,
+                  legend='Susceptible')
+cannib_log.line(encounters, cannib_rr,
+                color=colors[0])
+cannib_log.line(encounters, cannib_ss,
+                color=colors[2])
+
 cannib_plot = plt.figure(plot_width=plot_width,
-                         plot_height=plot_height,
-                         x_axis_type='log')
+                         plot_height=plot_height)
 cannib_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
-                         'Cannibalism Constant, Number of Trials: {}'.\
+                         'Cannibalism Constant, Number of Trials: {}'. \
     format(trials)
 cannib_plot.xaxis.axis_label = 'encounter constant'
 cannib_plot.yaxis.axis_label = 'cannibalism constant'
@@ -363,9 +418,28 @@ cannib_plot.line(encounters, cannib_rr,
 cannib_plot.line(encounters, cannib_ss,
                  color=colors[2])
 
-prop_plot = plt.figure(plot_width=plot_width,
+prop_log = plt.figure(plot_width=plot_width,
                        plot_height=plot_height,
                        x_axis_type='log')
+prop_log.title.text = 'Cannibalism Encounter Constant vs. ' \
+                       'Survival Proportion, ' \
+                      'Number of Trials: {}'.format(trials)
+prop_log.xaxis.axis_label = 'encounter constant'
+prop_log.yaxis.axis_label = 'survival proportion'
+
+prop_log.circle(encounters, prop_rr,
+                color=colors[0], size=10,
+                legend='Resistant')
+prop_log.circle(encounters, prop_ss,
+                color=colors[2], size=10,
+                legend='Susceptible')
+prop_log.line(encounters, prop_rr,
+              color=colors[0])
+prop_log.line(encounters, prop_ss,
+              color=colors[2])
+
+prop_plot = plt.figure(plot_width=plot_width,
+                       plot_height=plot_height)
 prop_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
                        'Survival Proportion, Number of Trials: {}'. \
     format(trials)
@@ -378,7 +452,6 @@ prop_plot.circle(encounters, prop_rr,
 prop_plot.circle(encounters, prop_ss,
                  color=colors[2], size=10,
                  legend='Susceptible')
-
 prop_plot.line(encounters, prop_rr,
                color=colors[0])
 prop_plot.line(encounters, prop_ss,
@@ -403,5 +476,5 @@ for index, k_slope in enumerate(k_values):
 
 fight_plot.legend.location = 'top_left'
 
-layout = lay.column(fight_plot, cannib_plot, prop_plot)
+layout = lay.column(fight_plot, cannib_plot, cannib_log, prop_plot, prop_log)
 plt.show(layout)
