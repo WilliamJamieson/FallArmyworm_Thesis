@@ -195,7 +195,6 @@ def create_plots(save_name=None):
 
     plt.output_file(plot_name)
 
-
     t            = list(range(num_steps_eggs))
     initial_pops = ((num_eggs,   num_eggs,   num_eggs),
                     (0,          0,          0),
@@ -259,9 +258,7 @@ def create_plots(save_name=None):
 
     egg_plot.legend.location = 'center_right'
 
-
     # plt.show(egg_plot)
-
 
     t            = list(range(num_steps_larvae))
     initial_pops = ((0,          0,          0),

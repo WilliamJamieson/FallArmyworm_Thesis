@@ -842,9 +842,143 @@ starve_box.xaxis.major_label_text_font_size = axis_tick_font_size
 starve_box.ygrid.grid_line_width = grid_line_width
 starve_box.xgrid.grid_line_width = grid_line_width
 
+
+digits       = 3
+instar_steps = 8
+instar_trials = 1000
+hist_density  = False
+hist_bins     = 30
+# Third In-star
+t            = list(range(instar_steps))
+initial_pops = ((0,      0,      0),
+                (instar_trials, instar_trials, instar_trials),
+                (0,      0,      0),
+                (0,      0,      0),
+                (0,      0,      0))
+print('{} Running Instar simulations'.
+      format(datetime.datetime.now()))
+instar_3 = Simulator(initial_pops, 1,
+                     forage.starvation(1,
+                                       param.theta_adlibitum,
+                                       param.sig_scarce))
+instar        = instar_3.run(t)
+instar_homo_r = instar[-1, :instar_trials]
+instar_hetero = instar[-1, instar_trials: 2*instar_trials]
+instar_homo_s = instar[-1, 2*instar_trials:]
+
+hist_homo_r, edges_homo_r = np.histogram(instar_homo_r,
+                                         density=hist_density,
+                                         bins=hist_bins)
+hist_hetero, edges_hetero = np.histogram(instar_hetero,
+                                         density=hist_density,
+                                         bins=hist_bins)
+hist_homo_s, edges_homo_s = np.histogram(instar_homo_s,
+                                         density=hist_density,
+                                         bins=hist_bins)
+
+mean_homo_r = np.mean(instar_homo_r)
+std_homo_r  = np.std( instar_homo_r)
+
+mean_hetero = np.mean(instar_hetero)
+std_hetero  = np.std( instar_hetero)
+
+mean_homo_s = np.mean(instar_homo_s)
+std_homo_s  = np.std( instar_homo_s)
+
+hist_plot_homo_r = plt.figure(plot_width=plot_width,
+                       plot_height=plot_height)
+hist_plot_homo_r.title.text = 'Third Instar Biomass Histogram, Resistant'
+hist_plot_homo_r.yaxis.axis_label = 'larva per biomass'
+hist_plot_homo_r.xaxis.axis_label = 'biomass (mg)'
+
+hist_plot_homo_r.quad(top=hist_homo_r, bottom=0,
+               left=edges_homo_r[:-1],
+               right=edges_homo_r[1:],
+               fill_color=colors[0],
+               legend='μ={}, σ={}'.
+               format(np.round(mean_homo_r, digits),
+                      np.round(std_homo_r, digits)))
+
+hist_plot_homo_r.legend.location = 'top_left'
+
+hist_plot_homo_r.title.text_font_size = title_font_size
+hist_plot_homo_r.legend.label_text_font_size = legend_font_size
+hist_plot_homo_r.yaxis.axis_line_width = axis_line_width
+hist_plot_homo_r.xaxis.axis_line_width = axis_line_width
+hist_plot_homo_r.yaxis.axis_label_text_font_size = axis_font_size
+hist_plot_homo_r.xaxis.axis_label_text_font_size = axis_font_size
+hist_plot_homo_r.yaxis.major_label_text_font_size = axis_tick_font_size
+hist_plot_homo_r.xaxis.major_label_text_font_size = axis_tick_font_size
+hist_plot_homo_r.ygrid.grid_line_width = grid_line_width
+hist_plot_homo_r.xgrid.grid_line_width = grid_line_width
+
+hist_plot_homo_s = plt.figure(plot_width=plot_width,
+                              plot_height=plot_height)
+hist_plot_homo_s.title.text = 'Third Instar Biomass Histogram, Susceptible'
+hist_plot_homo_s.yaxis.axis_label = 'larva per biomass'
+hist_plot_homo_s.xaxis.axis_label = 'biomass (mg)'
+
+hist_plot_homo_s.quad(top=hist_homo_s, bottom=0,
+                      left=edges_homo_s[:-1],
+                      right=edges_homo_s[1:],
+                      fill_color=colors[2],
+                      legend='μ={}, σ={}'.
+                      format(np.round(mean_homo_s, digits),
+                             np.round(std_homo_s, digits)))
+
+hist_plot_homo_s.legend.location = 'top_left'
+
+hist_plot_homo_s.title.text_font_size = title_font_size
+hist_plot_homo_s.legend.label_text_font_size = legend_font_size
+hist_plot_homo_s.yaxis.axis_line_width = axis_line_width
+hist_plot_homo_s.xaxis.axis_line_width = axis_line_width
+hist_plot_homo_s.yaxis.axis_label_text_font_size = axis_font_size
+hist_plot_homo_s.xaxis.axis_label_text_font_size = axis_font_size
+hist_plot_homo_s.yaxis.major_label_text_font_size = axis_tick_font_size
+hist_plot_homo_s.xaxis.major_label_text_font_size = axis_tick_font_size
+hist_plot_homo_s.ygrid.grid_line_width = grid_line_width
+hist_plot_homo_s.xgrid.grid_line_width = grid_line_width
+
+hist_plot = plt.figure(plot_width=plot_width,
+                              plot_height=plot_height)
+hist_plot.title.text = 'Third Instar Biomass Histogram'
+hist_plot.yaxis.axis_label = 'larva per biomass'
+hist_plot.xaxis.axis_label = 'biomass (mg)'
+
+hist_plot.quad(top=hist_homo_r, bottom=0,
+               left=edges_homo_r[:-1],
+               right=edges_homo_r[1:],
+               fill_color=colors[0],
+               legend='Resistant, (μ={}, σ={})'.
+               format(np.round(mean_homo_r, digits),
+                      np.round(std_homo_r, digits)))
+
+hist_plot.quad(top=hist_homo_s, bottom=0,
+               left=edges_homo_s[:-1],
+               right=edges_homo_s[1:],
+               fill_color=colors[2],
+               legend='Susceptible, (μ={}, σ={})'.
+               format(np.round(mean_homo_s, digits),
+                      np.round(std_homo_s, digits)))
+
+
+hist_plot.legend.location = 'top_left'
+
+hist_plot.title.text_font_size = title_font_size
+hist_plot.legend.label_text_font_size = legend_font_size
+hist_plot.yaxis.axis_line_width = axis_line_width
+hist_plot.xaxis.axis_line_width = axis_line_width
+hist_plot.yaxis.axis_label_text_font_size = axis_font_size
+hist_plot.xaxis.axis_label_text_font_size = axis_font_size
+hist_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+hist_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+hist_plot.ygrid.grid_line_width = grid_line_width
+hist_plot.xgrid.grid_line_width = grid_line_width
+
 print('RR pupation: {}'.format(fin_point_rr))
 print('SS pupation: {}'.format(fin_point_ss))
 
 layout = lay.column(euler_plot, rk4_plot, adlib_plot, starve_plot,
-                    adlib_box, starve_box)
+                    adlib_box, starve_box,
+                    hist_plot_homo_r, hist_plot_homo_s, hist_plot)
 plt.show(layout)

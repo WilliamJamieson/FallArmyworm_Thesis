@@ -27,14 +27,25 @@ import source.simulation.simulation as main_simulation
 
 num_cpu = 8
 
+line_width       = 2
+point_size       = 10
+point_size_stoch = 8
+
+axis_line_width     = 2
+grid_line_width     = 2
+title_font_size     = '16pt'
+legend_font_size    = '12pt'
+axis_font_size      = '12pt'
+axis_tick_font_size = '10pt'
+
 
 # Plotting parameters
 dominance  = 0
 trials     = 20
 
-k_lower    = 2
-k_upper    = 6
-num_k      = 9
+k_lower    = 0.5
+k_upper    = 4
+num_k      = 8
 
 num_steps  = 40
 num_eggs   = 10
@@ -45,7 +56,7 @@ save_fig   = True
 plot_width  = 800
 plot_height = 500
 
-colors    = palettes.Category10[9]
+colors    = palettes.Colorblind[8]
 save_file = 'forage_plots.html'
 
 plt.output_file(save_file)
@@ -62,7 +73,7 @@ class Kokko(object):
         fight:    dict of corresponding fight models
     """
 
-    interval = np.linspace(-2, 2, 1000)
+    interval = np.linspace(-15, 15, 1000)
 
     k: np.array
     fight: dict = dclass.field(default=dict)
@@ -355,126 +366,140 @@ class Simulator(object):
         return cannib, prop
 
 
-t            = list(range(num_steps))
-# encounters = [0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 2, 3]
-encounters = np.logspace(0, 3, 20)
-print('{} Running Cannibalism simulations for RR'.
-      format(datetime.datetime.now()))
-initial_pops = ((0,          0, 0),
-                (num_larvae, 0, 0),
-                (0,          0, 0),
-                (0,          0, 0),
-                (0,          0, 0))
-cannib_rr, prop_rr = Simulator.rho(encounters,
-                                   t, 'genotype_resistant',
-                                   initial_pops)
-print('{} Running Cannibalism simulations for SS'.
-      format(datetime.datetime.now()))
-initial_pops = ((0, 0, 0),
-                (0, 0, num_larvae),
-                (0, 0, 0),
-                (0, 0, 0),
-                (0, 0, 0))
-cannib_ss, prop_ss = Simulator.rho(encounters,
-                                   t, 'genotype_susceptible',
-                                   initial_pops)
-
-cannib_log = plt.figure(plot_width=plot_width,
-                        plot_height=plot_height,
-                        x_axis_type='log')
-cannib_log.title.text = 'Cannibalism Encounter Constant vs. ' \
-                         'Cannibalism Constant, ' \
-                        'Number of Trials: {}'.format(trials)
-cannib_log.xaxis.axis_label = 'encounter constant'
-cannib_log.yaxis.axis_label = 'cannibalism constant'
-
-cannib_log.circle(encounters, cannib_rr,
-                  color=colors[0], size=10,
-                  legend='Resistant')
-cannib_log.circle(encounters, cannib_ss,
-                  color=colors[2], size=10,
-                  legend='Susceptible')
-cannib_log.line(encounters, cannib_rr,
-                color=colors[0])
-cannib_log.line(encounters, cannib_ss,
-                color=colors[2])
-
-cannib_plot = plt.figure(plot_width=plot_width,
-                         plot_height=plot_height)
-cannib_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
-                         'Cannibalism Constant, Number of Trials: {}'. \
-    format(trials)
-cannib_plot.xaxis.axis_label = 'encounter constant'
-cannib_plot.yaxis.axis_label = 'cannibalism constant'
-
-cannib_plot.circle(encounters, cannib_rr,
-                   color=colors[0], size=10,
-                   legend='Resistant')
-cannib_plot.circle(encounters, cannib_ss,
-                   color=colors[2], size=10,
-                   legend='Susceptible')
-cannib_plot.line(encounters, cannib_rr,
-                 color=colors[0])
-cannib_plot.line(encounters, cannib_ss,
-                 color=colors[2])
-
-prop_log = plt.figure(plot_width=plot_width,
-                       plot_height=plot_height,
-                       x_axis_type='log')
-prop_log.title.text = 'Cannibalism Encounter Constant vs. ' \
-                       'Survival Proportion, ' \
-                      'Number of Trials: {}'.format(trials)
-prop_log.xaxis.axis_label = 'encounter constant'
-prop_log.yaxis.axis_label = 'survival proportion'
-
-prop_log.circle(encounters, prop_rr,
-                color=colors[0], size=10,
-                legend='Resistant')
-prop_log.circle(encounters, prop_ss,
-                color=colors[2], size=10,
-                legend='Susceptible')
-prop_log.line(encounters, prop_rr,
-              color=colors[0])
-prop_log.line(encounters, prop_ss,
-              color=colors[2])
-
-prop_plot = plt.figure(plot_width=plot_width,
-                       plot_height=plot_height)
-prop_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
-                       'Survival Proportion, Number of Trials: {}'. \
-    format(trials)
-prop_plot.xaxis.axis_label = 'encounter constant'
-prop_plot.yaxis.axis_label = 'survival proportion'
-
-prop_plot.circle(encounters, prop_rr,
-                 color=colors[0], size=10,
-                 legend='Resistant')
-prop_plot.circle(encounters, prop_ss,
-                 color=colors[2], size=10,
-                 legend='Susceptible')
-prop_plot.line(encounters, prop_rr,
-               color=colors[0])
-prop_plot.line(encounters, prop_ss,
-               color=colors[2])
-
-
-k_values = np.linspace(k_lower, k_upper, num_k)
+# k_values = np.linspace(k_lower, k_upper, num_k)
+k_values = np.array([0.25, 0.3, 0.4, 0.5, 0.75, 1, 2, 4])
 mass_0, output_data = Kokko.run(k_values)
 
 fight_plot = plt.figure(plot_width=plot_width,
                         plot_height=plot_height)
 fight_plot.title.text = 'Fight Plots'
-fight_plot.xaxis.axis_label = 'm_0 - m_1'
-fight_plot.yaxis.axis_label = 'probability m_0 wins'
+fight_plot.xaxis.axis_label = 'm_0 - m_1 (mg)'
+fight_plot.yaxis.axis_label = 'probability  m_0  wins'
 
 for index, k_slope in enumerate(k_values):
     fight_data = output_data[k_slope]
 
     fight_plot.line(mass_0, fight_data,
-                    color=colors[index],
+                    color=colors[index], line_width=line_width,
                     legend='k = {}'.format(k_slope))
 
 fight_plot.legend.location = 'top_left'
 
-layout = lay.column(fight_plot, cannib_plot, cannib_log, prop_plot, prop_log)
-plt.show(layout)
+fight_plot.title.text_font_size = title_font_size
+fight_plot.legend.label_text_font_size = legend_font_size
+fight_plot.yaxis.axis_line_width = axis_line_width
+fight_plot.xaxis.axis_line_width = axis_line_width
+fight_plot.yaxis.axis_label_text_font_size = axis_font_size
+fight_plot.xaxis.axis_label_text_font_size = axis_font_size
+fight_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+fight_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+fight_plot.ygrid.grid_line_width = grid_line_width
+fight_plot.xgrid.grid_line_width = grid_line_width
+
+plt.show(fight_plot)
+
+
+# t            = list(range(num_steps))
+# # encounters = [0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 2, 3]
+# encounters = np.logspace(0, 3, 20)
+# print('{} Running Cannibalism simulations for RR'.
+#       format(datetime.datetime.now()))
+# initial_pops = ((0,          0, 0),
+#                 (num_larvae, 0, 0),
+#                 (0,          0, 0),
+#                 (0,          0, 0),
+#                 (0,          0, 0))
+# cannib_rr, prop_rr = Simulator.rho(encounters,
+#                                    t, 'genotype_resistant',
+#                                    initial_pops)
+# print('{} Running Cannibalism simulations for SS'.
+#       format(datetime.datetime.now()))
+# initial_pops = ((0, 0, 0),
+#                 (0, 0, num_larvae),
+#                 (0, 0, 0),
+#                 (0, 0, 0),
+#                 (0, 0, 0))
+# cannib_ss, prop_ss = Simulator.rho(encounters,
+#                                    t, 'genotype_susceptible',
+#                                    initial_pops)
+#
+# cannib_log = plt.figure(plot_width=plot_width,
+#                         plot_height=plot_height,
+#                         x_axis_type='log')
+# cannib_log.title.text = 'Cannibalism Encounter Constant vs. ' \
+#                         'Cannibalism Constant, ' \
+#                         'Number of Trials: {}'.format(trials)
+# cannib_log.xaxis.axis_label = 'encounter constant'
+# cannib_log.yaxis.axis_label = 'cannibalism constant'
+#
+# cannib_log.circle(encounters, cannib_rr,
+#                   color=colors[0], size=10,
+#                   legend='Resistant')
+# cannib_log.circle(encounters, cannib_ss,
+#                   color=colors[2], size=10,
+#                   legend='Susceptible')
+# cannib_log.line(encounters, cannib_rr,
+#                 color=colors[0])
+# cannib_log.line(encounters, cannib_ss,
+#                 color=colors[2])
+#
+# cannib_plot = plt.figure(plot_width=plot_width,
+#                          plot_height=plot_height)
+# cannib_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
+#                          'Cannibalism Constant, Number of Trials: {}'. \
+#     format(trials)
+# cannib_plot.xaxis.axis_label = 'encounter constant'
+# cannib_plot.yaxis.axis_label = 'cannibalism constant'
+#
+# cannib_plot.circle(encounters, cannib_rr,
+#                    color=colors[0], size=10,
+#                    legend='Resistant')
+# cannib_plot.circle(encounters, cannib_ss,
+#                    color=colors[2], size=10,
+#                    legend='Susceptible')
+# cannib_plot.line(encounters, cannib_rr,
+#                  color=colors[0])
+# cannib_plot.line(encounters, cannib_ss,
+#                  color=colors[2])
+#
+# prop_log = plt.figure(plot_width=plot_width,
+#                       plot_height=plot_height,
+#                       x_axis_type='log')
+# prop_log.title.text = 'Cannibalism Encounter Constant vs. ' \
+#                       'Survival Proportion, ' \
+#                       'Number of Trials: {}'.format(trials)
+# prop_log.xaxis.axis_label = 'encounter constant'
+# prop_log.yaxis.axis_label = 'survival proportion'
+#
+# prop_log.circle(encounters, prop_rr,
+#                 color=colors[0], size=10,
+#                 legend='Resistant')
+# prop_log.circle(encounters, prop_ss,
+#                 color=colors[2], size=10,
+#                 legend='Susceptible')
+# prop_log.line(encounters, prop_rr,
+#               color=colors[0])
+# prop_log.line(encounters, prop_ss,
+#               color=colors[2])
+#
+# prop_plot = plt.figure(plot_width=plot_width,
+#                        plot_height=plot_height)
+# prop_plot.title.text = 'Cannibalism Encounter Constant vs. ' \
+#                        'Survival Proportion, Number of Trials: {}'. \
+#     format(trials)
+# prop_plot.xaxis.axis_label = 'encounter constant'
+# prop_plot.yaxis.axis_label = 'survival proportion'
+#
+# prop_plot.circle(encounters, prop_rr,
+#                  color=colors[0], size=10,
+#                  legend='Resistant')
+# prop_plot.circle(encounters, prop_ss,
+#                  color=colors[2], size=10,
+#                  legend='Susceptible')
+# prop_plot.line(encounters, prop_rr,
+#                color=colors[0])
+# prop_plot.line(encounters, prop_ss,
+#                color=colors[2])
+#
+# layout = lay.column(fight_plot, cannib_plot, cannib_log, prop_plot, prop_log)
+# plt.show(layout)
