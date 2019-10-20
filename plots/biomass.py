@@ -30,8 +30,9 @@ trials     = 1000
 num_steps  = 40
 use_hetero = False
 
-line_width      = 2
-point_size      = 10
+line_width       = 2
+point_size       = 10
+point_size_stoch = 8
 
 axis_line_width     = 2
 grid_line_width     = 2
@@ -628,6 +629,78 @@ adlib_plot.ygrid.grid_line_width = grid_line_width
 adlib_plot.xgrid.grid_line_width = grid_line_width
 
 
+adlib_box = plt.figure(plot_width=plot_width,
+                        plot_height=plot_height)
+adlib_box.title.text       = 'Simulation of 95% Ad Libitum Growth Box Plot, ' \
+                              'Number of Trials: {}'.format(trials)
+adlib_box.yaxis.axis_label = 'biomass (mg)'
+adlib_box.xaxis.axis_label = 'time (days)'
+
+adlib_box = plt.figure(plot_width=plot_width,
+                       plot_height=plot_height)
+adlib_box.title.text       = 'Simulation of 95% Ad Libitum Growth Plot, ' \
+                             'Number of Trials: {}'.format(trials)
+adlib_box.yaxis.axis_label = 'biomass (mg)'
+adlib_box.xaxis.axis_label = 'time (days)'
+
+adlib_box.add_layout(fin_time_homo_r)
+adlib_box.add_layout(fin_mass_homo_r)
+adlib_box.add_layout(fin_time_homo_s)
+adlib_box.add_layout(fin_mass_homo_s)
+
+adlib_box.triangle(t, biomass_adlib_homo_r[0],
+                    color=colors[0], size=point_size_stoch,
+                    legend='Mean Resistant')
+adlib_box.line(t, biomass_adlib_homo_r[0],
+                color=colors[0], line_width=line_width,
+                legend='Mean Resistant')
+adlib_box.segment(x0=t, y0=biomass_adlib_homo_r[7],
+                   x1=t, y1=biomass_adlib_homo_r[8],
+                   line_color=colors[0], line_width=line_width/2,
+                   line_cap='square')
+adlib_box.rect(t, biomass_adlib_homo_r[7], 0.5, 0.1,
+                line_color=colors[0])
+adlib_box.rect(t, biomass_adlib_homo_r[8], 0.5, 0.1,
+                line_color=colors[0])
+
+adlib_box.circle(t, biomass_adlib_homo_s[0],
+                  color=colors[2], size=point_size/2,
+                  legend='Mean Susceptible')
+adlib_box.line(t, biomass_adlib_homo_s[0],
+                color=colors[2], line_width=line_width,
+                legend='Mean Susceptible')
+adlib_box.segment(x0=t, y0=biomass_adlib_homo_s[7],
+                   x1=t, y1=biomass_adlib_homo_s[8],
+                   line_color=colors[2], line_width=line_width/2,
+                   line_cap='square')
+adlib_box.rect(t, biomass_adlib_homo_s[7], 0.5, 0.1,
+                line_color=colors[2])
+adlib_box.rect(t, biomass_adlib_homo_s[8], 0.5, 0.1,
+                line_color=colors[2])
+
+adlib_box.x([fin_point_rr[0]],
+             [fin_point_rr[1]],
+             color=colors[0], size=20,
+             legend='Resistant Pupation')
+adlib_box.x([fin_point_ss[0]],
+             [fin_point_ss[1]],
+             color=colors[2], size=20,
+             legend='Susceptible Pupation')
+
+adlib_box.legend.location = "bottom_right"
+
+adlib_box.title.text_font_size = title_font_size
+adlib_box.legend.label_text_font_size = legend_font_size
+adlib_box.yaxis.axis_line_width = axis_line_width
+adlib_box.xaxis.axis_line_width = axis_line_width
+adlib_box.yaxis.axis_label_text_font_size = axis_font_size
+adlib_box.xaxis.axis_label_text_font_size = axis_font_size
+adlib_box.yaxis.major_label_text_font_size = axis_tick_font_size
+adlib_box.xaxis.major_label_text_font_size = axis_tick_font_size
+adlib_box.ygrid.grid_line_width = grid_line_width
+adlib_box.xgrid.grid_line_width = grid_line_width
+
+
 print('{} Running Stochastic Starvation simulations'.
       format(datetime.datetime.now()))
 stochastic = Simulator(initial_pops, 1,
@@ -704,8 +777,74 @@ starve_plot.xaxis.major_label_text_font_size = axis_tick_font_size
 starve_plot.ygrid.grid_line_width = grid_line_width
 starve_plot.xgrid.grid_line_width = grid_line_width
 
+
+starve_box = plt.figure(plot_width=plot_width,
+                       plot_height=plot_height)
+starve_box.title.text       = 'Simulation of 95% Ad Libitum Growth Plot, ' \
+                             'Number of Trials: {}'.format(trials)
+starve_box.yaxis.axis_label = 'biomass (mg)'
+starve_box.xaxis.axis_label = 'time (days)'
+
+starve_box.add_layout(fin_time_homo_r)
+starve_box.add_layout(fin_mass_homo_r)
+starve_box.add_layout(fin_time_homo_s)
+starve_box.add_layout(fin_mass_homo_s)
+
+starve_box.triangle(t, biomass_data_homo_r[0],
+                     color=colors[0], size=point_size_stoch,
+                     legend='Mean Resistant')
+starve_box.line(t, biomass_data_homo_r[0],
+                color=colors[0], line_width=line_width,
+                legend='Mean Resistant')
+starve_box.segment(x0=t, y0=biomass_data_homo_r[7],
+                   x1=t, y1=biomass_data_homo_r[8],
+                   line_color=colors[0], line_width=line_width/2,
+                   line_cap='square')
+starve_box.rect(t, biomass_data_homo_r[7], 0.5, 0.1,
+                line_color=colors[0])
+starve_box.rect(t, biomass_data_homo_r[8], 0.5, 0.1,
+                line_color=colors[0])
+
+starve_box.circle(t, biomass_data_homo_s[0],
+                  color=colors[2], size=point_size_stoch,
+                  legend='Mean Susceptible')
+starve_box.line(t, biomass_data_homo_s[0],
+                color=colors[2], line_width=line_width,
+                legend='Mean Susceptible')
+starve_box.segment(x0=t, y0=biomass_data_homo_s[7],
+                   x1=t, y1=biomass_data_homo_s[8],
+                   line_color=colors[2], line_width=line_width/2,
+                   line_cap='square')
+starve_box.rect(t, biomass_data_homo_s[7], 0.5, 0.1,
+                line_color=colors[2])
+starve_box.rect(t, biomass_data_homo_s[8], 0.5, 0.1,
+                line_color=colors[2])
+
+starve_box.x([fin_point_rr[0]],
+             [fin_point_rr[1]],
+             color=colors[0], size=20,
+             legend='Resistant Pupation')
+starve_box.x([fin_point_ss[0]],
+             [fin_point_ss[1]],
+             color=colors[2], size=20,
+             legend='Susceptible Pupation')
+
+starve_box.legend.location = "bottom_right"
+
+starve_box.title.text_font_size = title_font_size
+starve_box.legend.label_text_font_size = legend_font_size
+starve_box.yaxis.axis_line_width = axis_line_width
+starve_box.xaxis.axis_line_width = axis_line_width
+starve_box.yaxis.axis_label_text_font_size = axis_font_size
+starve_box.xaxis.axis_label_text_font_size = axis_font_size
+starve_box.yaxis.major_label_text_font_size = axis_tick_font_size
+starve_box.xaxis.major_label_text_font_size = axis_tick_font_size
+starve_box.ygrid.grid_line_width = grid_line_width
+starve_box.xgrid.grid_line_width = grid_line_width
+
 print('RR pupation: {}'.format(fin_point_rr))
 print('SS pupation: {}'.format(fin_point_ss))
 
-layout = lay.column(euler_plot, rk4_plot, adlib_plot, starve_plot)
+layout = lay.column(euler_plot, rk4_plot, adlib_plot, starve_plot,
+                    adlib_box, starve_box)
 plt.show(layout)

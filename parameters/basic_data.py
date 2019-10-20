@@ -96,7 +96,7 @@ growth_samples_rr = 40
 theta_adlibitum = 0.95
 theta_scarce    = 0.8
 
-sig_scarce      = 1.0
+sig_scarce      = 3.0
 
 
 # Empirical cannibalism factors
