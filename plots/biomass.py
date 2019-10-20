@@ -30,10 +30,20 @@ trials     = 1000
 num_steps  = 40
 use_hetero = False
 
+line_width      = 2
+point_size      = 10
+
+axis_line_width     = 2
+grid_line_width     = 2
+title_font_size     = '16pt'
+legend_font_size    = '12pt'
+axis_font_size      = '12pt'
+axis_tick_font_size = '10pt'
+
 plot_width  = 800
 plot_height = 500
 
-colors    = palettes.Category10[3]
+colors    = palettes.Colorblind[3]
 save_file = 'biomass_plots.html'
 
 plt.output_file(save_file)
@@ -386,20 +396,20 @@ fin_point_ss = (
 
 fin_time_homo_r = mdl.Span(location=fin_point_rr[0],
                            dimension='height',
-                           line_color=colors[0],
+                           line_color=colors[0], line_width=line_width,
                            line_dash='dotted')
 fin_mass_homo_r = mdl.Span(location=fin_point_rr[1],
                            dimension='width',
-                           line_color=colors[0],
+                           line_color=colors[0], line_width=line_width,
                            line_dash='dotted')
 
 fin_time_homo_s = mdl.Span(location=fin_point_ss[0],
                            dimension='height',
-                           line_color=colors[2],
+                           line_color=colors[2], line_width=line_width,
                            line_dash='dotted')
 fin_mass_homo_s = mdl.Span(location=fin_point_ss[1],
                            dimension='width',
-                           line_color=colors[2],
+                           line_color=colors[2], line_width=line_width,
                            line_dash='dotted')
 
 # Generate the ad libitum plots
@@ -416,7 +426,7 @@ euler_homo_s = Approx.euler(keyword.homo_s, t)
 
 euler_plot = plt.figure(plot_width=plot_width,
                         plot_height=plot_height)
-euler_plot.title.text       = 'Simulation of Growth'
+euler_plot.title.text       = "Simulation of Growth, Euler's Method"
 euler_plot.yaxis.axis_label = 'biomass (mg)'
 euler_plot.xaxis.axis_label = 'time (days)'
 
@@ -426,23 +436,23 @@ euler_plot.add_layout(fin_time_homo_s)
 euler_plot.add_layout(fin_mass_homo_s)
 
 euler_plot.line(t, exact_homo_r,
-                color=colors[0],
+                color=colors[0], line_width=line_width,
                 legend='Exact Resistant')
-euler_plot.circle(t, euler_homo_r,
-                  color=colors[0],
-                  legend='Model Resistant')
+euler_plot.triangle(t, euler_homo_r,
+                    color=colors[0], size=point_size,
+                    legend='Model Resistant')
 if use_hetero:
     euler_plot.line(t, exact_hetero,
-                    color=colors[1],
+                    color=colors[1], line_width=line_width,
                     legend='Exact Heterozygous')
-    euler_plot.circle(t, euler_hetero,
-                      color=colors[1],
+    euler_plot.square(t, euler_hetero,
+                      color=colors[1], size=point_size,
                       legend='Model Heterozygous')
 euler_plot.line(t, exact_homo_s,
-                color=colors[2],
+                color=colors[2], line_width=line_width,
                 legend='Exact Susceptible')
 euler_plot.circle(t, euler_homo_s,
-                  color=colors[2],
+                  color=colors[2], size=point_size,
                   legend='Model Susceptible')
 
 euler_plot.x([fin_point_rr[0]],
@@ -455,6 +465,17 @@ euler_plot.x([fin_point_ss[0]],
              legend='Susceptible Pupation')
 
 euler_plot.legend.location = "bottom_right"
+
+euler_plot.title.text_font_size = title_font_size
+euler_plot.legend.label_text_font_size = legend_font_size
+euler_plot.yaxis.axis_line_width = axis_line_width
+euler_plot.xaxis.axis_line_width = axis_line_width
+euler_plot.yaxis.axis_label_text_font_size = axis_font_size
+euler_plot.xaxis.axis_label_text_font_size = axis_font_size
+euler_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+euler_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+euler_plot.ygrid.grid_line_width = grid_line_width
+euler_plot.xgrid.grid_line_width = grid_line_width
 
 
 initial_pops = ((0, 0, 0),
@@ -472,7 +493,7 @@ biomass_bt_homo_s = biomass_bt[:, 2]
 
 rk4_plot = plt.figure(plot_width=plot_width,
                       plot_height=plot_height)
-rk4_plot.title.text       = 'Simulation of Growth'
+rk4_plot.title.text       = 'Simulation of Growth, Runge-Kutta 4'
 rk4_plot.yaxis.axis_label = 'biomass (mg)'
 rk4_plot.xaxis.axis_label = 'time (days)'
 
@@ -482,23 +503,23 @@ rk4_plot.add_layout(fin_time_homo_s)
 rk4_plot.add_layout(fin_mass_homo_s)
 
 rk4_plot.line(t, exact_homo_r,
-              color=colors[0],
+              color=colors[0], line_width=line_width,
               legend='Exact Resistant')
-rk4_plot.circle(t, biomass_bt_homo_r,
-                color=colors[0],
+rk4_plot.triangle(t, biomass_bt_homo_r,
+                color=colors[0], size=point_size,
                 legend='Model Resistant')
 if use_hetero:
     rk4_plot.line(t, exact_hetero,
-                  color=colors[1],
+                  color=colors[1], line_width=line_width,
                   legend='Exact Heterozygous')
-    rk4_plot.circle(t, biomass_bt_hetero,
-                    color=colors[1],
+    rk4_plot.square(t, biomass_bt_hetero,
+                    color=colors[1], size=point_size,
                     legend='Model Heterozygous')
 rk4_plot.line(t, exact_homo_s,
-              color=colors[2],
+              color=colors[2], line_width=line_width,
               legend='Exact Susceptible')
 rk4_plot.circle(t, biomass_bt_homo_s,
-                color=colors[2],
+                color=colors[2], size=point_size,
                 legend='Model Susceptible')
 
 rk4_plot.x([fin_point_rr[0]],
@@ -511,6 +532,18 @@ rk4_plot.x([fin_point_ss[0]],
            legend='Susceptible Pupation')
 
 rk4_plot.legend.location = "bottom_right"
+
+rk4_plot.title.text_font_size = title_font_size
+rk4_plot.legend.label_text_font_size = legend_font_size
+rk4_plot.yaxis.axis_line_width = axis_line_width
+rk4_plot.xaxis.axis_line_width = axis_line_width
+rk4_plot.yaxis.axis_label_text_font_size = axis_font_size
+rk4_plot.xaxis.axis_label_text_font_size = axis_font_size
+rk4_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+rk4_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+rk4_plot.ygrid.grid_line_width = grid_line_width
+rk4_plot.xgrid.grid_line_width = grid_line_width
+
 
 # Generate the stochastic plots
 initial_pops = ((0,      0,      0),
@@ -534,40 +567,66 @@ biomass_adlib_homo_s = extract_data(adlib_homo_s)
 
 adlib_plot = plt.figure(plot_width=plot_width,
                         plot_height=plot_height)
-adlib_plot.title.text       = 'Simulation of Growth, Number of Trials: {}'. \
-    format(trials)
+adlib_plot.title.text       = 'Simulation of 95% Ad Libitum Growth, ' \
+                              'Number of Trials: {}'.format(trials)
 adlib_plot.yaxis.axis_label = 'biomass (mg)'
 adlib_plot.xaxis.axis_label = 'time (days)'
 
+adlib_plot.add_layout(fin_time_homo_r)
+adlib_plot.add_layout(fin_mass_homo_r)
+adlib_plot.add_layout(fin_time_homo_s)
+adlib_plot.add_layout(fin_mass_homo_s)
+
 adlib_plot.line(t, biomass_adlib_homo_r[0],
-                color=colors[0],
+                color=colors[0], line_width=line_width,
                 legend='Mean Resistant')
 adlib_plot.line(t, biomass_adlib_homo_r[7],
-                color=colors[0], line_dash='dashed',
+                color=colors[0], line_dash='dashed', line_width=line_width,
                 legend='95% Confidence Resistant')
 adlib_plot.line(t, biomass_adlib_homo_r[8],
-                color=colors[0], line_dash='dashed')
+                color=colors[0], line_dash='dashed', line_width=line_width)
 
 if use_hetero:
     adlib_plot.line(t, biomass_adlib_hetero[0],
-                    color=colors[1],
+                    color=colors[1], line_width=line_width,
                     legend='Mean Heterozygous')
     adlib_plot.line(t, biomass_adlib_hetero[7],
-                    color=colors[1], line_dash='dashed',
+                    color=colors[1], line_dash='dashed', line_width=line_width,
                     legend='95% Confidence Heterozygous')
     adlib_plot.line(t, biomass_adlib_hetero[8],
-                    color=colors[1], line_dash='dashed')
+                    color=colors[1], line_dash='dashed', line_width=line_width)
 
 adlib_plot.line(t, biomass_adlib_homo_s[0],
-                color=colors[2],
+                color=colors[2], line_width=line_width,
                 legend='Mean Susceptible')
 adlib_plot.line(t, biomass_adlib_homo_s[7],
-                color=colors[2], line_dash='dashed',
+                color=colors[2], line_dash='dashed', line_width=line_width,
                 legend='95% Confidence Susceptible')
 adlib_plot.line(t, biomass_adlib_homo_s[8],
-                color=colors[2], line_dash='dashed')
+                color=colors[2], line_dash='dashed', line_width=line_width)
+
+adlib_plot.x([fin_point_rr[0]],
+             [fin_point_rr[1]],
+             color=colors[0], size=20,
+             legend='Resistant Pupation')
+adlib_plot.x([fin_point_ss[0]],
+             [fin_point_ss[1]],
+             color=colors[2], size=20,
+             legend='Susceptible Pupation')
 
 adlib_plot.legend.location = "bottom_right"
+
+adlib_plot.title.text_font_size = title_font_size
+adlib_plot.legend.label_text_font_size = legend_font_size
+adlib_plot.yaxis.axis_line_width = axis_line_width
+adlib_plot.xaxis.axis_line_width = axis_line_width
+adlib_plot.yaxis.axis_label_text_font_size = axis_font_size
+adlib_plot.xaxis.axis_label_text_font_size = axis_font_size
+adlib_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+adlib_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+adlib_plot.ygrid.grid_line_width = grid_line_width
+adlib_plot.xgrid.grid_line_width = grid_line_width
+
 
 print('{} Running Stochastic Starvation simulations'.
       format(datetime.datetime.now()))
@@ -585,18 +644,23 @@ biomass_data_homo_s = extract_data(starve_homo_s)
 
 starve_plot = plt.figure(plot_width=plot_width,
                          plot_height=plot_height)
-starve_plot.title.text       = 'Simulation of Growth, Number of Trials: {}'.\
-    format(trials)
+starve_plot.title.text       = 'Simulation of 80% Ad Libitum Growth, ' \
+                               'Number of Trials: {}'.format(trials)
 starve_plot.yaxis.axis_label = 'biomass (mg)'
 starve_plot.xaxis.axis_label = 'time (days)'
 
+starve_plot.add_layout(fin_time_homo_r)
+starve_plot.add_layout(fin_mass_homo_r)
+starve_plot.add_layout(fin_time_homo_s)
+starve_plot.add_layout(fin_mass_homo_s)
+
 starve_plot.line(t, biomass_data_homo_r[0],
-                 color=colors[0],
+                 color=colors[0], line_width=line_width,
                  legend='Mean Resistant')
 starve_plot.line(t, biomass_data_homo_r[7],
-                 color=colors[0], line_dash='dashed',
+                 color=colors[0], line_dash='dashed', line_width=line_width,
                  legend='95% Confidence Resistant')
-starve_plot.line(t, biomass_data_homo_r[8],
+starve_plot.line(t, biomass_data_homo_r[8], line_width=line_width,
                  color=colors[0], line_dash='dashed')
 
 if use_hetero:
@@ -604,21 +668,41 @@ if use_hetero:
                      color=colors[1],
                      legend='Mean Heterozygous')
     starve_plot.line(t, biomass_data_hetero[7],
-                     color=colors[1], line_dash='dashed',
+                     color=colors[1], line_dash='dashed', line_width=line_width,
                      legend='95% Confidence Heterozygous')
-    starve_plot.line(t, biomass_data_hetero[8],
+    starve_plot.line(t, biomass_data_hetero[8], line_width=line_width,
                      color=colors[1], line_dash='dashed')
 
 starve_plot.line(t, biomass_data_homo_s[0],
-                 color=colors[2],
+                 color=colors[2], line_width=line_width,
                  legend='Mean Susceptible')
-starve_plot.line(t, biomass_data_homo_s[7],
+starve_plot.line(t, biomass_data_homo_s[7], line_width=line_width,
                  color=colors[2], line_dash='dashed',
                  legend='95% Confidence Susceptible')
-starve_plot.line(t, biomass_data_homo_s[8],
+starve_plot.line(t, biomass_data_homo_s[8], line_width=line_width,
                  color=colors[2], line_dash='dashed')
 
+starve_plot.x([fin_point_rr[0]],
+              [fin_point_rr[1]],
+              color=colors[0], size=20,
+              legend='Resistant Pupation')
+starve_plot.x([fin_point_ss[0]],
+              [fin_point_ss[1]],
+              color=colors[2], size=20,
+              legend='Susceptible Pupation')
+
 starve_plot.legend.location = "bottom_right"
+
+starve_plot.title.text_font_size = title_font_size
+starve_plot.legend.label_text_font_size = legend_font_size
+starve_plot.yaxis.axis_line_width = axis_line_width
+starve_plot.xaxis.axis_line_width = axis_line_width
+starve_plot.yaxis.axis_label_text_font_size = axis_font_size
+starve_plot.xaxis.axis_label_text_font_size = axis_font_size
+starve_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+starve_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+starve_plot.ygrid.grid_line_width = grid_line_width
+starve_plot.xgrid.grid_line_width = grid_line_width
 
 print('RR pupation: {}'.format(fin_point_rr))
 print('SS pupation: {}'.format(fin_point_ss))
