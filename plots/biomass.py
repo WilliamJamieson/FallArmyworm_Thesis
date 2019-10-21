@@ -406,11 +406,11 @@ fin_mass_homo_r = mdl.Span(location=fin_point_rr[1],
 
 fin_time_homo_s = mdl.Span(location=fin_point_ss[0],
                            dimension='height',
-                           line_color=colors[2], line_width=line_width,
+                           line_color=colors[1], line_width=line_width,
                            line_dash='dotted')
 fin_mass_homo_s = mdl.Span(location=fin_point_ss[1],
                            dimension='width',
-                           line_color=colors[2], line_width=line_width,
+                           line_color=colors[1], line_width=line_width,
                            line_dash='dotted')
 
 # Generate the ad libitum plots
@@ -442,19 +442,19 @@ euler_plot.line(t, exact_homo_r,
 euler_plot.triangle(t, euler_homo_r,
                     color=colors[0], size=point_size,
                     legend='Model Resistant')
-if use_hetero:
-    euler_plot.line(t, exact_hetero,
-                    color=colors[1], line_width=line_width,
-                    legend='Exact Heterozygous')
-    euler_plot.square(t, euler_hetero,
-                      color=colors[1], size=point_size,
-                      legend='Model Heterozygous')
 euler_plot.line(t, exact_homo_s,
-                color=colors[2], line_width=line_width,
+                color=colors[1], line_width=line_width,
                 legend='Exact Susceptible')
 euler_plot.circle(t, euler_homo_s,
-                  color=colors[2], size=point_size,
+                  color=colors[1], size=point_size,
                   legend='Model Susceptible')
+if use_hetero:
+    euler_plot.line(t, exact_hetero,
+                    color=colors[2], line_width=line_width,
+                    legend='Exact Heterozygous')
+    euler_plot.square(t, euler_hetero,
+                      color=colors[2], size=point_size,
+                      legend='Model Heterozygous')
 
 euler_plot.x([fin_point_rr[0]],
              [fin_point_rr[1]],
@@ -462,7 +462,7 @@ euler_plot.x([fin_point_rr[0]],
              legend='Resistant Pupation')
 euler_plot.x([fin_point_ss[0]],
              [fin_point_ss[1]],
-             color=colors[2], size=20,
+             color=colors[1], size=20,
              legend='Susceptible Pupation')
 
 euler_plot.legend.location = "bottom_right"
@@ -507,21 +507,21 @@ rk4_plot.line(t, exact_homo_r,
               color=colors[0], line_width=line_width,
               legend='Exact Resistant')
 rk4_plot.triangle(t, biomass_bt_homo_r,
-                color=colors[0], size=point_size,
-                legend='Model Resistant')
-if use_hetero:
-    rk4_plot.line(t, exact_hetero,
-                  color=colors[1], line_width=line_width,
-                  legend='Exact Heterozygous')
-    rk4_plot.square(t, biomass_bt_hetero,
-                    color=colors[1], size=point_size,
-                    legend='Model Heterozygous')
+                  color=colors[0], size=point_size,
+                  legend='Model Resistant')
 rk4_plot.line(t, exact_homo_s,
-              color=colors[2], line_width=line_width,
+              color=colors[1], line_width=line_width,
               legend='Exact Susceptible')
 rk4_plot.circle(t, biomass_bt_homo_s,
-                color=colors[2], size=point_size,
+                color=colors[1], size=point_size,
                 legend='Model Susceptible')
+if use_hetero:
+    rk4_plot.line(t, exact_hetero,
+                  color=colors[2], line_width=line_width,
+                  legend='Exact Heterozygous')
+    rk4_plot.square(t, biomass_bt_hetero,
+                    color=colors[2], size=point_size,
+                    legend='Model Heterozygous')
 
 rk4_plot.x([fin_point_rr[0]],
            [fin_point_rr[1]],
@@ -529,7 +529,7 @@ rk4_plot.x([fin_point_rr[0]],
            legend='Resistant Pupation')
 rk4_plot.x([fin_point_ss[0]],
            [fin_point_ss[1]],
-           color=colors[2], size=20,
+           color=colors[1], size=20,
            legend='Susceptible Pupation')
 
 rk4_plot.legend.location = "bottom_right"
@@ -587,24 +587,24 @@ adlib_plot.line(t, biomass_adlib_homo_r[7],
 adlib_plot.line(t, biomass_adlib_homo_r[8],
                 color=colors[0], line_dash='dashed', line_width=line_width)
 
-if use_hetero:
-    adlib_plot.line(t, biomass_adlib_hetero[0],
-                    color=colors[1], line_width=line_width,
-                    legend='Mean Heterozygous')
-    adlib_plot.line(t, biomass_adlib_hetero[7],
-                    color=colors[1], line_dash='dashed', line_width=line_width,
-                    legend='95% Confidence Heterozygous')
-    adlib_plot.line(t, biomass_adlib_hetero[8],
-                    color=colors[1], line_dash='dashed', line_width=line_width)
-
 adlib_plot.line(t, biomass_adlib_homo_s[0],
-                color=colors[2], line_width=line_width,
+                color=colors[1], line_width=line_width,
                 legend='Mean Susceptible')
 adlib_plot.line(t, biomass_adlib_homo_s[7],
-                color=colors[2], line_dash='dashed', line_width=line_width,
+                color=colors[1], line_dash='dashed', line_width=line_width,
                 legend='95% Confidence Susceptible')
 adlib_plot.line(t, biomass_adlib_homo_s[8],
-                color=colors[2], line_dash='dashed', line_width=line_width)
+                color=colors[1], line_dash='dashed', line_width=line_width)
+
+if use_hetero:
+    adlib_plot.line(t, biomass_adlib_hetero[0],
+                    color=colors[2], line_width=line_width,
+                    legend='Mean Heterozygous')
+    adlib_plot.line(t, biomass_adlib_hetero[7],
+                    color=colors[2], line_dash='dashed', line_width=line_width,
+                    legend='95% Confidence Heterozygous')
+    adlib_plot.line(t, biomass_adlib_hetero[8],
+                    color=colors[2], line_dash='dashed', line_width=line_width)
 
 adlib_plot.x([fin_point_rr[0]],
              [fin_point_rr[1]],
@@ -612,7 +612,7 @@ adlib_plot.x([fin_point_rr[0]],
              legend='Resistant Pupation')
 adlib_plot.x([fin_point_ss[0]],
              [fin_point_ss[1]],
-             color=colors[2], size=20,
+             color=colors[1], size=20,
              legend='Susceptible Pupation')
 
 adlib_plot.legend.location = "bottom_right"
@@ -664,19 +664,19 @@ adlib_box.rect(t, biomass_adlib_homo_r[8], 0.5, 0.1,
                 line_color=colors[0])
 
 adlib_box.circle(t, biomass_adlib_homo_s[0],
-                  color=colors[2], size=point_size/2,
+                  color=colors[1], size=point_size/2,
                   legend='Mean Susceptible')
 adlib_box.line(t, biomass_adlib_homo_s[0],
-                color=colors[2], line_width=line_width,
+                color=colors[1], line_width=line_width,
                 legend='Mean Susceptible')
 adlib_box.segment(x0=t, y0=biomass_adlib_homo_s[7],
                    x1=t, y1=biomass_adlib_homo_s[8],
-                   line_color=colors[2], line_width=line_width/2,
+                   line_color=colors[1], line_width=line_width/2,
                    line_cap='square')
 adlib_box.rect(t, biomass_adlib_homo_s[7], 0.5, 0.1,
-                line_color=colors[2])
+                line_color=colors[1])
 adlib_box.rect(t, biomass_adlib_homo_s[8], 0.5, 0.1,
-                line_color=colors[2])
+                line_color=colors[1])
 
 adlib_box.x([fin_point_rr[0]],
              [fin_point_rr[1]],
@@ -684,7 +684,7 @@ adlib_box.x([fin_point_rr[0]],
              legend='Resistant Pupation')
 adlib_box.x([fin_point_ss[0]],
              [fin_point_ss[1]],
-             color=colors[2], size=20,
+             color=colors[1], size=20,
              legend='Susceptible Pupation')
 
 adlib_box.legend.location = "bottom_right"
@@ -736,24 +736,24 @@ starve_plot.line(t, biomass_data_homo_r[7],
 starve_plot.line(t, biomass_data_homo_r[8], line_width=line_width,
                  color=colors[0], line_dash='dashed')
 
-if use_hetero:
-    starve_plot.line(t, biomass_data_hetero[0],
-                     color=colors[1],
-                     legend='Mean Heterozygous')
-    starve_plot.line(t, biomass_data_hetero[7],
-                     color=colors[1], line_dash='dashed', line_width=line_width,
-                     legend='95% Confidence Heterozygous')
-    starve_plot.line(t, biomass_data_hetero[8], line_width=line_width,
-                     color=colors[1], line_dash='dashed')
-
 starve_plot.line(t, biomass_data_homo_s[0],
-                 color=colors[2], line_width=line_width,
+                 color=colors[1], line_width=line_width,
                  legend='Mean Susceptible')
 starve_plot.line(t, biomass_data_homo_s[7], line_width=line_width,
-                 color=colors[2], line_dash='dashed',
+                 color=colors[1], line_dash='dashed',
                  legend='95% Confidence Susceptible')
 starve_plot.line(t, biomass_data_homo_s[8], line_width=line_width,
-                 color=colors[2], line_dash='dashed')
+                 color=colors[1], line_dash='dashed')
+
+if use_hetero:
+    starve_plot.line(t, biomass_data_hetero[0],
+                     color=colors[2],
+                     legend='Mean Heterozygous')
+    starve_plot.line(t, biomass_data_hetero[7],
+                     color=colors[2], line_dash='dashed', line_width=line_width,
+                     legend='95% Confidence Heterozygous')
+    starve_plot.line(t, biomass_data_hetero[8], line_width=line_width,
+                     color=colors[2], line_dash='dashed')
 
 starve_plot.x([fin_point_rr[0]],
               [fin_point_rr[1]],
@@ -761,7 +761,7 @@ starve_plot.x([fin_point_rr[0]],
               legend='Resistant Pupation')
 starve_plot.x([fin_point_ss[0]],
               [fin_point_ss[1]],
-              color=colors[2], size=20,
+              color=colors[1], size=20,
               legend='Susceptible Pupation')
 
 starve_plot.legend.location = "bottom_right"
@@ -779,7 +779,7 @@ starve_plot.xgrid.grid_line_width = grid_line_width
 
 
 starve_box = plt.figure(plot_width=plot_width,
-                       plot_height=plot_height)
+                        plot_height=plot_height)
 starve_box.title.text       = 'Simulation of 95% Ad Libitum Growth Plot, ' \
                              'Number of Trials: {}'.format(trials)
 starve_box.yaxis.axis_label = 'biomass (mg)'
@@ -806,19 +806,19 @@ starve_box.rect(t, biomass_data_homo_r[8], 0.5, 0.1,
                 line_color=colors[0])
 
 starve_box.circle(t, biomass_data_homo_s[0],
-                  color=colors[2], size=point_size_stoch,
+                  color=colors[1], size=point_size_stoch,
                   legend='Mean Susceptible')
 starve_box.line(t, biomass_data_homo_s[0],
-                color=colors[2], line_width=line_width,
+                color=colors[1], line_width=line_width,
                 legend='Mean Susceptible')
 starve_box.segment(x0=t, y0=biomass_data_homo_s[7],
                    x1=t, y1=biomass_data_homo_s[8],
-                   line_color=colors[2], line_width=line_width/2,
+                   line_color=colors[1], line_width=line_width/2,
                    line_cap='square')
 starve_box.rect(t, biomass_data_homo_s[7], 0.5, 0.1,
-                line_color=colors[2])
+                line_color=colors[1])
 starve_box.rect(t, biomass_data_homo_s[8], 0.5, 0.1,
-                line_color=colors[2])
+                line_color=colors[1])
 
 starve_box.x([fin_point_rr[0]],
              [fin_point_rr[1]],
@@ -826,7 +826,7 @@ starve_box.x([fin_point_rr[0]],
              legend='Resistant Pupation')
 starve_box.x([fin_point_ss[0]],
              [fin_point_ss[1]],
-             color=colors[2], size=20,
+             color=colors[1], size=20,
              legend='Susceptible Pupation')
 
 starve_box.legend.location = "bottom_right"
@@ -886,18 +886,18 @@ mean_homo_s = np.mean(instar_homo_s)
 std_homo_s  = np.std( instar_homo_s)
 
 hist_plot_homo_r = plt.figure(plot_width=plot_width,
-                       plot_height=plot_height)
+                              plot_height=plot_height)
 hist_plot_homo_r.title.text = 'Third Instar Biomass Histogram, Resistant'
 hist_plot_homo_r.yaxis.axis_label = 'larva per biomass'
 hist_plot_homo_r.xaxis.axis_label = 'biomass (mg)'
 
 hist_plot_homo_r.quad(top=hist_homo_r, bottom=0,
-               left=edges_homo_r[:-1],
-               right=edges_homo_r[1:],
-               fill_color=colors[0],
-               legend='μ={}, σ={}'.
-               format(np.round(mean_homo_r, digits),
-                      np.round(std_homo_r, digits)))
+                      left=edges_homo_r[:-1],
+                      right=edges_homo_r[1:],
+                      fill_color=colors[0],
+                      legend='μ={}, σ={}'.
+                      format(np.round(mean_homo_r, digits),
+                             np.round(std_homo_r, digits)))
 
 hist_plot_homo_r.legend.location = 'top_left'
 
@@ -921,7 +921,7 @@ hist_plot_homo_s.xaxis.axis_label = 'biomass (mg)'
 hist_plot_homo_s.quad(top=hist_homo_s, bottom=0,
                       left=edges_homo_s[:-1],
                       right=edges_homo_s[1:],
-                      fill_color=colors[2],
+                      fill_color=colors[1],
                       legend='μ={}, σ={}'.
                       format(np.round(mean_homo_s, digits),
                              np.round(std_homo_s, digits)))
@@ -956,7 +956,7 @@ hist_plot.quad(top=hist_homo_r, bottom=0,
 hist_plot.quad(top=hist_homo_s, bottom=0,
                left=edges_homo_s[:-1],
                right=edges_homo_s[1:],
-               fill_color=colors[2],
+               fill_color=colors[1],
                legend='Susceptible, (μ={}, σ={})'.
                format(np.round(mean_homo_s, digits),
                       np.round(std_homo_s, digits)))
