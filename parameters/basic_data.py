@@ -116,7 +116,7 @@ larva_factor = 1
 
 # Empirical movement factors
 larva_scale = 1
-larva_shape = 10
+larva_shape = 1
 
 adult_scale = 1
 adult_shape = 1

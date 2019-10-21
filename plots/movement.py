@@ -26,16 +26,27 @@ larva_grid = 25
 adult_grid = 50
 
 dominance  = 0
-num_steps  = 15
-num_larvae = 3
-num_adults = 3
+num_steps  = param.forage_steps
+num_larvae = 2
+num_adults = 2
 save_fig   = True
 
+
+line_width       = 2
+point_size       = 10
+point_size_stoch = 8
+
+axis_line_width     = 2
+grid_line_width     = 2
+title_font_size     = '16pt'
+legend_font_size    = '12pt'
+axis_font_size      = '12pt'
+axis_tick_font_size = '10pt'
 
 plot_width  = 800
 plot_height = 500
 
-colors    = palettes.Category10[9]
+colors    = palettes.Colorblind[8]
 save_file = 'move_plots.html'
 
 
@@ -313,6 +324,7 @@ for agent_index in range(3*num_larvae):
                                                 line_color=colors[agent_index],
                                                 size=10),
                                 line_color=colors[agent_index],
+                                line_width=line_width,
                                 x_start=start_point[0], y_start=start_point[1],
                                 x_end=end_point[0], y_end=end_point[1])
         larva_plot.add_layout(larva_arrow)
@@ -321,6 +333,17 @@ for agent_index in range(3*num_larvae):
 
 larva_legend = mdl.Legend(items=larva_legend_items, location='top_right')
 larva_plot.add_layout(larva_legend, 'right')
+
+larva_plot.title.text_font_size = title_font_size
+larva_plot.legend.label_text_font_size = legend_font_size
+larva_plot.yaxis.axis_line_width = axis_line_width
+larva_plot.xaxis.axis_line_width = axis_line_width
+larva_plot.yaxis.axis_label_text_font_size = axis_font_size
+larva_plot.xaxis.axis_label_text_font_size = axis_font_size
+larva_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+larva_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+larva_plot.ygrid.grid_line_width = grid_line_width
+larva_plot.xgrid.grid_line_width = grid_line_width
 
 
 plt.show(larva_plot)
@@ -365,6 +388,7 @@ for agent_index in range(3*num_adults):
                                                 line_color=colors[agent_index],
                                                 size=10),
                                 line_color=colors[agent_index],
+                                line_width=line_width,
                                 x_start=start_point[0], y_start=start_point[1],
                                 x_end=end_point[0], y_end=end_point[1])
         adult_plot.add_layout(adult_arrow)
@@ -373,6 +397,17 @@ for agent_index in range(3*num_adults):
 
 adult_legend = mdl.Legend(items=adult_legend_items, location='top_right')
 adult_plot.add_layout(adult_legend, 'right')
+
+adult_plot.title.text_font_size = title_font_size
+adult_plot.legend.label_text_font_size = legend_font_size
+adult_plot.yaxis.axis_line_width = axis_line_width
+adult_plot.xaxis.axis_line_width = axis_line_width
+adult_plot.yaxis.axis_label_text_font_size = axis_font_size
+adult_plot.xaxis.axis_label_text_font_size = axis_font_size
+adult_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+adult_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+adult_plot.ygrid.grid_line_width = grid_line_width
+adult_plot.xgrid.grid_line_width = grid_line_width
 
 
 plt.show(adult_plot)

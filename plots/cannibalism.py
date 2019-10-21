@@ -37,7 +37,7 @@ axis_tick_font_size = '10pt'
 
 # Plotting parameters
 dominance  = 0
-trials     = 10
+trials     = 1000
 
 k_lower    = 0.5
 k_upper    = 4
@@ -69,7 +69,7 @@ class Simulator(object):
     """
 
     grid        = [(keyword.hexagon, 1, 1, True),
-                   graph.graph(25)]
+                   graph.graph(10)]
     attrs       = {1: tracking.genotype_attrs}
     data        = (np.inf,)
     steps       = [({keyword.larva: [keyword.move,
@@ -113,10 +113,11 @@ class Simulator(object):
                     forage.larva(param.larva_factor),
                     forage.fight(param.fight_slope),
                     forage.radius(param.cannibalism_radius),
-                    forage.loss(param.loss_slope,
-                                param.mid,
-                                param.egg_factor,
-                                param.larva_factor)]
+                    # forage.loss(param.loss_slope,
+                    #             param.mid,
+                    #             param.egg_factor,
+                    #             param.larva_factor)
+                    ]
     input_variables = param.repro_values
 
     nums:       hint.init_pops
@@ -280,9 +281,9 @@ raffa_span_low = mdl.Span(location=raffa_point_low,
 
 
 t          = list(range(num_steps))
-encounters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# encounters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 # encounters = np.logspace(0, 5, 30)
-# encounters = np.geomspace(0.1, 7, 40)
+encounters = np.geomspace(0.1, 1, 10)
 print('{} Running Cannibalism simulations for RR'.
       format(datetime.datetime.now()))
 initial_pops = ((0,          0, 0),
