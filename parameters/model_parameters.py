@@ -4,6 +4,7 @@ import parameters.growth       as growth
 import parameters.init_biomass as init_bio
 import parameters.movement     as move
 import parameters.reproduction as repro
+import parameters.survival     as sur
 
 
 print_data = True
@@ -76,6 +77,11 @@ larva_scale = move.larva_scale
 larva_shape = move.larva_shape
 adult_scale = move.adult_scale
 adult_shape = move.adult_shape
+
+# List out survival parameters
+egg_prob   = sur.egg_prob
+pupa_prob  = sur.pupa_prob
+adult_prob = sur.adult_prob
 
 
 # Print data to console

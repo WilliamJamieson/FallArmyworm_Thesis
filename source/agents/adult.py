@@ -133,7 +133,6 @@ class Adult(insect.Insect):
         else:
             self.mate = mate.genotype
 
-
     def _location_keys(self, **kwargs) -> hint.location_keys:
         """
         Get the location_keys for vertices in range
@@ -209,7 +208,6 @@ class Adult(insect.Insect):
             self.transition(keyword.male)
 
         return []
-
 
     def _set_sex(self) -> None:
         """

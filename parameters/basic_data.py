@@ -121,9 +121,7 @@ larva_shape = 1
 adult_scale = 1
 adult_shape = 1
 
-
-
-# Egg development Sparks 1979
+# Egg development Sparks 1979 (duration)
 mu_egg_dev  = 3.0
 sig_egg_dev = 1.0
 
@@ -143,3 +141,38 @@ pupa_duration_adamczyk_2001 = [
     7.20
 ]
 pupa_duration = pupa_duration_pitre_1983 + pupa_duration_adamczyk_2001
+
+
+# Pencoe and Martin (Adult duration)
+adult_duration = [
+    10.8,
+    11.9,
+    9.9,
+    9.9,
+    9.3,
+    9.3
+]
+
+
+# Whiteford et.al. (Egg survival)
+egg_survivals = [
+    0.91,
+    0.81,
+    0.95,
+    0.81,
+    0.74,
+    0.96,
+    0.97,
+    0.99,
+    0.87,
+    0.88,
+    0.98,
+    0.90
+]
+
+# Hardke et.al (Pupa survival/ecolsion)
+pupa_survivals = [
+    0.567,
+    0.787,
+    0.850
+]

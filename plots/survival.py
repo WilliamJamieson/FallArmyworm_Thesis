@@ -1,13 +1,20 @@
 import datetime
-import dataclasses       as dclass
-import numpy             as np
-import matplotlib.pyplot as plt
+import dataclasses as dclass
+import numpy       as np
+import pandas      as pd
 
-import data.biomass       as input_biomass
-import data.data_tracking as input_tracking
-import data.forage        as input_forage
-import data.reproduction  as input_repro
-import data.survival      as input_survive
+import bokeh.plotting as plt
+import bokeh.layouts  as lay
+import bokeh.models   as mdl
+import bokeh.palettes as palettes
+
+import parameters.data_tracking    as tracking
+import parameters.model_parameters as param
+
+import models.growth       as growth
+import models.init_biomass as init_bio
+import models.reproduction as repro
+import models.survival     as sur
 
 import source.hint    as hint
 import source.keyword as keyword
@@ -16,21 +23,37 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
+trials     = 10
+dominance  = 0
 num_steps  = 40
 num_eggs   = 10
 num_larvae = 1000
 num_pupae  = 1000
 num_adults = 1000
-# num_steps  = 40
-# num_eggs   = 0
-# num_larvae = 200
-# num_pupae  = 0
-# num_adults = 0
-save_fig   = True
+
+use_hetero = False
+
+line_width       = 2.5
+point_size       = 10
+point_size_stoch = 8
+
+axis_line_width     = 2
+grid_line_width     = 2
+title_font_size     = '16pt'
+legend_font_size    = '12pt'
+axis_font_size      = '12pt'
+axis_tick_font_size = '10pt'
+
+plot_width  = 800
+plot_height = 500
+
+colors    = palettes.Colorblind[3]
+save_file = 'survive_plots.html'
+
+plt.output_file(save_file)
 
 
-sex_model = input_repro.init_sex
-sex_model.prob = 1.0
+sex_model = repro.init_sex(1)
 
 
 @dclass.dataclass
@@ -45,7 +68,7 @@ class Simulator(object):
 
     grid        = [(keyword.hexagon, 1, 1, True),
                    (keyword.hexagon, 1, 1, True)]
-    attrs       = {1: input_tracking.genotype_attrs}
+    attrs       = {1: tracking.genotype_attrs}
     data        = (np.inf,)
     steps       = [({keyword.larva:  [keyword.consume,
                                       keyword.grow,
@@ -57,21 +80,37 @@ class Simulator(object):
     emigration  = []
     immigration = []
 
-    input_models = [input_biomass.max_gut,
-                    input_biomass.growth,
-                    input_biomass.init_num,
-                    input_biomass.init_mass,
-                    input_biomass.init_juvenile,
-                    input_biomass.init_mature,
-                    input_biomass.init_plant,
-                    input_forage.ad_libitum,
+    input_models = [growth.max_gut(),
+                    growth.growth(param.alpha_ss,
+                                  param.alpha_rr,
+                                  param.beta_ss,
+                                  param.beta_rr,
+                                  dominance),
+                    init_bio.init_num(param.lam_0_egg),
+                    init_bio.init_mass(param.mu_0_egg_ss,
+                                       param.mu_0_egg_rr,
+                                       param.sig_0_egg_ss,
+                                       param.sig_0_egg_rr,
+                                       dominance),
+                    init_bio.init_juvenile(param.mu_0_larva_ss,
+                                           param.mu_0_larva_rr,
+                                           param.sig_0_larva_ss,
+                                           param.sig_0_larva_rr,
+                                           dominance),
+                    init_bio.init_mature(param.mu_0_mature_ss,
+                                         param.mu_0_mature_rr,
+                                         param.sig_0_mature_ss,
+                                         param.sig_0_mature_rr,
+                                         dominance),
+                    init_bio.init_plant(param.mu_leaf,
+                                        param.sig_leaf),
                     sex_model,
-                    input_survive.egg_survival,
-                    input_survive.larva_survival,
-                    input_survive.pupa_survival,
-                    input_survive.adult_survival]
-    input_variables = input_repro.values
+                    sur.egg_sur(param.egg_prob),
+                    sur.pupa_sur(param.pupa_prob),
+                    sur.adult_sur(param.adult_prob)]
+    input_variables = param.repro_values
 
+    # input_survive.larva_survival,
     nums:       hint.init_pops
     bt_prop:    float
     simulation: hint.simulation = None
@@ -101,10 +140,28 @@ class Simulator(object):
             biomass data
         """
 
-        for time in times[1:]:
-            print('     {} Running step: {}'.
-                  format(datetime.datetime.now(), time))
+        for _ in times[1:]:
             self.simulation.step()
+
+
+def mean_data(dataframes: hint.dataframe_list) -> hint.dataframe:
+    """
+    Generate a mean data frame from the list of dataframes
+
+    Args:
+        dataframes: list of dataframes
+
+    Returns:
+        a mean dataframe
+    """
+
+    concat     = pd.concat(dataframes)
+    row_concat = concat.groupby(concat.index)
+
+    mean = row_concat.mean()
+    mean['index'] = range(len(mean.index))
+
+    return mean
 
 
 t            = list(range(num_steps))
@@ -114,149 +171,149 @@ initial_pops = ((num_eggs,   num_eggs,   num_eggs),
                 (num_adults, num_adults, num_adults),
                 (0,          0,          0))
 print('{} Running Survival Bt simulations'.format(datetime.datetime.now()))
-simulator_bt = Simulator(initial_pops, 1)
-start = datetime.datetime.now()
-simulator_bt.run(t)
-end   = datetime.datetime.now()
-print('Run time: {}'.format(end - start))
-dataframes_bt = simulator_bt.simulation.agents.dataframes()
-egg_bt        = dataframes_bt['(0, 0)_egg']
-larva_bt      = dataframes_bt['(0, 0)_larva']
-pupa_bt       = dataframes_bt['(0, 0)_pupa']
-adult_bt      = dataframes_bt['(0, 0)_female']
+egg_bt   = []
+larva_bt = []
+pupa_bt  = []
+adult_bt = []
+for num in range(trials):
+    print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
+    simulator_bt = Simulator(initial_pops, 1)
+    simulator_bt.run(t)
+    dataframes_bt = simulator_bt.simulation.agents.dataframes()
+    egg_bt.  append(dataframes_bt['(0, 0)_egg'])
+    larva_bt.append(dataframes_bt['(0, 0)_larva'])
+    pupa_bt. append(dataframes_bt['(0, 0)_pupa'])
+    adult_bt.append(dataframes_bt['(0, 0)_female'])
 
-print('{} Running Survival not Bt simulations'.format(datetime.datetime.now()))
-simulator_not_bt = Simulator(initial_pops, 0)
-start = datetime.datetime.now()
-simulator_not_bt.run(t)
-end   = datetime.datetime.now()
-print('Run time: {}'.format(end - start))
-dataframes_not_bt = simulator_not_bt.simulation.agents.dataframes()
-egg_not_bt        = dataframes_not_bt['(0, 0)_egg']
-larva_not_bt      = dataframes_not_bt['(0, 0)_larva']
-pupa_not_bt       = dataframes_not_bt['(0, 0)_pupa']
-adult_not_bt      = dataframes_not_bt['(0, 0)_female']
+egg_bt_mean   = mean_data(egg_bt)
+larva_bt_mean = mean_data(larva_bt)
+pupa_bt_mean  = mean_data(pupa_bt)
+adult_bt_mean = mean_data(adult_bt)
 
-#   Plot Egg on not_bt
-plt.figure()
-#       Plot data
-egg_not_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-egg_not_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-egg_not_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Egg Survival on Non-Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Egg_not_Bt_survive.png')
-plt.show()
-#   Plot Egg on Bt
-plt.figure()
-#       Plot data
-egg_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-egg_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-egg_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Egg Survival on Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Egg_Bt_survive.png')
-plt.show()
+egg_source   = mdl.ColumnDataSource(egg_bt_mean)
+pupa_source  = mdl.ColumnDataSource(pupa_bt_mean)
+adult_source = mdl.ColumnDataSource(adult_bt_mean)
 
-#   Plot Larva on not_bt
-plt.figure()
-#       Plot data
-larva_not_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-larva_not_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-larva_not_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Larva Survival on Non-Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Larva_not_Bt_survive.png')
-plt.show()
-#   Plot Larva on Bt
-plt.figure()
-#       Plot data
-larva_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-larva_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-larva_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Larva Survival on Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Larva_Bt_survive.png')
-plt.show()
+larva_bt_source = mdl.ColumnDataSource(larva_bt_mean)
 
-#   Plot Pupa on not_bt
-plt.figure()
-#       Plot data
-pupa_not_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-pupa_not_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-pupa_not_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Pupa Survival on Non-Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Pupa_not_Bt_survive.png')
-plt.show()
-#   Plot Pupa on Bt
-plt.figure()
-#       Plot data
-pupa_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-pupa_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-pupa_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Pupa Survival on Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Pupa_Bt_survive.png')
-plt.show()
+egg_plot = plt.figure(plot_width=plot_width,
+                      plot_height=plot_height)
+egg_plot.title.text       = 'Egg Survival, ' \
+                            'Number of Trials: {}'.format(trials)
+egg_plot.yaxis.axis_label = 'population'
+egg_plot.xaxis.axis_label = 'time (days)'
 
-#   Plot Adult on not_bt
-plt.figure()
-#       Plot data
-adult_not_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-adult_not_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-adult_not_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Adult Survival on Non-Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Adult_not_Bt_survive.png')
-plt.show()
-#   Plot Adult on Bt
-plt.figure()
-#       Plot data
-adult_bt['genotype_resistant'].   plot(color='b', label='Resistant')
-adult_bt['genotype_heterozygous'].plot(color='r', label='Heterozygous')
-adult_bt['genotype_susceptible']. plot(color='k', label='Susceptible')
-#       Add plot labels
-plt.legend()
-plt.xlabel('time (days)')
-plt.ylabel('population')
-plt.title('Adult Survival on Bt plant')
-#       Show/save plot
-if save_fig:
-    plt.savefig('Adult_Bt_survive.png')
-plt.show()
+egg_plot.line(x='index', y='genotype_resistant',
+              source=egg_source,
+              color=colors[0], line_width=line_width,
+              legend='Resistant')
+egg_plot.line(x='index', y='genotype_susceptible',
+              source=egg_source,
+              color=colors[1], line_width=line_width,
+              legend='Susceptible')
+if use_hetero:
+    egg_plot.line(x='index', y='genotype_heterozygous',
+                  source=egg_source,
+                  color=colors[2], line_width=line_width,
+                  legend='Heterozygous')
+
+egg_plot.legend.location = 'top_right'
+
+egg_plot.title.text_font_size = title_font_size
+egg_plot.legend.label_text_font_size = legend_font_size
+egg_plot.yaxis.axis_line_width = axis_line_width
+egg_plot.xaxis.axis_line_width = axis_line_width
+egg_plot.yaxis.axis_label_text_font_size = axis_font_size
+egg_plot.xaxis.axis_label_text_font_size = axis_font_size
+egg_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+egg_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+egg_plot.ygrid.grid_line_width = grid_line_width
+egg_plot.xgrid.grid_line_width = grid_line_width
+
+# plt.show(egg_plot)
+
+pupa_plot = plt.figure(plot_width=plot_width,
+                       plot_height=plot_height)
+pupa_plot.title.text       = 'Pupa Survival, ' \
+                             'Number of Trials: {}'.format(trials)
+pupa_plot.yaxis.axis_label = 'population'
+pupa_plot.xaxis.axis_label = 'time (days)'
+
+pupa_plot.line(x='index', y='genotype_resistant',
+               source=pupa_source,
+               color=colors[0], line_width=line_width,
+               legend='Resistant')
+pupa_plot.line(x='index', y='genotype_susceptible',
+               source=pupa_source,
+               color=colors[1], line_width=line_width,
+               legend='Susceptible')
+if use_hetero:
+    pupa_plot.line(x='index', y='genotype_heterozygous',
+                   source=pupa_source,
+                   color=colors[2], line_width=line_width,
+                   legend='Heterozygous')
+
+pupa_plot.legend.location = 'top_right'
+
+pupa_plot.title.text_font_size = title_font_size
+pupa_plot.legend.label_text_font_size = legend_font_size
+pupa_plot.yaxis.axis_line_width = axis_line_width
+pupa_plot.xaxis.axis_line_width = axis_line_width
+pupa_plot.yaxis.axis_label_text_font_size = axis_font_size
+pupa_plot.xaxis.axis_label_text_font_size = axis_font_size
+pupa_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+pupa_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+pupa_plot.ygrid.grid_line_width = grid_line_width
+pupa_plot.xgrid.grid_line_width = grid_line_width
+
+# layout = lay.column(egg_plot, pupa_plot)
+# plt.show(layout)
+
+adult_plot = plt.figure(plot_width=plot_width,
+                        plot_height=plot_height)
+adult_plot.title.text       = 'Adult Survival, ' \
+                              'Number of Trials: {}'.format(trials)
+adult_plot.yaxis.axis_label = 'population'
+adult_plot.xaxis.axis_label = 'time (days)'
+
+adult_plot.line(x='index', y='genotype_resistant',
+                source=adult_source,
+                color=colors[0], line_width=line_width,
+                legend='Resistant')
+adult_plot.line(x='index', y='genotype_susceptible',
+                source=adult_source,
+                color=colors[1], line_width=line_width,
+                legend='Susceptible')
+if use_hetero:
+    adult_plot.line(x='index', y='genotype_heterozygous',
+                    source=adult_source,
+                    color=colors[2], line_width=line_width,
+                    legend='Heterozygous')
+
+adult_plot.legend.location = 'top_right'
+
+adult_plot.title.text_font_size = title_font_size
+adult_plot.legend.label_text_font_size = legend_font_size
+adult_plot.yaxis.axis_line_width = axis_line_width
+adult_plot.xaxis.axis_line_width = axis_line_width
+adult_plot.yaxis.axis_label_text_font_size = axis_font_size
+adult_plot.xaxis.axis_label_text_font_size = axis_font_size
+adult_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+adult_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+adult_plot.ygrid.grid_line_width = grid_line_width
+adult_plot.xgrid.grid_line_width = grid_line_width
+
+layout = lay.column(egg_plot, pupa_plot, adult_plot)
+plt.show(layout)
+
+# print('{} Running Survival not Bt simulations'.format(datetime.datetime.now()))
+# simulator_not_bt = Simulator(initial_pops, 0)
+# start = datetime.datetime.now()
+# simulator_not_bt.run(t)
+# end   = datetime.datetime.now()
+# print('Run time: {}'.format(end - start))
+# dataframes_not_bt = simulator_not_bt.simulation.agents.dataframes()
+# egg_not_bt        = dataframes_not_bt['(0, 0)_egg']
+# larva_not_bt      = dataframes_not_bt['(0, 0)_larva']
+# pupa_not_bt       = dataframes_not_bt['(0, 0)_pupa']
+# adult_not_bt      = dataframes_not_bt['(0, 0)_female']
