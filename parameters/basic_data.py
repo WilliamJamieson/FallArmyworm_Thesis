@@ -176,3 +176,56 @@ pupa_survivals = [
     0.787,
     0.850
 ]
+
+# Bernardi et.al. (Larva non-Bt survival)
+larva_bernardi_non_bt_survivals = [
+    0.8,
+    0.8,
+    0.85,
+    0.75
+]
+
+# Hardkie et.al. (Larva non-Bt survival)
+larva_hardke_non_bt_survivals = [
+    0.66,
+    0.88,
+    0.917
+]
+larva_non_bt_survivals = larva_bernardi_non_bt_survivals + \
+                         larva_hardke_non_bt_survivals
+
+# Bernardi et.al (Larva Bt survival)
+larva_bernardi_bt_survivals_rr = [
+    0.75
+]
+larva_bernardi_bt_survivals_ss = [
+    0.0
+]
+
+# Storer et.al. (Larva Bt survival)
+larva_storer_bt_survivals_rr = [
+    0.978
+]
+larva_storer_bt_survivals_ss = [
+    0.005
+]
+
+# Hardke et.al. (Larva Bt survival)
+larva_hardke_bt_survivals_ss = [
+    0.367,
+    0.313,
+    0.644
+]
+
+# Adamczyk et.al. (Larva Bt survival)
+larva_adamczyk_bt_survivals_ss = [
+    0.695,
+    0.678
+]
+
+larva_bt_survivals_rr = larva_bernardi_bt_survivals_rr + \
+                        larva_storer_bt_survivals_rr
+larva_bt_survivals_ss = larva_bernardi_bt_survivals_ss + \
+                        larva_storer_bt_survivals_ss + \
+                        larva_hardke_bt_survivals_ss + \
+                        larva_adamczyk_bt_survivals_ss

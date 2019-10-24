@@ -83,6 +83,11 @@ egg_prob   = sur.egg_prob
 pupa_prob  = sur.pupa_prob
 adult_prob = sur.adult_prob
 
+larva_prob_non_bt_rr = sur.larva_non_bt_rr
+larva_prob_non_bt_ss = sur.larva_non_bt_ss
+larva_prob_bt_rr     = sur.larva_bt_rr
+larva_prob_bt_ss    = sur.larva_bt_ss
+
 
 # Print data to console
 if print_data:

@@ -86,6 +86,40 @@ class Larva(models.Model):
 
 
 @dclass.dataclass
+class LarvaFixed(models.Model):
+    """
+    Class to describe a survival model for larvae with fixed probabilities
+
+    Variables:
+        prob: probabilities
+    """
+
+    model_key = keyword.larva_survival
+
+    prob: hint.bt_variable
+
+    def __call__(self, mass:     float,
+                       genotype: str,
+                       bt:       str) -> bool:
+        """
+        Run the survival model
+
+        Args:
+            mass:     insect mass
+            genotype: larva's genotype
+            bt:       bt state of plant
+
+        Returns:
+            result of flipping a coin weighted by logistic function's resulting
+            probability
+        """
+
+        prob = self.prob[bt][genotype]
+
+        return rnd.random() <= prob
+
+
+@dclass.dataclass
 class Fixed(models.Model):
     """
     Class to describe a survival model with a fixed probability

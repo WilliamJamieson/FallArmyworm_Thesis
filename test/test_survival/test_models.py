@@ -133,7 +133,63 @@ class TestLarva(ut.TestCase):
                                  [mk.call()])
                 self.assertEqual(mkLogistic.call_args_list,
                                  [mk.call(self.Larva, mass, genotype, bt)])
-                
+
+
+class TestLarvaFixed(ut.TestCase):
+    """test the fixed value survival for larvae"""
+
+    def setUp(self):
+        """Setup the tests"""
+
+        self.prob = mk.MagicMock(spec=dict)
+        self.prob.__getitem__.return_value = mk.MagicMock(spec=dict)
+
+        self.Larva = model.LarvaFixed(self.prob)
+
+    def test___init__(self):
+        """test __init__ for class"""
+
+        self.assertIsInstance(self.Larva, models.Model)
+        self.assertIsInstance(self.Larva, model.LarvaFixed)
+
+        self.assertEqual(self.Larva.prob, self.prob)
+
+        self.assertEqual(self.Larva.model_key, keyword.larva_survival)
+
+        self.assertTrue(dclass.is_dataclass(self.Larva))
+
+    def test___call__(self):
+        """test call the model"""
+
+        mass     = mk.MagicMock(spec=float)
+        genotype = mk.MagicMock(spec=str)
+        bt       = mk.MagicMock(spec=str)
+
+        with mk.patch.object(rnd, 'random') as mkRND:
+            mkRND.return_value.__le__.side_effect = [True, False]
+
+            self.assertTrue(self.Larva(mass, genotype, bt))
+            self.assertEqual(mkRND.return_value.__le__.call_args_list,
+                             [mk.call(self.prob.__getitem__.return_value.
+                                        __getitem__.return_value)])
+            self.assertEqual(self.prob.__getitem__.return_value.
+                                __getitem__.call_args_list,
+                             [mk.call(genotype)])
+            self.assertEqual(self.prob.__getitem__.call_args_list,
+                             [mk.call(bt)])
+
+            mkRND.reset_mock()
+            self.prob.reset_mock()
+            self.assertFalse(self.Larva(mass, genotype, bt))
+            self.assertEqual(mkRND.return_value.__le__.call_args_list,
+                             [mk.call(self.prob.__getitem__.return_value.
+                                      __getitem__.return_value)])
+            self.assertEqual(self.prob.__getitem__.return_value.
+                             __getitem__.call_args_list,
+                             [mk.call(genotype)])
+            self.assertEqual(self.prob.__getitem__.call_args_list,
+                             [mk.call(bt)])
+
 
 class TestFixed(ut.TestCase):
     """test the Fixed survival mathematical model class"""
