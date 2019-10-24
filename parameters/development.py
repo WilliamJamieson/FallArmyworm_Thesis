@@ -22,12 +22,14 @@ def normal_pupa(duration_data: list) -> tuple:
 
 def normal_larva(mass:     list,
                  mass_sem: list,
+                 offset:   float,
                  samples:  int) -> tuple:
     """
     Get a normal distribution for the mass of larva pupating
     Args:
         mass:     mass sample point data
         mass_sem: mass sem data
+        offset:   discretization offset
         samples:  number of total samples for each point
 
     Returns:
@@ -39,7 +41,7 @@ def normal_larva(mass:     list,
     sem   = mass_sem[-1]
     sigma = sem*np.sqrt(samples)
 
-    return mu, sigma
+    return mu + offset, sigma
 
 
 # Pass through the egg development parameters
@@ -52,7 +54,9 @@ mu_pupa, sig_pupa = normal_pupa(data.pupa_duration)
 # Generate the larva development parameters
 mu_larva_ss, sig_larva_ss = normal_larva(data.growth_mass_ss,
                                          data.growth_mass_sem_ss,
+                                         data.larva_mu_dev_offset_ss,
                                          data.growth_samples_ss)
 mu_larva_rr, sig_larva_rr = normal_larva(data.growth_mass_rr,
                                          data.growth_mass_sem_rr,
+                                         data.larva_mu_dev_offset_rr,
                                          data.growth_samples_rr)

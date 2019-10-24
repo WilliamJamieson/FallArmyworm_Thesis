@@ -125,6 +125,11 @@ adult_shape = 1
 mu_egg_dev  = 3.0
 sig_egg_dev = 1.0
 
+
+# Larva Development
+larva_mu_dev_offset_rr = 31
+larva_mu_dev_offset_ss = 16
+
 # Pitre and Hogg 1983 (Pupation duration)
 pupa_duration_pitre_1983 = [
     9.0,

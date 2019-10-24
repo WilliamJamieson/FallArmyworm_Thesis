@@ -113,8 +113,8 @@ class Simulator(object):
                                 param.sig_egg_dev),
                     dev.pupa_dev(param.mu_pupa_dev,
                                  param.sig_pupa_dev),
-                    dev.larva_dev(param.mu_larva_dev_ss + 16,
-                                  param.mu_larva_dev_rr + 31,
+                    dev.larva_dev(param.mu_larva_dev_ss,
+                                  param.mu_larva_dev_rr,
                                   param.sig_larva_dev_ss,
                                   param.sig_larva_dev_rr,
                                   dominance)]
