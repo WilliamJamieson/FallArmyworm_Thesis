@@ -23,7 +23,7 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
-trials     = 100
+trials     = 1000
 dominance  = 0
 num_steps  = 40
 num_eggs   = 10
@@ -33,7 +33,7 @@ num_adults = 1000
 
 use_hetero = False
 
-line_width       = 2.5
+line_width       = 3.5
 point_size       = 10
 point_size_stoch = 8
 

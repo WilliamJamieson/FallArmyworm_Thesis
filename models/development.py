@@ -58,6 +58,10 @@ def larva_dev(mu_larva_dev_ss:  float,
     mu  = dom.dom(mu_larva_dev_ss,
                   mu_larva_dev_rr,
                   dominance)
+
+    print('SS Mu: {}'.format(mu['susceptible']))
+    print('RR Mu: {}'.format(mu['resistant']))
+
     sig = dom.dom(sig_larva_dev_ss,
                   sig_larva_dev_rr,
                   dominance)

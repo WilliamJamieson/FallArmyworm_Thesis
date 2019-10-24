@@ -24,14 +24,14 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
-trials     = 10
+trials     = 1000
 dominance  = 0
-num_steps  = 40
+num_steps  = 45
 
 num_steps_eggs = 10
 num_eggs       = 10
 
-num_steps_larvae = 30
+num_steps_larvae = 40
 num_larvae       = 1000
 hist_density     = False
 mass_bins        = 30
@@ -42,10 +42,11 @@ num_pupae       = 1000
 
 use_hetero = False
 
-line_width       = 2.5
+line_width       = 3.5
 point_size       = 10
 point_size_stoch = 8
 
+alpha               = 0.8
 axis_line_width     = 2
 grid_line_width     = 2
 title_font_size     = '16pt'
@@ -112,8 +113,8 @@ class Simulator(object):
                                 param.sig_egg_dev),
                     dev.pupa_dev(param.mu_pupa_dev,
                                  param.sig_pupa_dev),
-                    dev.larva_dev(param.mu_larva_dev_ss,
-                                  param.mu_larva_dev_rr,
+                    dev.larva_dev(param.mu_larva_dev_ss + 16,
+                                  param.mu_larva_dev_rr + 31,
                                   param.sig_larva_dev_ss,
                                   param.sig_larva_dev_rr,
                                   dominance)]
@@ -138,7 +139,7 @@ class Simulator(object):
                   *self.input_models,
                   **self.input_variables)
 
-    def collect(self) -> list:
+    def collect(self) -> dict:
         """
         Collect a list of masses
 
@@ -148,10 +149,15 @@ class Simulator(object):
 
         larvae = self.simulation.agents.agents(keyword.pupa)
 
-        values = []
+        values = {
+            keyword.homo_r: [],
+            keyword.hetero: [],
+            keyword.homo_s: [],
+        }
+
         for agent in larvae:
             # noinspection PyUnresolvedReferences
-            values.append(agent.mass)
+            values[agent.genotype].append(agent.mass)
 
         return values
 
@@ -290,9 +296,9 @@ for num in range(trials):
     simulator_larva.run(t)
 
     pupa_mass = simulator_larva.collect()
-    pupa_mass_homo_r.extend(pupa_mass[:num_larvae])
-    pupa_mass_hetero.extend(pupa_mass[num_larvae: 2*num_larvae])
-    pupa_mass_homo_s.extend(pupa_mass[2*num_larvae:])
+    pupa_mass_homo_r.extend(pupa_mass[keyword.homo_r])
+    pupa_mass_hetero.extend(pupa_mass[keyword.hetero])
+    pupa_mass_homo_s.extend(pupa_mass[keyword.homo_s])
 
     dataframes_larva = simulator_larva.simulation.agents.dataframes()
     larva_larva.append(dataframes_larva['(0, 0)_larva'])
@@ -392,6 +398,7 @@ hist_plot.quad(top=hist_homo_r, bottom=0,
                right=edges_homo_r[1:],
                fill_color=colors[0],
                line_color='white',
+               alpha=alpha,
                legend='Resistant, (μ={}, σ={}, n={})'.
                    format(np.round(mu_homo_r, digits),
                           np.round(sig_homo_r, digits),
@@ -401,6 +408,7 @@ hist_plot.quad(top=hist_homo_s, bottom=0,
                right=edges_homo_s[1:],
                fill_color=colors[1],
                line_color='white',
+               alpha=alpha,
                legend='Susceptible, (μ={}, σ={}, n={})'.
                    format(np.round(mu_homo_s, digits),
                           np.round(sig_homo_s, digits),
@@ -411,6 +419,7 @@ if use_hetero:
                    right=edges_hetero[1:],
                    fill_color=colors[2],
                    line_color='white',
+                   alpha=alpha,
                    legend='Heterozygous, (μ={}, σ={}, n={})'.
                    format(np.round(mu_hetero, digits),
                           np.round(sig_hetero, digits),
