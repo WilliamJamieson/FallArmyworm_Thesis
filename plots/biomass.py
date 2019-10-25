@@ -30,7 +30,7 @@ trials     = 1000
 num_steps  = 40
 use_hetero = False
 
-line_width       = 2
+line_width       = 3.5
 point_size       = 10
 point_size_stoch = 8
 
@@ -456,14 +456,16 @@ if use_hetero:
                       color=colors[2], size=point_size,
                       legend='Model Heterozygous')
 
-euler_plot.x([fin_point_rr[0]],
-             [fin_point_rr[1]],
-             color=colors[0], size=20,
-             legend='Resistant Pupation')
-euler_plot.x([fin_point_ss[0]],
-             [fin_point_ss[1]],
-             color=colors[1], size=20,
-             legend='Susceptible Pupation')
+euler_plot.square_x([fin_point_rr[0]],
+                    [fin_point_rr[1]],
+                    color=colors[0], size=20,
+                    fill_color=None, line_width=line_width,
+                    legend='Resistant Pupation')
+euler_plot.square_x([fin_point_ss[0]],
+                    [fin_point_ss[1]],
+                    color=colors[1], size=20,
+                    fill_color=None, line_width=line_width,
+                    legend='Susceptible Pupation')
 
 euler_plot.legend.location = "bottom_right"
 
@@ -523,14 +525,16 @@ if use_hetero:
                     color=colors[2], size=point_size,
                     legend='Model Heterozygous')
 
-rk4_plot.x([fin_point_rr[0]],
-           [fin_point_rr[1]],
-           color=colors[0], size=20,
-           legend='Resistant Pupation')
-rk4_plot.x([fin_point_ss[0]],
-           [fin_point_ss[1]],
-           color=colors[1], size=20,
-           legend='Susceptible Pupation')
+rk4_plot.square_x([fin_point_rr[0]],
+                  [fin_point_rr[1]],
+                  color=colors[0], size=20,
+                  fill_color=None, line_width=line_width,
+                  legend='Resistant Pupation')
+rk4_plot.square_x([fin_point_ss[0]],
+                  [fin_point_ss[1]],
+                  color=colors[1], size=20,
+                  fill_color=None, line_width=line_width,
+                  legend='Susceptible Pupation')
 
 rk4_plot.legend.location = "bottom_right"
 
@@ -606,14 +610,16 @@ if use_hetero:
     adlib_plot.line(t, biomass_adlib_hetero[8],
                     color=colors[2], line_dash='dashed', line_width=line_width)
 
-adlib_plot.x([fin_point_rr[0]],
-             [fin_point_rr[1]],
-             color=colors[0], size=20,
-             legend='Resistant Pupation')
-adlib_plot.x([fin_point_ss[0]],
-             [fin_point_ss[1]],
-             color=colors[1], size=20,
-             legend='Susceptible Pupation')
+adlib_plot.square_x([fin_point_rr[0]],
+                    [fin_point_rr[1]],
+                    color=colors[0], size=20,
+                    fill_color=None, line_width=line_width,
+                    legend='Resistant Pupation')
+adlib_plot.square_x([fin_point_ss[0]],
+                    [fin_point_ss[1]],
+                    color=colors[1], size=20,
+                    fill_color=None, line_width=line_width,
+                    legend='Susceptible Pupation')
 
 adlib_plot.legend.location = "bottom_right"
 
@@ -664,7 +670,7 @@ adlib_box.rect(t, biomass_adlib_homo_r[8], 0.5, 0.1,
                 line_color=colors[0])
 
 adlib_box.circle(t, biomass_adlib_homo_s[0],
-                  color=colors[1], size=point_size/2,
+                  color=colors[1], size=point_size_stoch,
                   legend='Mean Susceptible')
 adlib_box.line(t, biomass_adlib_homo_s[0],
                 color=colors[1], line_width=line_width,
@@ -678,14 +684,16 @@ adlib_box.rect(t, biomass_adlib_homo_s[7], 0.5, 0.1,
 adlib_box.rect(t, biomass_adlib_homo_s[8], 0.5, 0.1,
                 line_color=colors[1])
 
-adlib_box.x([fin_point_rr[0]],
-             [fin_point_rr[1]],
-             color=colors[0], size=20,
-             legend='Resistant Pupation')
-adlib_box.x([fin_point_ss[0]],
-             [fin_point_ss[1]],
-             color=colors[1], size=20,
-             legend='Susceptible Pupation')
+adlib_box.square_x([fin_point_rr[0]],
+                   [fin_point_rr[1]],
+                   color=colors[0], size=20,
+                   fill_color=None, line_width=line_width,
+                   legend='Resistant Pupation')
+adlib_box.square_x([fin_point_ss[0]],
+                   [fin_point_ss[1]],
+                   color=colors[1], size=20,
+                   fill_color=None, line_width=line_width,
+                   legend='Susceptible Pupation')
 
 adlib_box.legend.location = "bottom_right"
 
@@ -755,14 +763,16 @@ if use_hetero:
     starve_plot.line(t, biomass_data_hetero[8], line_width=line_width,
                      color=colors[2], line_dash='dashed')
 
-starve_plot.x([fin_point_rr[0]],
-              [fin_point_rr[1]],
-              color=colors[0], size=20,
-              legend='Resistant Pupation')
-starve_plot.x([fin_point_ss[0]],
-              [fin_point_ss[1]],
-              color=colors[1], size=20,
-              legend='Susceptible Pupation')
+starve_plot.square_x([fin_point_rr[0]],
+                     [fin_point_rr[1]],
+                     color=colors[0], size=20,
+                     fill_color=None, line_width=line_width,
+                     legend='Resistant Pupation')
+starve_plot.square_x([fin_point_ss[0]],
+                     [fin_point_ss[1]],
+                     color=colors[1], size=20,
+                     fill_color=None, line_width=line_width,
+                     legend='Susceptible Pupation')
 
 starve_plot.legend.location = "bottom_right"
 
@@ -820,14 +830,16 @@ starve_box.rect(t, biomass_data_homo_s[7], 0.5, 0.1,
 starve_box.rect(t, biomass_data_homo_s[8], 0.5, 0.1,
                 line_color=colors[1])
 
-starve_box.x([fin_point_rr[0]],
-             [fin_point_rr[1]],
-             color=colors[0], size=20,
-             legend='Resistant Pupation')
-starve_box.x([fin_point_ss[0]],
-             [fin_point_ss[1]],
-             color=colors[1], size=20,
-             legend='Susceptible Pupation')
+starve_box.square_x([fin_point_rr[0]],
+                    [fin_point_rr[1]],
+                    color=colors[0], size=20,
+                    fill_color=None, line_width=line_width,
+                    legend='Resistant Pupation')
+starve_box.square_x([fin_point_ss[0]],
+                    [fin_point_ss[1]],
+                    color=colors[1], size=20,
+                    fill_color=None, line_width=line_width,
+                    legend='Susceptible Pupation')
 
 starve_box.legend.location = "bottom_right"
 
@@ -895,6 +907,7 @@ hist_plot_homo_r.quad(top=hist_homo_r, bottom=0,
                       left=edges_homo_r[:-1],
                       right=edges_homo_r[1:],
                       fill_color=colors[0],
+                      line_color='white',
                       legend='μ={}, σ={}'.
                       format(np.round(mean_homo_r, digits),
                              np.round(std_homo_r, digits)))
@@ -922,6 +935,7 @@ hist_plot_homo_s.quad(top=hist_homo_s, bottom=0,
                       left=edges_homo_s[:-1],
                       right=edges_homo_s[1:],
                       fill_color=colors[1],
+                      line_color='white',
                       legend='μ={}, σ={}'.
                       format(np.round(mean_homo_s, digits),
                              np.round(std_homo_s, digits)))
@@ -949,6 +963,7 @@ hist_plot.quad(top=hist_homo_r, bottom=0,
                left=edges_homo_r[:-1],
                right=edges_homo_r[1:],
                fill_color=colors[0],
+               line_color='white',
                legend='Resistant, (μ={}, σ={})'.
                format(np.round(mean_homo_r, digits),
                       np.round(std_homo_r, digits)))
@@ -957,6 +972,7 @@ hist_plot.quad(top=hist_homo_s, bottom=0,
                left=edges_homo_s[:-1],
                right=edges_homo_s[1:],
                fill_color=colors[1],
+               line_color='white',
                legend='Susceptible, (μ={}, σ={})'.
                format(np.round(mean_homo_s, digits),
                       np.round(std_homo_s, digits)))

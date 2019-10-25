@@ -23,7 +23,7 @@ import source.keyword as keyword
 import source.simulation.simulation as main_simulation
 
 
-line_width       = 2
+line_width       = 3.5
 point_size       = 10
 point_size_stoch = 8
 
