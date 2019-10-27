@@ -37,7 +37,7 @@ axis_tick_font_size = '10pt'
 
 # Plotting parameters
 dominance  = 0
-trials     = 1000
+trials     = 10
 
 k_lower    = 0.5
 k_upper    = 4
@@ -226,10 +226,20 @@ class Simulator(object):
         start_pop = np.mean(start_data)
         end_pop   = np.mean(end_data)
 
-        prop = end_pop/start_pop
-        rate = 1 - prop
+        start_lower = np.percentile(start_data, 2.5)
+        start_upper = np.percentile(start_data, 97.5)
+        end_lower   = np.percentile(end_data, 2.5)
+        end_upper   = np.percentile(end_data, 97.5)
 
-        return - np.log(prop) / start_pop, prop, rate
+        prop       = end_pop   / start_pop
+        prop_lower = end_lower / start_lower
+        prop_upper = end_upper / start_upper
+
+        rate       = 1 - prop
+        rate_lower = 1 - prop_lower
+        rate_upper = 1 - prop_upper
+
+        return prop, prop_lower, prop_upper, rate, rate_lower, rate_upper
 
     @classmethod
     def rho(cls, rhos:     np.array,
@@ -249,17 +259,25 @@ class Simulator(object):
             list of corresponding values for cannibalism
         """
 
-        cannib = []
-        prop   = []
-        rate   = []
+        prop       = []
+        prop_lower = []
+        prop_upper = []
+        rate       = []
+        rate_lower = []
+        rate_upper = []
         for rho in rhos:
-            rho_cannib, rho_prop, rho_rate = cls.run(rho, times, data_key, nums)
+            rho_prop, rho_prop_lower, rho_prop_upper, \
+                rho_rate, rho_rate_lower, rho_rate_upper = \
+                cls.run(rho, times, data_key, nums)
 
-            cannib.append(rho_cannib)
-            prop.  append(rho_prop)
-            rate.  append(rho_rate)
+            prop.      append(rho_prop)
+            prop_lower.append(rho_prop_lower)
+            prop_upper.append(rho_prop_upper)
+            rate.      append(rho_rate)
+            rate_lower.append(rho_rate_lower)
+            rate_upper.append(rho_rate_upper)
 
-        return cannib, prop, rate
+        return prop, prop_lower, prop_upper, rate, rate_lower, rate_upper
 
 
 raffa_point_high = 38.6/100
@@ -282,8 +300,7 @@ raffa_span_low = mdl.Span(location=raffa_point_low,
 
 t          = list(range(num_steps))
 # encounters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-# encounters = np.logspace(0, 5, 30)
-encounters = np.geomspace(0.1, 1, 10)
+encounters = np.geomspace(0.1, 2, 30)
 print('{} Running Cannibalism simulations for RR'.
       format(datetime.datetime.now()))
 initial_pops = ((0,          0, 0),
@@ -291,9 +308,9 @@ initial_pops = ((0,          0, 0),
                 (0,          0, 0),
                 (0,          0, 0),
                 (0,          0, 0))
-cannib_rr, prop_rr, rate_rr = Simulator.rho(encounters,
-                                            t, 'genotype_resistant',
-                                            initial_pops)
+prop_rr, prop_lower_rr, prop_upper_rr,\
+    rate_rr, rate_lower_rr, rate_upper_rr =\
+    Simulator.rho(encounters, t, 'genotype_resistant', initial_pops)
 print('{} Running Cannibalism simulations for SS'.
       format(datetime.datetime.now()))
 initial_pops = ((0, 0, 0),
@@ -301,72 +318,9 @@ initial_pops = ((0, 0, 0),
                 (0, 0, 0),
                 (0, 0, 0),
                 (0, 0, 0))
-cannib_ss, prop_ss, rate_ss = Simulator.rho(encounters,
-                                            t, 'genotype_susceptible',
-                                            initial_pops)
-
-cannib_log = plt.figure(plot_width=plot_width,
-                        plot_height=plot_height,
-                        x_axis_type='log')
-cannib_log.title.text = 'Cannibalism Constant, ' \
-                        'Number of Trials: {}'.format(trials)
-cannib_log.xaxis.axis_label = 'encounter constant'
-cannib_log.yaxis.axis_label = 'cannibalism constant'
-
-cannib_log.triangle(encounters, cannib_rr,
-                    color=colors[0], size=point_size,
-                    legend='Resistant')
-cannib_log.circle(encounters, cannib_ss,
-                  color=colors[1], size=point_size,
-                  legend='Susceptible')
-cannib_log.line(encounters, cannib_rr,
-                color=colors[0], line_width=line_width,
-                legend='Resistant')
-cannib_log.line(encounters, cannib_ss,
-                color=colors[1], line_width=line_width,
-                legend='Susceptible')
-
-cannib_log.title.text_font_size = title_font_size
-cannib_log.legend.label_text_font_size = legend_font_size
-cannib_log.yaxis.axis_line_width = axis_line_width
-cannib_log.xaxis.axis_line_width = axis_line_width
-cannib_log.yaxis.axis_label_text_font_size = axis_font_size
-cannib_log.xaxis.axis_label_text_font_size = axis_font_size
-cannib_log.yaxis.major_label_text_font_size = axis_tick_font_size
-cannib_log.xaxis.major_label_text_font_size = axis_tick_font_size
-cannib_log.ygrid.grid_line_width = grid_line_width
-cannib_log.xgrid.grid_line_width = grid_line_width
-
-cannib_plot = plt.figure(plot_width=plot_width,
-                         plot_height=plot_height)
-cannib_plot.title.text = 'Cannibalism Constant, Number of Trials: {}'. \
-    format(trials)
-cannib_plot.xaxis.axis_label = 'encounter constant'
-cannib_plot.yaxis.axis_label = 'cannibalism constant'
-
-cannib_plot.triangle(encounters, cannib_rr,
-                     color=colors[0], size=point_size,
-                     legend='Resistant')
-cannib_plot.circle(encounters, cannib_ss,
-                   color=colors[1], size=point_size,
-                   legend='Susceptible')
-cannib_plot.line(encounters, cannib_rr,
-                 color=colors[0], line_width=line_width,
-                 legend='Resistant')
-cannib_plot.line(encounters, cannib_ss,
-                 color=colors[1], line_width=line_width,
-                 legend='Susceptible')
-
-cannib_plot.title.text_font_size = title_font_size
-cannib_plot.legend.label_text_font_size = legend_font_size
-cannib_plot.yaxis.axis_line_width = axis_line_width
-cannib_plot.xaxis.axis_line_width = axis_line_width
-cannib_plot.yaxis.axis_label_text_font_size = axis_font_size
-cannib_plot.xaxis.axis_label_text_font_size = axis_font_size
-cannib_plot.yaxis.major_label_text_font_size = axis_tick_font_size
-cannib_plot.xaxis.major_label_text_font_size = axis_tick_font_size
-cannib_plot.ygrid.grid_line_width = grid_line_width
-cannib_plot.xgrid.grid_line_width = grid_line_width
+prop_ss, prop_lower_ss, prop_upper_ss, \
+    rate_ss, rate_lower_ss, rate_upper_ss = \
+    Simulator.rho(encounters, t, 'genotype_susceptible', initial_pops)
 
 prop_log = plt.figure(plot_width=plot_width,
                       plot_height=plot_height,
@@ -379,23 +333,31 @@ prop_log.yaxis.axis_label = 'survival proportion'
 prop_log.triangle(encounters, prop_rr,
                   color=colors[0], size=point_size,
                   legend='Resistant')
-prop_log.circle(encounters, prop_ss,
-                color=colors[1], size=point_size,
-                legend='Susceptible')
 prop_log.line(encounters, prop_rr,
               color=colors[0], line_width=line_width,
               legend='Resistant')
+prop_log.segment(x0=encounters, y0=prop_lower_rr,
+                 x1=encounters, y1=prop_upper_rr,
+                 line_color=colors[0], line_width=line_width/2,
+                 line_cap='square')
+
+prop_log.circle(encounters, prop_ss,
+                color=colors[1], size=point_size,
+                legend='Susceptible')
 prop_log.line(encounters, prop_ss,
               color=colors[1], line_width=line_width,
               legend='Susceptible')
+prop_log.segment(x0=encounters, y0=prop_lower_ss,
+                 x1=encounters, y1=prop_upper_ss,
+                 line_color=colors[1], line_width=line_width/2,
+                 line_cap='square')
+
 
 prop_log.title.text_font_size = title_font_size
 prop_log.legend.label_text_font_size = legend_font_size
 prop_log.yaxis.axis_line_width = axis_line_width
 prop_log.xaxis.axis_line_width = axis_line_width
 prop_log.yaxis.axis_label_text_font_size = axis_font_size
-prop_log.xaxis.axis_label_text_font_size = axis_font_size
-prop_log.yaxis.major_label_text_font_size = axis_tick_font_size
 prop_log.xaxis.major_label_text_font_size = axis_tick_font_size
 prop_log.ygrid.grid_line_width = grid_line_width
 prop_log.xgrid.grid_line_width = grid_line_width
@@ -410,15 +372,24 @@ prop_plot.yaxis.axis_label = 'survival proportion'
 prop_plot.triangle(encounters, prop_rr,
                    color=colors[0], size=point_size,
                    legend='Resistant')
-prop_plot.circle(encounters, prop_ss,
-                 color=colors[1], size=point_size,
-                 legend='Susceptible')
 prop_plot.line(encounters, prop_rr,
                color=colors[0], line_width=line_width,
                legend='Resistant')
+prop_plot.segment(x0=encounters, y0=prop_lower_rr,
+                  x1=encounters, y1=prop_upper_rr,
+                  line_color=colors[0], line_width=line_width/2,
+                  line_cap='square')
+
+prop_plot.circle(encounters, prop_ss,
+                 color=colors[1], size=point_size,
+                 legend='Susceptible')
 prop_plot.line(encounters, prop_ss,
                color=colors[1], line_width=line_width,
                legend='Susceptible')
+prop_plot.segment(x0=encounters, y0=prop_lower_ss,
+                  x1=encounters, y1=prop_upper_ss,
+                  line_color=colors[1], line_width=line_width/2,
+                  line_cap='square')
 
 prop_plot.title.text_font_size = title_font_size
 prop_plot.legend.label_text_font_size = legend_font_size
@@ -445,15 +416,24 @@ rate_log.add_layout(raffa_span_low)
 rate_log.triangle(encounters, rate_rr,
                   color=colors[0], size=point_size,
                   legend='Resistant')
-rate_log.circle(encounters, rate_ss,
-                color=colors[1], size=point_size,
-                legend='Susceptible')
 rate_log.line(encounters, rate_rr,
               color=colors[0], line_width=line_width,
               legend='Resistant')
+rate_log.segment(x0=encounters, y0=rate_lower_rr,
+                 x1=encounters, y1=rate_upper_rr,
+                 line_color=colors[0], line_width=line_width/2,
+                 line_cap='square')
+
+rate_log.circle(encounters, rate_ss,
+                color=colors[1], size=point_size,
+                legend='Susceptible')
 rate_log.line(encounters, rate_ss,
               color=colors[1], line_width=line_width,
               legend='Susceptible')
+rate_log.segment(x0=encounters, y0=rate_lower_ss,
+                 x1=encounters, y1=rate_upper_ss,
+                 line_color=colors[1], line_width=line_width/2,
+                 line_cap='square')
 
 rate_log.title.text_font_size = title_font_size
 rate_log.legend.label_text_font_size = legend_font_size
@@ -479,15 +459,24 @@ rate_plot.add_layout(raffa_span_low)
 rate_plot.triangle(encounters, rate_rr,
                    color=colors[0], size=point_size,
                    legend='Resistant')
-rate_plot.circle(encounters, rate_ss,
-                 color=colors[1], size=point_size,
-                 legend='Susceptible')
 rate_plot.line(encounters, rate_rr,
                color=colors[0], line_width=line_width,
                legend='Resistant')
+rate_plot.segment(x0=encounters, y0=rate_lower_rr,
+                  x1=encounters, y1=rate_upper_rr,
+                  line_color=colors[0], line_width=line_width/2,
+                  line_cap='square')
+
+rate_plot.circle(encounters, rate_ss,
+                 color=colors[1], size=point_size,
+                 legend='Susceptible')
 rate_plot.line(encounters, rate_ss,
                color=colors[1], line_width=line_width,
                legend='Susceptible')
+rate_plot.segment(x0=encounters, y0=rate_lower_ss,
+                  x1=encounters, y1=rate_upper_ss,
+                  line_color=colors[1], line_width=line_width/2,
+                  line_cap='square')
 
 rate_plot.title.text_font_size = title_font_size
 rate_plot.legend.label_text_font_size = legend_font_size
@@ -500,7 +489,6 @@ rate_plot.xaxis.major_label_text_font_size = axis_tick_font_size
 rate_plot.ygrid.grid_line_width = grid_line_width
 rate_plot.xgrid.grid_line_width = grid_line_width
 
-layout = lay.column(cannib_plot, cannib_log,
-                    prop_plot, prop_log,
+layout = lay.column(prop_plot, prop_log,
                     rate_plot, rate_log)
 plt.show(layout)
