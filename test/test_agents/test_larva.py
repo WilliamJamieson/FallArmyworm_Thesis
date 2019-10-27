@@ -208,12 +208,6 @@ class TestLarva(ut.TestCase):
 
         # Alive and full
         self.Larva.alive = True
-        self.Larva.full  = True
-        self.assertFalse(self.Larva._can_consume)
-
-        # Alive and  not full
-        self.Larva.alive = True
-        self.Larva.full  = False
         self.assertTrue(self.Larva._can_consume)
 
     def test__has_target(self):
@@ -584,13 +578,6 @@ class TestLarva(ut.TestCase):
                 master.attach_mock(mkPlant,          'plant')
                 master.attach_mock(self.cannibalism, 'cannibalism')
 
-                # Is Full
-                self.Larva.full = True
-                self.assertEqual(self.Larva.consume(), [])
-                self.assertEqual(master.mock_calls, [])
-
-                # Is Not Full
-                self.Larva.full = False
                 self.assertEqual(self.Larva.consume(), [])
                 self.assertEqual(master.mock_calls,
                                  [mk.call.target(),

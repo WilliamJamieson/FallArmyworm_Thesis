@@ -37,7 +37,7 @@ axis_tick_font_size = '10pt'
 
 # Plotting parameters
 dominance  = 0
-trials     = 10
+trials     = 1000
 
 k_lower    = 0.5
 k_upper    = 4
@@ -106,9 +106,7 @@ class Simulator(object):
                     repro.init_sex(param.female_prob),
                     move.larva(param.larva_scale,
                                param.larva_shape),
-                    forage.starvation(param.forage_steps,
-                                      param.theta_adlibitum,
-                                      param.sig_scarce),
+                    forage.adlibitum(param.forage_steps),
                     forage.egg(param.egg_factor),
                     forage.larva(param.larva_factor),
                     forage.fight(param.fight_slope),
@@ -300,7 +298,7 @@ raffa_span_low = mdl.Span(location=raffa_point_low,
 
 t          = list(range(num_steps))
 # encounters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-encounters = np.geomspace(0.1, 2, 30)
+encounters = np.geomspace(0.01, 2, 50)
 print('{} Running Cannibalism simulations for RR'.
       format(datetime.datetime.now()))
 initial_pops = ((0,          0, 0),

@@ -70,7 +70,7 @@ class Larva(insect.Insect):
     def _can_consume(self) -> bool:
         """Determine if this larva can consume"""
 
-        return self.alive and (not self.full)
+        return self.alive
 
     @property
     def _has_target(self) -> bool:
@@ -320,10 +320,9 @@ class Larva(insect.Insect):
             empty list
         """
 
-        if not self.full:
-            self._consume_target()
-            self.cannibalism.cannibalism(self)
-            self._consume_plant()
+        self._consume_target()
+        self.cannibalism.cannibalism(self)
+        self._consume_plant()
 
         return []
 
