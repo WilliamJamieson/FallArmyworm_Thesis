@@ -8,6 +8,7 @@ import bokeh.layouts  as lay
 import bokeh.models   as mdl
 import bokeh.palettes as palettes
 
+import parameters.basic_data       as base
 import parameters.data_tracking    as tracking
 import parameters.model_parameters as param
 
@@ -57,7 +58,7 @@ axis_tick_font_size = '10pt'
 plot_width  = 800
 plot_height = 500
 
-colors    = palettes.Colorblind[3]
+colors    = palettes.Colorblind[6]
 save_file = 'develop_plots.html'
 
 plt.output_file(save_file)
@@ -112,20 +113,26 @@ class Simulator(object):
                     dev.egg_dev(param.mu_egg_dev,
                                 param.sig_egg_dev),
                     dev.pupa_dev(param.mu_pupa_dev,
-                                 param.sig_pupa_dev),
-                    dev.larva_dev(param.mu_larva_dev_ss,
-                                  param.mu_larva_dev_rr,
-                                  param.sig_larva_dev_ss,
-                                  param.sig_larva_dev_rr,
-                                  dominance)]
+                                 param.sig_pupa_dev)]
     input_variables = param.repro_values
 
     nums:       hint.init_pops
     bt_prop:    float
     steps:      hint.step_tuples
+    offset_ss:  float           = 0
+    offset_rr:  float           = 0
     simulation: hint.simulation = None
 
     def __post_init__(self):
+
+        larva_dev = dev.larva_dev(param.mu_larva_dev_ss - self.offset_ss,
+                                  param.mu_larva_dev_rr - self.offset_rr,
+                                  param.sig_larva_dev_ss,
+                                  param.sig_larva_dev_rr,
+                                  dominance)
+
+        input_models = self.input_models.copy()
+        input_models.append(larva_dev)
 
         self.simulation = main_simulation.Simulation. \
             setup(self.nums,
@@ -136,7 +143,7 @@ class Simulator(object):
                   self.steps,
                   self.emigration,
                   self.immigration,
-                  *self.input_models,
+                  *input_models,
                   **self.input_variables)
 
     def collect(self) -> dict:
@@ -307,7 +314,6 @@ for num in range(trials):
 larva_larva_mean = mean_data(larva_larva)
 larva_pupa_mean  = mean_data(larva_pupa)
 
-
 larva_larva_source = mdl.ColumnDataSource(larva_larva_mean)
 larva_pupa_source  = mdl.ColumnDataSource(larva_pupa_mean)
 
@@ -441,6 +447,245 @@ hist_plot.xgrid.grid_line_width = grid_line_width
 
 # layout = lay.column(egg_plot, larva_plot, hist_plot)
 # plt.show(layout)
+
+
+fin_point_rr = (
+    base.growth_times_rr[1] - base.growth_times_sem_rr[1],
+    base.growth_mass_rr[ 1] + base.growth_mass_sem_rr[ 1]
+)
+fin_point_ss = (
+    base.growth_times_ss[1] - base.growth_times_sem_ss[1],
+    base.growth_mass_ss[ 1] + base.growth_mass_sem_ss[ 1]
+)
+
+
+fin_time_homo_r = mdl.Span(location=fin_point_rr[0],
+                           dimension='height', line_alpha=0.5,
+                           line_color=colors[0], line_width=line_width)
+
+fin_time_homo_s = mdl.Span(location=fin_point_ss[0],
+                           dimension='height', line_alpha=0.5,
+                           line_color=colors[1], line_width=line_width)
+
+
+print('{} Running Development No Offset Larva simulations'.
+      format(datetime.datetime.now()))
+larva_larva_off = []
+larva_pupa_off  = []
+pupa_mass_off_homo_r = []
+pupa_mass_off_hetero = []
+pupa_mass_off_homo_s = []
+for num in range(trials):
+    print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
+    simulator_larva_off = Simulator(initial_pops, 1, steps_larva,
+                                    base.larva_mu_dev_offset_ss,
+                                    base.larva_mu_dev_offset_rr)
+    simulator_larva_off.run(t)
+
+    pupa_mass = simulator_larva_off.collect()
+    pupa_mass_off_homo_r.extend(pupa_mass[keyword.homo_r])
+    pupa_mass_off_hetero.extend(pupa_mass[keyword.hetero])
+    pupa_mass_off_homo_s.extend(pupa_mass[keyword.homo_s])
+
+    dataframes_larva_off = simulator_larva_off.simulation.agents.dataframes()
+    larva_larva_off.append(dataframes_larva_off['(0, 0)_larva'])
+    larva_pupa_off. append(dataframes_larva_off['(0, 0)_pupa'])
+
+larva_larva_off_mean = mean_data(larva_larva_off)
+larva_pupa_off_mean  = mean_data(larva_pupa_off)
+
+larva_larva_off_source = mdl.ColumnDataSource(larva_larva_off_mean)
+larva_pupa_off_source  = mdl.ColumnDataSource(larva_pupa_off_mean)
+
+larva_off_plot = plt.figure(plot_width=plot_width,
+                            plot_height=plot_height)
+larva_off_plot.title.text       = 'Larva Offset Development,' \
+                                  'Number of Trials: {}'. \
+    format(trials)
+larva_off_plot.yaxis.axis_label = 'population'
+larva_off_plot.xaxis.axis_label = 'time (days)'
+
+larva_off_plot.add_layout(fin_time_homo_r)
+larva_off_plot.add_layout(fin_time_homo_s)
+
+larva_off_plot.line(x='index', y='genotype_resistant',
+                    source=larva_larva_off_source,
+                    color=colors[0], line_width=line_width,
+                    legend='Resistant Larva')
+larva_off_plot.line(x='index', y='genotype_susceptible',
+                    source=larva_larva_off_source,
+                    color=colors[1], line_width=line_width,
+                    legend='Susceptible Larva')
+if use_hetero:
+    larva_off_plot.line(x='index', y='genotype_heterozygous',
+                        source=larva_larva_off_source,
+                        color=colors[2], line_width=line_width,
+                        legend='Heterozygous Larva')
+
+larva_off_plot.line(x='index', y='genotype_resistant',
+                    source=larva_pupa_off_source,
+                    color=colors[0], line_dash='dashed', line_width=line_width,
+                    legend='Resistant Pupa')
+larva_off_plot.line(x='index', y='genotype_susceptible',
+                    source=larva_pupa_off_source,
+                    color=colors[1], line_dash='dashed', line_width=line_width,
+                    legend='Susceptible Pupa')
+if use_hetero:
+    larva_off_plot.line(x='index', y='genotype_heterozygous',
+                        source=larva_pupa_off_source,
+                        color=colors[2], line_dash='dashed',
+                        line_width=line_width,
+                        legend='Heterozygous Pupa')
+
+larva_off_plot.line(x='index', y='genotype_resistant',
+                    source=larva_larva_source,
+                    color=colors[0], line_width=line_width,
+                    line_dash='dotted',
+                    legend='Resistant Larva Offset')
+larva_off_plot.line(x='index', y='genotype_susceptible',
+                    source=larva_larva_source,
+                    color=colors[1], line_width=line_width,
+                    line_dash='dotted',
+                    legend='Susceptible Larva Offset')
+if use_hetero:
+    larva_off_plot.line(x='index', y='genotype_heterozygous',
+                        source=larva_larva_source,
+                        color=colors[2], line_width=line_width,
+                        line_dash='dotted',
+                        legend='Heterozygous Larva Offset')
+
+larva_off_plot.line(x='index', y='genotype_resistant',
+                    source=larva_pupa_source,
+                    color=colors[0], line_dash='dashdot', line_width=line_width,
+                    legend='Resistant Pupa Offset')
+larva_off_plot.line(x='index', y='genotype_susceptible',
+                    source=larva_pupa_source,
+                    color=colors[1], line_dash='dashdot', line_width=line_width,
+                    legend='Susceptible Pupa Offset')
+if use_hetero:
+    larva_off_plot.line(x='index', y='genotype_heterozygous',
+                        source=larva_pupa_source,
+                        color=colors[2], line_dash='dashdot',
+                        line_width=line_width,
+                        legend='Heterozygous Pupa Offset')
+
+larva_off_plot.legend.location = 'center_right'
+
+larva_off_plot.title.text_font_size = title_font_size
+larva_off_plot.legend.label_text_font_size = legend_font_size
+larva_off_plot.yaxis.axis_line_width = axis_line_width
+larva_off_plot.xaxis.axis_line_width = axis_line_width
+larva_off_plot.yaxis.axis_label_text_font_size = axis_font_size
+larva_off_plot.xaxis.axis_label_text_font_size = axis_font_size
+larva_off_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+larva_off_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+larva_off_plot.ygrid.grid_line_width = grid_line_width
+larva_off_plot.xgrid.grid_line_width = grid_line_width
+
+hist_off_homo_r, edges_off_homo_r = np.histogram(pupa_mass_off_homo_r,
+                                                 density=hist_density,
+                                                 bins=mass_bins)
+hist_off_hetero, edges_off_hetero = np.histogram(pupa_mass_off_hetero,
+                                                 density=hist_density,
+                                                 bins=mass_bins)
+hist_off_homo_s, edges_off_homo_s = np.histogram(pupa_mass_off_homo_s,
+                                                 density=hist_density,
+                                                 bins=mass_bins)
+
+num_off_homo_r = len(pupa_mass_off_homo_r)
+mu_off_homo_r  = np.mean(pupa_mass_off_homo_r)
+sig_off_homo_r = np.std( pupa_mass_off_homo_r)
+
+num_off_hetero = len(pupa_mass_off_hetero)
+mu_off_hetero  = np.mean(pupa_mass_off_hetero)
+sig_off_hetero = np.std( pupa_mass_off_hetero)
+
+num_off_homo_s = len(pupa_mass_off_homo_s)
+mu_off_homo_s  = np.mean(pupa_mass_off_homo_s)
+sig_off_homo_s = np.std( pupa_mass_off_homo_s)
+
+hist_off_plot = plt.figure(plot_width=plot_width,
+                           plot_height=plot_height)
+hist_off_plot.title.text       = 'Pupation Mass No Offset Histogram'
+hist_off_plot.yaxis.axis_label = 'pupa per mass'
+hist_off_plot.xaxis.axis_label = 'mass (mg)'
+
+hist_off_plot.quad(top=hist_off_homo_r, bottom=0,
+                   left=edges_off_homo_r[:-1],
+                   right=edges_off_homo_r[1:],
+                   fill_color=colors[0],
+                   line_color='white',
+                   alpha=alpha,
+                   legend='Resistant, (μ={}, σ={}, n={})'.
+                   format(np.round(mu_off_homo_r, digits),
+                          np.round(sig_off_homo_r, digits),
+                          num_off_homo_r))
+hist_off_plot.quad(top=hist_off_homo_s, bottom=0,
+                   left=edges_off_homo_s[:-1],
+                   right=edges_off_homo_s[1:],
+                   fill_color=colors[1],
+                   line_color='white',
+                   alpha=alpha,
+                   legend='Susceptible, (μ={}, σ={}, n={})'.
+                   format(np.round(mu_off_homo_s, digits),
+                          np.round(sig_off_homo_s, digits),
+                          num_off_homo_s))
+if use_hetero:
+    hist_off_plot.quad(top=hist_off_hetero, bottom=0,
+                       left=edges_off_hetero[:-1],
+                       right=edges_off_hetero[1:],
+                       fill_color=colors[2],
+                       line_color='white',
+                       alpha=alpha,
+                       legend='Heterozygous, (μ={}, σ={}, n={})'.
+                       format(np.round(mu_off_hetero, digits),
+                              np.round(sig_off_hetero, digits),
+                              num_off_hetero))
+
+hist_off_plot.quad(top=hist_homo_r, bottom=0,
+                   left=edges_homo_r[:-1],
+                   right=edges_homo_r[1:],
+                   fill_color=colors[3],
+                   line_color='white',
+                   alpha=alpha,
+                   legend='Offset Resistant, (μ={}, σ={}, n={})'.
+                   format(np.round(mu_homo_r, digits),
+                          np.round(sig_homo_r, digits),
+                          num_homo_r))
+hist_off_plot.quad(top=hist_homo_s, bottom=0,
+                   left=edges_homo_s[:-1],
+                   right=edges_homo_s[1:],
+                   fill_color=colors[4],
+                   line_color='white',
+                   alpha=alpha,
+                   legend='Offset Susceptible, (μ={}, σ={}, n={})'.
+                   format(np.round(mu_homo_s, digits),
+                          np.round(sig_homo_s, digits),
+                          num_homo_s))
+if use_hetero:
+    hist_off_plot.quad(top=hist_hetero, bottom=0,
+                       left=edges_hetero[:-1],
+                       right=edges_hetero[1:],
+                       fill_color=colors[5],
+                       line_color='white',
+                       alpha=alpha,
+                       legend='Offset Heterozygous, (μ={}, σ={}, n={})'.
+                       format(np.round(mu_hetero, digits),
+                              np.round(sig_hetero, digits),
+                              num_hetero))
+
+hist_off_plot.legend.location = 'top_left'
+
+hist_off_plot.title.text_font_size = title_font_size
+hist_off_plot.legend.label_text_font_size = legend_font_size
+hist_off_plot.yaxis.axis_line_width = axis_line_width
+hist_off_plot.xaxis.axis_line_width = axis_line_width
+hist_off_plot.yaxis.axis_label_text_font_size = axis_font_size
+hist_off_plot.xaxis.axis_label_text_font_size = axis_font_size
+hist_off_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+hist_off_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+hist_off_plot.ygrid.grid_line_width = grid_line_width
+hist_off_plot.xgrid.grid_line_width = grid_line_width
 
 
 t            = list(range(num_steps_pupae))
@@ -640,5 +885,6 @@ full_plot.ygrid.grid_line_width = grid_line_width
 full_plot.xgrid.grid_line_width = grid_line_width
 
 
-layout = lay.column(egg_plot, larva_plot, pupa_plot, full_plot, hist_plot)
+layout = lay.column(egg_plot, larva_plot, pupa_plot, full_plot, hist_plot,
+                    larva_off_plot, hist_off_plot)
 plt.show(layout)

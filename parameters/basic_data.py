@@ -219,18 +219,18 @@ larva_storer_bt_survivals_ss = [
 larva_hardke_bt_survivals_ss = [
     0.367,
     0.313,
-    0.644
 ]
 
 # Adamczyk et.al. (Larva Bt survival)
 larva_adamczyk_bt_survivals_ss = [
+    0.644,
     0.695,
     0.678
 ]
 
 larva_bt_survivals_rr = larva_bernardi_bt_survivals_rr + \
                         larva_storer_bt_survivals_rr
-larva_bt_survivals_ss = larva_bernardi_bt_survivals_ss + \
-                        larva_storer_bt_survivals_ss + \
-                        larva_hardke_bt_survivals_ss + \
-                        larva_adamczyk_bt_survivals_ss
+larva_bt_low_survivals_ss  = larva_bernardi_bt_survivals_ss + \
+                             larva_storer_bt_survivals_ss
+larva_bt_mid_survivals_ss  = larva_hardke_bt_survivals_ss
+larva_bt_high_survivals_ss = larva_adamczyk_bt_survivals_ss
