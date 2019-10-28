@@ -7,7 +7,7 @@ def dom(homo_s:    float,
         dominance: float) -> hint.variable:
     """
     Calculate the heterozyous parameter using degree of dominance
-        SR = (SS + RR)/2 + D*(SS - RR)/2
+        SR = SS + D*(RR - SS)
 
         SR = heterozyous
         SS = susceptible
@@ -23,10 +23,7 @@ def dom(homo_s:    float,
         heterozygous parameter
     """
 
-    avg = (homo_s + homo_r)/2
-    sub = (homo_s - homo_r)/2
-
-    hetero = avg + (dominance * sub)
+    hetero = homo_s + dominance*(homo_r - homo_s)
 
     return {
         keyword.homo_s: homo_s,
