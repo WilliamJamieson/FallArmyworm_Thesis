@@ -26,12 +26,10 @@ class TestLay(ut.TestCase):
     def setUp(self):
         """Setup the tests"""
 
-        self.trials    = mk.MagicMock(spec=int)
         self.fecundity = mk.MagicMock(spec=callable)
         self.density   = mk.MagicMock(spec=callable)
 
-        self.Lay = lay.Lay(self.trials,
-                           self.fecundity,
+        self.Lay = lay.Lay(self.fecundity,
                            self.density)
 
     def test___init__(self):
@@ -39,7 +37,6 @@ class TestLay(ut.TestCase):
 
         self.assertIsInstance(self.Lay, lay.Lay)
 
-        self.assertEqual(self.Lay.trials,    self.trials)
         self.assertEqual(self.Lay.fecundity, self.fecundity)
         self.assertEqual(self.Lay.density,   self.density)
 
@@ -77,7 +74,7 @@ class TestLay(ut.TestCase):
             self.assertEqual(self.Lay.reset(adult),
                              self.fecundity.return_value)
             self.assertEqual(self.fecundity.call_args_list,
-                             [mk.call(adult.mass, adult.age, adult.genotype)])
+                             [mk.call(adult.age, adult.mass, adult.genotype)])
 
     def test__check_density(self):
         """test the density checker"""
@@ -115,7 +112,7 @@ class TestLay(ut.TestCase):
 
                 # Test Fail check
                 self.assertEqual(self.Lay._lay_egg_mass(adult, number),
-                                 ([], number))
+                                 ([], number, True))
                 self.assertEqual(mkCheck.call_args_list,
                                  [mk.call(self.Lay, adult, number)])
                 self.assertEqual(mkBirth.call_args_list, [])
@@ -127,7 +124,8 @@ class TestLay(ut.TestCase):
                 # Test pass check
                 self.assertEqual(self.Lay._lay_egg_mass(adult, number),
                                  ([mkBirth.return_value],
-                                   number.__add__.return_value))
+                                  number.__add__.return_value,
+                                  False))
                 self.assertEqual(mkCheck.call_args_list,
                                  [mk.call(self.Lay, adult, number)])
                 self.assertEqual(mkBirth.call_args_list,
@@ -139,15 +137,14 @@ class TestLay(ut.TestCase):
                 self.assertEqual(num_eggs.__sub__.call_args_list,
                                  [mk.call(1)])
                 
-    def test__lay(self):
+    def test_lay(self):
         """test lay loop"""
 
         adult = mk.create_autospec(AdultTest, spec_set=True)
+        adult.num_eggs = 3
 
-        self.Lay.trials = 3
         with mk.patch.object(lay.Lay, '_lay_egg_mass', autospec=True) as mkLay:
             # No Break
-            adult.num_eggs.__le__.side_effect = [False, False, False]
             numbers    = []
             effects    = []
             egg_masses = []
@@ -155,11 +152,11 @@ class TestLay(ut.TestCase):
                 number = mk.MagicMock(spec=int)
                 new    = [mk.create_autospec(egg_mass.EggMass, spec_set=True)
                           for _ in range(3)]
-                effects.append((new, number))
+                effects.append((new, number, False))
                 numbers.append(number)
                 egg_masses.extend(new)
             mkLay.side_effect = effects
-            self.assertEqual(self.Lay._lay(adult), egg_masses)
+            self.assertEqual(self.Lay.lay(adult), egg_masses)
             self.assertEqual(len(mkLay.call_args_list), 3)
             call = mkLay.call_args_list.pop(0)
             self.assertEqual(call,
@@ -172,27 +169,23 @@ class TestLay(ut.TestCase):
                                  mk.call(self.Lay,
                                          adult, numbers[index]))
             self.assertEqual(len(mkLay.call_args_list), 2)
-            for call in adult.num_eggs.__le__.call_args_list:
-                self.assertEqual(call, mk.call(0))
-            self.assertEqual(len(adult.num_eggs.__le__.call_args_list), 3)
 
             adult.reset_mock()
-            adult.num_eggs.__le__.reset_mock()
             mkLay.reset_mock()
             # Break on 3rd round
-            adult.num_eggs.__le__.side_effect = [False, False, True]
+            stop_lay = [False, True]
             numbers    = []
             effects    = []
             egg_masses = []
-            for _ in range(2):
+            for index in range(2):
                 number = mk.MagicMock(spec=int)
                 new    = [mk.create_autospec(egg_mass.EggMass, spec_set=True)
                           for _ in range(3)]
-                effects.append((new, number))
+                effects.append((new, number, stop_lay[index]))
                 numbers.append(number)
                 egg_masses.extend(new)
             mkLay.side_effect = effects
-            self.assertEqual(self.Lay._lay(adult), egg_masses)
+            self.assertEqual(self.Lay.lay(adult), egg_masses)
             self.assertEqual(len(mkLay.call_args_list), 2)
             call = mkLay.call_args_list.pop(0)
             self.assertEqual(call,
@@ -205,15 +198,10 @@ class TestLay(ut.TestCase):
                                  mk.call(self.Lay,
                                          adult, numbers[index]))
             self.assertEqual(len(mkLay.call_args_list), 1)
-            for call in adult.num_eggs.__le__.call_args_list:
-                self.assertEqual(call, mk.call(0))
-            self.assertEqual(len(adult.num_eggs.__le__.call_args_list), 3)
 
             adult.reset_mock()
-            adult.num_eggs.__le__.reset_mock()
             mkLay.reset_mock()
             # Break on 2nd round
-            adult.num_eggs.__le__.side_effect = [False, True]
             numbers    = []
             effects    = []
             egg_masses = []
@@ -221,11 +209,11 @@ class TestLay(ut.TestCase):
                 number = mk.MagicMock(spec=int)
                 new    = [mk.create_autospec(egg_mass.EggMass, spec_set=True)
                           for _ in range(3)]
-                effects.append((new, number))
+                effects.append((new, number, True))
                 numbers.append(number)
                 egg_masses.extend(new)
             mkLay.side_effect = effects
-            self.assertEqual(self.Lay._lay(adult), egg_masses)
+            self.assertEqual(self.Lay.lay(adult), egg_masses)
             self.assertEqual(len(mkLay.call_args_list), 1)
             call = mkLay.call_args_list.pop(0)
             self.assertEqual(call,
@@ -234,59 +222,27 @@ class TestLay(ut.TestCase):
             self.assertEqual(adult.population.call_args_list,
                              [mk.call()])
             self.assertEqual(len(mkLay.call_args_list), 0)
-            for call in adult.num_eggs.__le__.call_args_list:
-                self.assertEqual(call, mk.call(0))
-            self.assertEqual(len(adult.num_eggs.__le__.call_args_list), 2)
 
             adult.reset_mock()
-            adult.num_eggs.__le__.reset_mock()
             mkLay.reset_mock()
             # Break on 1st round
-            adult.num_eggs.__le__.side_effect = [True]
+            adult.num_eggs = 0
             effects    = []
             egg_masses = []
             mkLay.side_effect = effects
-            self.assertEqual(self.Lay._lay(adult), egg_masses)
+            self.assertEqual(self.Lay.lay(adult), egg_masses)
             self.assertEqual(len(mkLay.call_args_list), 0)
             self.assertEqual(adult.population.call_args_list,
                              [mk.call()])
-            for call in adult.num_eggs.__le__.call_args_list:
-                self.assertEqual(call, mk.call(0))
-            self.assertEqual(len(adult.num_eggs.__le__.call_args_list), 1)
-
-    def test_lay(self):
-        """test run the behavior"""
-
-        adult = mk.create_autospec(AdultTest, spec_set=True)
-
-        with mk.patch.object(lay.Lay, '_lay', autospec=True) as mkLay:
-            adult.num_eggs.__gt__.side_effect = [False, True]
-
-            # Test num fails
-            self.assertEqual(self.Lay.lay(adult), [])
-            self.assertEqual(mkLay.call_args_list, [])
-            self.assertEqual(adult.num_eggs.__gt__.call_args_list,
-                             [mk.call(0)])
-
-            adult.num_eggs.__gt__.reset_mock()
-            # Test num is good
-            self.assertEqual(self.Lay.lay(adult),
-                             mkLay.return_value)
-            self.assertEqual(mkLay.call_args_list,
-                             [mk.call(self.Lay, adult)])
-            self.assertEqual(adult.num_eggs.__gt__.call_args_list,
-                             [mk.call(0)])
 
     def test_setup(self):
         """test setup the class"""
 
         # Test if have the models
-        kwargs = {keyword.trials:    self.trials,
-                  keyword.fecundity: self.fecundity,
+        kwargs = {keyword.fecundity: self.fecundity,
                   keyword.density:   self.density}
         self.Lay = lay.Lay.setup(**kwargs)
         self.assertIsInstance(self.Lay, lay.Lay)
-        self.assertEqual(self.Lay.trials,    self.trials)
         self.assertEqual(self.Lay.fecundity, self.fecundity)
         self.assertEqual(self.Lay.density,   self.density)
 
@@ -294,6 +250,5 @@ class TestLay(ut.TestCase):
         kwargs = {}
         self.Lay = lay.Lay.setup(**kwargs)
         self.assertIsInstance(self.Lay, lay.Lay)
-        self.assertEqual(self.Lay.trials,    0)
         self.assertEqual(self.Lay.fecundity, None)
         self.assertEqual(self.Lay.density,   None)

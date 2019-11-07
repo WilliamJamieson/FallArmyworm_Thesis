@@ -285,8 +285,6 @@ class TestBehaviors(ut.TestCase):
         self.Behavior.make_reproduction(**kwargs)
 
         self.assertIsInstance(self.Behavior.lay, agent_lay.Lay)
-        self.assertEqual(self.Behavior.lay.trials,
-                         kwargs[keyword.trials])
         self.assertEqual(self.Behavior.lay.fecundity,
                          kwargs[keyword.fecundity])
         self.assertEqual(self.Behavior.lay.density,

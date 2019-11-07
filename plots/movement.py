@@ -1,6 +1,6 @@
 import datetime
-import dataclasses       as dclass
-import numpy             as np
+import dataclasses as dclass
+import numpy       as np
 
 import bokeh.plotting as plt
 import bokeh.models   as mdl
@@ -22,7 +22,7 @@ import source.simulation.simulation as main_simulation
 
 
 # Plotting parameters
-larva_grid = 25
+larva_grid = 10
 adult_grid = 50
 
 dominance  = 0
@@ -32,7 +32,7 @@ num_adults = 2
 save_fig   = True
 
 
-line_width       = 2
+line_width       = 3.5
 point_size       = 10
 point_size_stoch = 8
 

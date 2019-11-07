@@ -184,9 +184,15 @@ class Adult(insect.Insect):
 
         if self.alive:
             if self.mate is not None:
-                return self.lay.lay(self)
+                new_eggs = self.lay.lay(self)
             else:
+                new_eggs = []
+
                 self.mating.mate(self)
+
+            for new_egg in new_eggs:
+                new_egg.activate()
+
 
         return []
 

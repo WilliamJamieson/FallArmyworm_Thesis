@@ -25,7 +25,6 @@ class Lay(object):
         setup: setup class
     """
 
-    trials:    int            = 0
     fecundity: hint.fecundity = None
     density:   hint.density   = None
 
@@ -53,7 +52,7 @@ class Lay(object):
         """
 
         if self._use_fecundity:
-            return self.fecundity(adult.mass, adult.age, adult.genotype)
+            return self.fecundity(adult.age, adult.mass, adult.genotype)
         else:
             return 0
 
@@ -91,11 +90,11 @@ class Lay(object):
 
         if self._check_density(adult, number):
             adult.num_eggs -= 1
-            return [agent_egg_mass.EggMass.birth(adult)], number + 1
+            return [agent_egg_mass.EggMass.birth(adult)], number + 1, False
         else:
-            return [], number
+            return [], number, True
 
-    def _lay(self, adult: hint.adult) -> hint.egg_masses:
+    def lay(self, adult: hint.adult) -> hint.egg_masses:
         """
         Run loop to create egg_masses
 
@@ -106,33 +105,19 @@ class Lay(object):
             list of egg_masses
         """
 
-        number = adult.population()
+        number   = adult.population()
+        num_eggs = adult.num_eggs
+        stop_lay = False
 
         egg_masses = []
-        for _ in range(self.trials):
-            if adult.num_eggs <= 0:
+        for num in range(num_eggs):
+            if stop_lay:
                 break
             else:
-                new, number = self._lay_egg_mass(adult, number)
+                new, number, stop_lay = self._lay_egg_mass(adult, number)
                 egg_masses.extend(new)
 
         return egg_masses
-
-    def lay(self, adult: hint.adult) -> hint.egg_masses:
-        """
-        Run egg lay system
-
-        Args:
-            adult: the adult in question
-
-        Returns:
-            list of egg_masses
-        """
-
-        if adult.num_eggs > 0:
-            return self._lay(adult)
-        else:
-            return []
 
     @classmethod
     def setup(cls, **kwargs) -> 'Lay':
@@ -146,11 +131,6 @@ class Lay(object):
             setup class
         """
 
-        if keyword.trials in kwargs:
-            trials = kwargs[keyword.trials]
-        else:
-            trials = 0
-
         if keyword.fecundity in kwargs:
             fecundity = kwargs[keyword.fecundity]
         else:
@@ -161,4 +141,4 @@ class Lay(object):
         else:
             density = None
 
-        return cls(trials, fecundity, density)
+        return cls(fecundity, density)

@@ -14,6 +14,18 @@ limited         = True
 
 female_prob = 0.5
 
+# Reproductive encounter
+mate_encounter = 10
+mate_radius    = 2
+
+# Reproductive fecundity
+fecundity_maximum = 2
+fecundity_decay   = 0.5
+
+# Reproductive density
+eta   = 0.45
+gamma = 4
+
 
 # Whiteford et.al. 1988 (egg_mass data)
 egg_mass_mean_number_eggs = [
@@ -115,8 +127,8 @@ larva_factor = 1
 
 
 # Empirical movement factors
-larva_scale = 1
-larva_shape = 1
+larva_scale = 0.5
+larva_shape = 10
 
 adult_scale = 1
 adult_shape = 1

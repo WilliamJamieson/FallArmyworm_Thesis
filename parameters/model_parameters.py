@@ -69,7 +69,17 @@ mu_larva_dev_rr  = dev.mu_larva_rr
 sig_larva_dev_rr = dev.sig_larva_rr
 
 # List out reproduction parameters
-female_prob  = repro.female_prob
+female_prob = repro.female_prob
+
+mate_encounter = repro.encounter
+mate_radius    = repro.radius
+
+fecundity_maximum = repro.maximum
+fecundity_decay   = repro.decay
+
+eta   = repro.eta
+gamma = repro.gamma
+
 repro_values = repro.values
 
 # List out movement parameters

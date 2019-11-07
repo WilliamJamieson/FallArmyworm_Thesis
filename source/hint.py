@@ -332,7 +332,7 @@ cannibalism = 'main_cannibalism.Cannibalism'
 fecundity = typing.Callable[[float, int, str], int]
 density   = typing.Callable[[int, float, str], bool]
 
-egg_lay = typing.Tuple[egg_masses, int]
+egg_lay = typing.Tuple[egg_masses, int, bool]
 
 lay = 'main_lay.Lay'
 

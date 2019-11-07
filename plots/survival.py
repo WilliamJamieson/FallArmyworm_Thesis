@@ -190,7 +190,7 @@ for num in range(trials):
     egg_bt.      append(dataframes_bt['(0, 0)_egg'])
     larva_low_bt.append(dataframes_bt['(0, 0)_larva'])
     pupa_bt.     append(dataframes_bt['(0, 0)_pupa'])
-    adult_bt.     append(dataframes_bt['(0, 0)_female'])
+    adult_bt.    append(dataframes_bt['(0, 0)_female'])
 
 egg_bt_mean       = mean_data(egg_bt)
 larva_low_bt_mean = mean_data(larva_low_bt)
