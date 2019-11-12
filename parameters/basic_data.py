@@ -114,7 +114,7 @@ sig_scarce      = 3.0
 # Empirical cannibalism factors
 fight_slope           = 4
 cannibalism_radius    = 0
-cannibalism_encounter = 1
+cannibalism_encounter = 0.07
 
 loss_slope = 4
 egg_loss   = 0.9

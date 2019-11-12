@@ -9,6 +9,27 @@ import parameters.survival     as sur
 
 print_data = True
 
+field_grid = 50
+plant_grid = 10
+
+timesteps = 4200
+
+mean_adult  = 300
+sigma_adult = 10
+
+dominance_0 = 0
+dominance_1 = 0.11
+dominance_2 = 0.29
+
+start_preg_ss = 200
+start_preg_rr = 200
+
+bt_prop_0  = 0.0
+bt_prop_25 = 0.25
+bt_prop_50 = 0.5
+bt_prop_75 = 0.75
+bt_prop_1  = 1.0
+
 # List out init biomass parameters
 lam_0_egg    = init_bio.lam_0_egg
 mu_0_egg_ss  = init_bio.mu_0_egg_ss
