@@ -85,16 +85,16 @@ input_models = [
                       param.dominance_0)
 ]
 
-base_save = sys.argv[0].split('.')[0]
+base_dir = sys.argv[0].split('.')[0]
+base_save = base_dir.split('/')[-1]
 
 try:
     work_path = os.environ['WORK']
     path_save = '{}/{}/{}'.format(work_path,
                                   'FallArmyworm_Thesis',
                                   base_save)
-    # if os.path.isdir(path_save):
-    #     raise RuntimeError('Save directory exists')
-    # else:
+    #
+    # if not os.path.isdir(path_save):
     #     print('Creating save directory')
     #     os.mkdir(path_save)
 
