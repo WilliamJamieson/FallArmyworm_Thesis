@@ -23,7 +23,7 @@ import source.simulation.simulation as main_simulation
 
 # Plotting parameters
 dominance = 0
-trials    = 2
+trials    = 5000
 
 age_max           = 12
 num_steps_density = 5
@@ -255,10 +255,10 @@ fecundity_plot.circle(a, fecundity_mean,
                       color=colors[0],
                       size=point_size,
                       legend='number of eggs')
-fecundity_plot.segment(x0=a, y0=fecundity_lower,
-                       x1=a, y1=fecundity_upper,
-                       line_color=colors[0], line_width=line_width / 2,
-                       line_cap='square')
+# fecundity_plot.segment(x0=a, y0=fecundity_lower,
+#                        x1=a, y1=fecundity_upper,
+#                        line_color=colors[0], line_width=line_width / 2,
+#                        line_cap='square')
 
 fecundity_plot.legend.location = 'top_right'
 fecundity_plot.title.text_font_size = title_font_size
@@ -272,108 +272,108 @@ fecundity_plot.xaxis.major_label_text_font_size = axis_tick_font_size
 fecundity_plot.ygrid.grid_line_width = grid_line_width
 fecundity_plot.xgrid.grid_line_width = grid_line_width
 
-# plt.show(fecundity_plot)
+plt.show(fecundity_plot)
 
 
-t            = list(range(num_steps_density))
-initial_pops = ((0,          0,          0),
-                (0,          0,          0),
-                (0,          0,          0),
-                (0,          0,          0),
-                (num_adults, num_adults, num_adults))
-print('{} Running Reproduction simulations'.
-      format(datetime.datetime.now()))
-eggs_mass          = []
-egg_mass_densities = []
-eggs               = []
-for num in range(trials):
-    print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
-    simulator = Simulator(initial_pops, 1)
-    egg_mass, egg_mass_density = simulator.run(t)
-    dataframes = simulator.simulation.agents.dataframes()
-    egg = dataframes['(0,)_egg']
-
-    eggs_mass.append(egg_mass)
-    egg_mass_densities.append(egg_mass_density)
-    eggs.append(egg)
-
-egg_mass_mean  = np.mean(eggs_mass, axis=0)
-egg_mass_lower = np.percentile(eggs_mass, 2.5, axis=0)
-egg_mass_upper = np.percentile(eggs_mass, 97.5, axis=0)
-
-egg_mass_density_mean  = np.mean(egg_mass_densities, axis=0)
-egg_mass_density_lower = np.percentile(egg_mass_densities, 2.5, axis=0)
-egg_mass_density_upper = np.percentile(egg_mass_densities, 97.5, axis=0)
-
-egg_mass_plot = plt.figure(plot_width=plot_width,
-                           plot_height=plot_height)
-egg_mass_plot.title.text       = 'Number of Juveniles, ' \
-                                 'Number of Trials: {}'.format(trials)
-egg_mass_plot.yaxis.axis_label = 'population'
-egg_mass_plot.xaxis.axis_label = 'time (days)'
-
-egg_mass_plot.line(t, egg_mass_mean,
-                   color=colors[0],
-                   line_width=line_width,
-                   legend='number of agents')
-egg_mass_plot.circle(t, egg_mass_mean,
-                     color=colors[0],
-                     size=point_size,
-                     legend='number of agents')
-egg_mass_plot.segment(x0=t, y0=egg_mass_lower,
-                      x1=t, y1=egg_mass_upper,
-                      line_color=colors[0], line_width=line_width/2,
-                      line_cap='square')
-
-egg_mass_plot.legend.location = 'top_left'
-
-egg_mass_plot.title.text_font_size = title_font_size
-egg_mass_plot.legend.label_text_font_size = legend_font_size
-egg_mass_plot.yaxis.axis_line_width = axis_line_width
-egg_mass_plot.xaxis.axis_line_width = axis_line_width
-egg_mass_plot.yaxis.axis_label_text_font_size = axis_font_size
-egg_mass_plot.xaxis.axis_label_text_font_size = axis_font_size
-egg_mass_plot.yaxis.major_label_text_font_size = axis_tick_font_size
-egg_mass_plot.xaxis.major_label_text_font_size = axis_tick_font_size
-egg_mass_plot.ygrid.grid_line_width = grid_line_width
-egg_mass_plot.xgrid.grid_line_width = grid_line_width
-
-# plt.show(egg_mass_plot)
-
-
-egg_mass_density_plot = plt.figure(plot_width=plot_width,
-                                   plot_height=plot_height)
-egg_mass_density_plot.title.text       = 'Density of Juveniles, ' \
-                                         'Number of Trials: {}'.format(trials)
-egg_mass_density_plot.yaxis.axis_label = 'population per plant'
-egg_mass_density_plot.xaxis.axis_label = 'time (days)'
-
-egg_mass_density_plot.line(t, egg_mass_density_mean,
-                           color=colors[0],
-                           line_width=line_width,
-                           legend='density of agents')
-egg_mass_density_plot.circle(t, egg_mass_density_mean,
-                             color=colors[0],
-                             size=point_size,
-                             legend='density of agents')
-egg_mass_density_plot.segment(x0=t, y0=egg_mass_density_lower,
-                              x1=t, y1=egg_mass_density_upper,
-                              line_color=colors[0], line_width=line_width/2,
-                              line_cap='square')
-
-egg_mass_density_plot.legend.location = 'top_left'
-
-egg_mass_density_plot.title.text_font_size = title_font_size
-egg_mass_density_plot.legend.label_text_font_size = legend_font_size
-egg_mass_density_plot.yaxis.axis_line_width = axis_line_width
-egg_mass_density_plot.xaxis.axis_line_width = axis_line_width
-egg_mass_density_plot.yaxis.axis_label_text_font_size = axis_font_size
-egg_mass_density_plot.xaxis.axis_label_text_font_size = axis_font_size
-egg_mass_density_plot.yaxis.major_label_text_font_size = axis_tick_font_size
-egg_mass_density_plot.xaxis.major_label_text_font_size = axis_tick_font_size
-egg_mass_density_plot.ygrid.grid_line_width = grid_line_width
-egg_mass_density_plot.xgrid.grid_line_width = grid_line_width
-
-layout = lay.column(egg_mass_plot, egg_mass_density_plot,
-                    fecundity_plot)
-plt.show(layout)
+# t            = list(range(num_steps_density))
+# initial_pops = ((0,          0,          0),
+#                 (0,          0,          0),
+#                 (0,          0,          0),
+#                 (0,          0,          0),
+#                 (num_adults, num_adults, num_adults))
+# print('{} Running Reproduction simulations'.
+#       format(datetime.datetime.now()))
+# eggs_mass          = []
+# egg_mass_densities = []
+# eggs               = []
+# for num in range(trials):
+#     print('    {} Running Trial: {}'.format(datetime.datetime.now(), num))
+#     simulator = Simulator(initial_pops, 1)
+#     egg_mass, egg_mass_density = simulator.run(t)
+#     dataframes = simulator.simulation.agents.dataframes()
+#     egg = dataframes['(0,)_egg']
+#
+#     eggs_mass.append(egg_mass)
+#     egg_mass_densities.append(egg_mass_density)
+#     eggs.append(egg)
+#
+# egg_mass_mean  = np.mean(eggs_mass, axis=0)
+# egg_mass_lower = np.percentile(eggs_mass, 2.5, axis=0)
+# egg_mass_upper = np.percentile(eggs_mass, 97.5, axis=0)
+#
+# egg_mass_density_mean  = np.mean(egg_mass_densities, axis=0)
+# egg_mass_density_lower = np.percentile(egg_mass_densities, 2.5, axis=0)
+# egg_mass_density_upper = np.percentile(egg_mass_densities, 97.5, axis=0)
+#
+# egg_mass_plot = plt.figure(plot_width=plot_width,
+#                            plot_height=plot_height)
+# egg_mass_plot.title.text       = 'Number of Juveniles, ' \
+#                                  'Number of Trials: {}'.format(trials)
+# egg_mass_plot.yaxis.axis_label = 'population'
+# egg_mass_plot.xaxis.axis_label = 'time (days)'
+#
+# egg_mass_plot.line(t, egg_mass_mean,
+#                    color=colors[0],
+#                    line_width=line_width,
+#                    legend='number of agents')
+# egg_mass_plot.circle(t, egg_mass_mean,
+#                      color=colors[0],
+#                      size=point_size,
+#                      legend='number of agents')
+# egg_mass_plot.segment(x0=t, y0=egg_mass_lower,
+#                       x1=t, y1=egg_mass_upper,
+#                       line_color=colors[0], line_width=line_width/2,
+#                       line_cap='square')
+#
+# egg_mass_plot.legend.location = 'top_left'
+#
+# egg_mass_plot.title.text_font_size = title_font_size
+# egg_mass_plot.legend.label_text_font_size = legend_font_size
+# egg_mass_plot.yaxis.axis_line_width = axis_line_width
+# egg_mass_plot.xaxis.axis_line_width = axis_line_width
+# egg_mass_plot.yaxis.axis_label_text_font_size = axis_font_size
+# egg_mass_plot.xaxis.axis_label_text_font_size = axis_font_size
+# egg_mass_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+# egg_mass_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+# egg_mass_plot.ygrid.grid_line_width = grid_line_width
+# egg_mass_plot.xgrid.grid_line_width = grid_line_width
+#
+# # plt.show(egg_mass_plot)
+#
+#
+# egg_mass_density_plot = plt.figure(plot_width=plot_width,
+#                                    plot_height=plot_height)
+# egg_mass_density_plot.title.text       = 'Density of Juveniles, ' \
+#                                          'Number of Trials: {}'.format(trials)
+# egg_mass_density_plot.yaxis.axis_label = 'population per plant'
+# egg_mass_density_plot.xaxis.axis_label = 'time (days)'
+#
+# egg_mass_density_plot.line(t, egg_mass_density_mean,
+#                            color=colors[0],
+#                            line_width=line_width,
+#                            legend='density of agents')
+# egg_mass_density_plot.circle(t, egg_mass_density_mean,
+#                              color=colors[0],
+#                              size=point_size,
+#                              legend='density of agents')
+# egg_mass_density_plot.segment(x0=t, y0=egg_mass_density_lower,
+#                               x1=t, y1=egg_mass_density_upper,
+#                               line_color=colors[0], line_width=line_width/2,
+#                               line_cap='square')
+#
+# egg_mass_density_plot.legend.location = 'top_left'
+#
+# egg_mass_density_plot.title.text_font_size = title_font_size
+# egg_mass_density_plot.legend.label_text_font_size = legend_font_size
+# egg_mass_density_plot.yaxis.axis_line_width = axis_line_width
+# egg_mass_density_plot.xaxis.axis_line_width = axis_line_width
+# egg_mass_density_plot.yaxis.axis_label_text_font_size = axis_font_size
+# egg_mass_density_plot.xaxis.axis_label_text_font_size = axis_font_size
+# egg_mass_density_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+# egg_mass_density_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+# egg_mass_density_plot.ygrid.grid_line_width = grid_line_width
+# egg_mass_density_plot.xgrid.grid_line_width = grid_line_width
+#
+# layout = lay.column(egg_mass_plot, egg_mass_density_plot,
+#                     fecundity_plot)
+# plt.show(layout)

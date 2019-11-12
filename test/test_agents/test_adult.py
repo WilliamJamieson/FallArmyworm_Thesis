@@ -370,20 +370,29 @@ class TestAdult(ut.TestCase):
     def test_reproduce(self):
         """test reproduce the agents"""
 
+        eggs = [mk.MagicMock(spec=egg_mass.EggMass)
+                    for _ in range(3)]
+        self.lay.lay.return_value = eggs
+
         # Adult is not alive
         self.Adult.alive = False
         self.assertEqual(self.Adult.reproduce(), [])
         self.assertEqual(self.mating.mate.call_args_list, [])
         self.assertEqual(self.lay.lay.call_args_list, [])
+        for this in eggs:
+            self.assertEqual(this.activate.call_args_list, [])
 
         # Adult is alive
         self.Adult.alive = True
         #   Test has a mate
-        self.assertEqual(self.Adult.reproduce(),
-                         self.lay.lay.return_value)
+        self.assertEqual(self.Adult.reproduce(), [])
         self.assertEqual(self.lay.lay.call_args_list,
                          [mk.call(self.Adult)])
         self.assertEqual(self.mating.mate.call_args_list, [])
+        for this in eggs:
+            self.assertEqual(this.activate.call_args_list,
+                             [mk.call()])
+            this.reset_mock()
 
         #   Test no mate
         self.lay.reset_mock()
@@ -392,6 +401,8 @@ class TestAdult(ut.TestCase):
         self.assertEqual(self.mating.mate.call_args_list,
                          [mk.call(self.Adult)])
         self.assertEqual(self.lay.lay.call_args_list, [])
+        for this in eggs:
+            self.assertEqual(this.activate.call_args_list, [])
 
     def test_reset(self):
         """test reset the mock"""
