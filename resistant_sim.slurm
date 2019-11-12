@@ -6,8 +6,8 @@
 #SBATCH --job-name=resistant_sim
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=wjamieson@huskers.unl.edu
-#SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/%x/job_%x.%A_%a.err
-#SBATCH --output=/work/rebarber/wjamieson2/FallArmyworm_Thesis/%x/job_%x.%A_%a.out
+#SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.err
+#SBATCH --output=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.out
 
 module load anaconda
 conda activate fallarmyworm
