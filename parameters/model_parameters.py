@@ -24,6 +24,9 @@ dominance_2 = 0.29
 start_preg_ss = 200
 start_preg_rr = 200
 
+mix_preg_rr = 50
+mix_preg_ss = 200
+
 bt_prop_0 = 0.0
 bt_prop_7 = 0.7
 bt_prop_8 = 0.8
@@ -70,6 +73,12 @@ sig_scarce      = forage.sig_scarce
 fight_slope           = forage.fight_slope
 cannibalism_radius    = forage.cannibalism_radius
 cannibalism_encounter = forage.cannibalism_encounter
+
+cannib_0 = cannibalism_encounter
+cannib_1 = 0.15
+cannib_2 = 0.38
+cannib_3 = 0.5
+cannib_4 = 1.0
 
 egg_factor   = forage.egg_factor
 larva_factor = forage.larva_factor
