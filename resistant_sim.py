@@ -92,15 +92,17 @@ try:
     path_save = '{}/{}/{}'.format(work_path,
                                   'FallArmyworm_Thesis',
                                   base_save)
-    if os.path.isdir(path_save):
-        raise RuntimeError('Save directory exists')
-    else:
-        print('Creating save directory')
-        os.makedirs(path_save)
+    # if os.path.isdir(path_save):
+    #     raise RuntimeError('Save directory exists')
+    # else:
+    #     print('Creating save directory')
+    #     os.mkdir(path_save)
 
 except KeyError:
     path_save = os.path.dirname(os.path.abspath(__file__))
     print('Falling back to local save')
+
+print('Save path: {}'.format(path_save))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
