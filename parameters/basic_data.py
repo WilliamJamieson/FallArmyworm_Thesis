@@ -15,7 +15,7 @@ limited         = True
 female_prob = 0.5
 
 # Reproductive encounter
-mate_encounter = 10
+mate_encounter = 0.347
 mate_radius    = 2
 
 # Reproductive fecundity
