@@ -21,7 +21,7 @@ nums = (
     (0, 0, param.start_preg_ss)
 )
 
-bt_prop = param.bt_prop_50
+bt_prop = param.bt_prop_8
 
 input_models = [
     growth.max_gut(),

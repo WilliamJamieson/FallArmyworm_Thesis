@@ -21,7 +21,7 @@ nums = (
     (0, 0, param.start_preg_ss)
 )
 
-bt_prop = param.bt_prop_75
+bt_prop = param.bt_prop_7
 
 input_models = [
     growth.max_gut(),
@@ -80,7 +80,7 @@ input_models = [
     survive.larva_sur(param.larva_prob_non_bt_rr,
                       param.larva_prob_non_bt_ss,
                       param.larva_prob_bt_rr,
-                      param.larva_prob_bt_mid_ss,
+                      param.larva_prob_bt_low_ss,
                       param.dominance_0)
 ]
 

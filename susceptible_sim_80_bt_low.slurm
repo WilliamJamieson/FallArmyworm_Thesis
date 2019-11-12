@@ -3,7 +3,7 @@
 #SBATCH --array=0-199      #Job array start-end
 #SBATCH --time=96:00:00    # Run time  hh:mm:ss
 #SBATCH --mem-per-cpu=6144 # Max memory per cpu in Mb
-#SBATCH --job-name=susceptible_sim_50_bt_high
+#SBATCH --job-name=susceptible_sim_80_bt_low
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=wjamieson@huskers.unl.edu
 #SBATCH --error=/work/rebarber/wjamieson2/FallArmyworm_Thesis/job_%x.%A_%a.err

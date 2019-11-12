@@ -24,11 +24,11 @@ dominance_2 = 0.29
 start_preg_ss = 200
 start_preg_rr = 200
 
-bt_prop_0  = 0.0
-bt_prop_25 = 0.25
-bt_prop_50 = 0.5
-bt_prop_75 = 0.75
-bt_prop_1  = 1.0
+bt_prop_0 = 0.0
+bt_prop_7 = 0.7
+bt_prop_8 = 0.8
+bt_prop_9 = 0.9
+bt_prop_1 = 1.0
 
 # List out init biomass parameters
 lam_0_egg    = init_bio.lam_0_egg
