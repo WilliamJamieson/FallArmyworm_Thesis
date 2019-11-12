@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --array=0-1      #Job array start-end
+#SBATCH --array=0-199      #Job array start-end
 #SBATCH --time=96:00:00    # Run time  hh:mm:ss
 #SBATCH --mem-per-cpu=6144 # Max memory per cpu in Mb
 #SBATCH --job-name=resistant_sim

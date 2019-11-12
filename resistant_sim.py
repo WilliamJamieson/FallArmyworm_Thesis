@@ -93,10 +93,10 @@ try:
     path_save = '{}/{}/{}'.format(work_path,
                                   'FallArmyworm_Thesis',
                                   base_save)
-    #
-    # if not os.path.isdir(path_save):
-    #     print('Creating save directory')
-    #     os.mkdir(path_save)
+
+    if not os.path.isdir(path_save):
+        print('Creating save directory')
+        os.mkdir(path_save)
 
 except KeyError:
     path_save = os.path.dirname(os.path.abspath(__file__))
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     else:
         run_number = 0
 
-    simulator.Simulator(run_number,
+    simulator.Simulator.run(run_number,
                             nums,
                             bt_prop,
                             input_models,
