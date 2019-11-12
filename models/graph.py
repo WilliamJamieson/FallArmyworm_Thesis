@@ -1,16 +1,21 @@
+import os
+
 import pickle   as pickle
 
 import source.hint as hint
 
+graph_path = os.path.dirname(os.path.abspath(__file__))
+print('Graph path is: {}'.format(graph_path))
+
 
 # MUST be Adjusted for corrected paths
-hex_1x1   = '/home/william/Dropbox/Research/Parallel_FallArmyworm/models/hex_1x1.graph'
-hex_2x2   = '/home/william/Dropbox/Research/Parallel_FallArmyworm/models/hex_2x2.graph'
-hex_4x4   = '/home/william/Dropbox/Research/Parallel_FallArmyworm/models/hex_4x4.graph'
-hex_8x8   = '/home/william/Dropbox/Research/Parallel_FallArmyworm/models/hex_8x8.graph'
-hex_10x10 = '/home/william/Dropbox/Research/Parallel_FallArmyworm/models/hex_10x10.graph'
-hex_25x25 = '/home/william/Dropbox/Research/Parallel_FallArmyworm/models/hex_25x25.graph'
-hex_50x50 = '/home/william/Dropbox/Research/Parallel_FallArmyworm/models/hex_50x50.graph'
+hex_1x1   = '{}/hex_1x1.graph'.format(graph_path)
+hex_2x2   = '{}/hex_2x2.graph'.format(graph_path)
+hex_4x4   = '{}/hex_4x4.graph'.format(graph_path)
+hex_8x8   = '{}/hex_8x8.graph'.format(graph_path)
+hex_10x10 = '{}/hex_10x10.graph'.format(graph_path)
+hex_25x25 = '{}/hex_25x25.graph'.format(graph_path)
+hex_50x50 = '{}/hex_50x50.graph'.format(graph_path)
 
 
 def graph(side: int) -> hint.graph:

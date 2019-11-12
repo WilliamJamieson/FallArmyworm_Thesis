@@ -108,7 +108,7 @@ if __name__ == '__main__':
     else:
         run_number = 0
 
-    simulator.Simulator.run(run_number,
+    simulator.Simulator(run_number,
                             nums,
                             bt_prop,
                             input_models,
