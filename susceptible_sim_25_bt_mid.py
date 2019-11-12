@@ -14,14 +14,14 @@ import models.survival     as survive
 
 
 nums = (
-    (0,                   0, 0),
-    (0,                   0, 0),
-    (0,                   0, 0),
-    (0,                   0, 0),
-    (param.start_preg_rr, 0, 0)
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, param.start_preg_ss)
 )
 
-bt_prop = param.bt_prop_0
+bt_prop = param.bt_prop_25
 
 input_models = [
     growth.max_gut(),
@@ -80,7 +80,7 @@ input_models = [
     survive.larva_sur(param.larva_prob_non_bt_rr,
                       param.larva_prob_non_bt_ss,
                       param.larva_prob_bt_rr,
-                      param.larva_prob_bt_low_ss,
+                      param.larva_prob_bt_mid_ss,
                       param.dominance_0)
 ]
 

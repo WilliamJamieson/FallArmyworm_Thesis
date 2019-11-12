@@ -14,11 +14,11 @@ import models.survival     as survive
 
 
 nums = (
-    (0,                   0, 0),
-    (0,                   0, 0),
-    (0,                   0, 0),
-    (0,                   0, 0),
-    (param.start_preg_rr, 0, 0)
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, param.start_preg_ss)
 )
 
 bt_prop = param.bt_prop_0
