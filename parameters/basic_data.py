@@ -112,7 +112,7 @@ sig_scarce      = 3.0
 
 
 # Empirical cannibalism factors
-fight_slope           = 4
+fight_slope           = 0.5
 cannibalism_radius    = 0
 cannibalism_encounter = 0.07
 
