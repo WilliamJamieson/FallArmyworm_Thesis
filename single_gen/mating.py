@@ -305,8 +305,7 @@ class Simulator(object):
         return dataframe
 
 
-t          = list(range(num_steps_mate))
-
+t = list(range(num_steps_mate))
 resist_percent = [0.1, 0.5, 0.9]
 mean_data = []
 for percent in resist_percent:
