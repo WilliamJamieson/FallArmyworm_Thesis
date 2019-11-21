@@ -129,6 +129,7 @@ plots/*.png
 simulations/*.png
 simulations/*.sqlite
 analysis/*.html
+single_gen/*.html
 crane/*/data/*.graph
 /.dropbox
 simulation_data/*/data/*.sqlite
