@@ -14,10 +14,10 @@ import models.survival     as survive
 
 
 
-bt_prop   = param.bt_prop_7
-dominance = param.dominance_1
+bt_prop   = param.bt_prop_9
+dominance = param.dominance_0
 cannib    = param.cannib_1
-sur       = param.larva_prob_bt_low_ss
+sur       = param.larva_prob_bt_high_ss
 
 nums = (
     (0,                 0, 0),
