@@ -104,7 +104,8 @@ class Simulator(object):
                     sex_model,
                     sur.egg_sur(param.egg_prob),
                     sur.pupa_sur(param.pupa_prob),
-                    sur.adult_sur(param.adult_prob)]
+                    sur.adult_sur(param.adult_prob)
+                    ]
     input_variables = param.repro_values
 
     # input_survive.larva_survival,

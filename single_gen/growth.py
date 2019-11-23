@@ -452,7 +452,7 @@ bio_grow_4_homo_s = bio_grow_4[:, 2]
 grow_ss_plot = plt.figure(plot_width=plot_width,
                           plot_height=plot_height)
 grow_ss_plot.title.text       = 'Growth with Different Growth Rates, β={}'.\
-    format(param.beta_ss)
+    format(np.round(param.beta_ss, 3))
 grow_ss_plot.yaxis.axis_label = 'biomass (mg)'
 grow_ss_plot.xaxis.axis_label = 'time (days)'
 
@@ -463,31 +463,31 @@ grow_ss_plot.add_layout(fin_mass_homo_s)
 
 grow_ss_plot.line(t, bio_grow_0_homo_s,
                   color=colors[0], line_width=line_width,
-                  legend='α={}'.format(grow_0))
+                  legend='α={}'.format(np.round(grow_0, 3)))
 grow_ss_plot.triangle(t, bio_grow_0_homo_s,
                       color=colors[0], size=point_size,
-                      legend='α={}'.format(grow_0))
+                      legend='α={}'.format(np.round(grow_0, 3)))
 
 grow_ss_plot.line(t, bio_grow_1_homo_s,
                   color=colors[2], line_width=line_width,
-                  legend='α={}'.format(grow_1))
+                  legend='α={}'.format(np.round(grow_1, 3)))
 
 grow_ss_plot.line(t, bio_grow_2_homo_s,
                   color=colors[3], line_width=line_width,
                   line_dash='dashed',
-                  legend='α={}'.format(grow_2))
+                  legend='α={}'.format(np.round(grow_2, 3)))
 
 grow_ss_plot.line(t, bio_grow_3_homo_s,
                   color=colors[4], line_width=line_width,
                   line_dash='dotted',
-                  legend='α={}'.format(grow_3))
+                  legend='α={}'.format(np.round(grow_3, 3)))
 
 grow_ss_plot.line(t, bio_grow_4_homo_s,
                   color=colors[1], line_width=line_width,
-                  legend='α={}'.format(grow_4))
+                  legend='α={}'.format(np.round(grow_4, 3)))
 grow_ss_plot.circle(t, bio_grow_4_homo_s,
                     color=colors[1], size=point_size,
-                    legend='α={}'.format(grow_4))
+                    legend='α={}'.format(np.round(grow_4, 3)))
 
 grow_ss_plot.legend.location = "top_left"
 
@@ -505,7 +505,7 @@ grow_ss_plot.xgrid.grid_line_width = grid_line_width
 grow_rr_plot = plt.figure(plot_width=plot_width,
                           plot_height=plot_height)
 grow_rr_plot.title.text       = 'Growth with Different Growth Rates, β={}'. \
-    format(param.beta_rr)
+    format(np.round(param.beta_rr, 3))
 grow_rr_plot.yaxis.axis_label = 'biomass (mg)'
 grow_rr_plot.xaxis.axis_label = 'time (days)'
 
@@ -516,31 +516,31 @@ grow_rr_plot.add_layout(fin_mass_homo_s)
 
 grow_rr_plot.line(t, bio_grow_0_homo_r,
                   color=colors[0], line_width=line_width,
-                  legend='α={}'.format(grow_0))
+                  legend='α={}'.format(np.round(grow_0, 3)))
 grow_rr_plot.triangle(t, bio_grow_0_homo_r,
                       color=colors[0], size=point_size,
-                      legend='α={}'.format(grow_0))
+                      legend='α={}'.format(np.round(grow_0, 3)))
 
 grow_rr_plot.line(t, bio_grow_1_homo_r,
                   color=colors[2], line_width=line_width,
-                  legend='α={}'.format(grow_1))
+                  legend='α={}'.format(np.round(grow_1, 3)))
 
 grow_rr_plot.line(t, bio_grow_2_homo_r,
                   color=colors[3], line_width=line_width,
                   line_dash='dashed',
-                  legend='α={}'.format(grow_2))
+                  legend='α={}'.format(np.round(grow_2, 3)))
 
 grow_rr_plot.line(t, bio_grow_3_homo_r,
                   color=colors[4], line_width=line_width,
                   line_dash='dotted',
-                  legend='α={}'.format(grow_3))
+                  legend='α={}'.format(np.round(grow_3, 3)))
 
 grow_rr_plot.line(t, bio_grow_4_homo_r,
                   color=colors[1], line_width=line_width,
-                  legend='α={}'.format(grow_4))
+                  legend='α={}'.format(np.round(grow_4, 3)))
 grow_rr_plot.circle(t, bio_grow_4_homo_r,
                     color=colors[1], size=point_size,
-                    legend='α={}'.format(grow_4))
+                    legend='α={}'.format(np.round(grow_4, 3)))
 
 grow_rr_plot.legend.location = "top_left"
 
@@ -633,7 +633,7 @@ bio_cost_4_homo_s = bio_cost_4[:, 2]
 cost_ss_plot = plt.figure(plot_width=plot_width,
                           plot_height=plot_height)
 cost_ss_plot.title.text       = 'Growth with Different Maintenance Costs, α={}'. \
-    format(param.alpha_ss)
+    format(np.round(param.alpha_ss, 3))
 cost_ss_plot.yaxis.axis_label = 'biomass (mg)'
 cost_ss_plot.xaxis.axis_label = 'time (days)'
 
@@ -644,31 +644,31 @@ cost_ss_plot.add_layout(fin_mass_homo_s)
 
 cost_ss_plot.line(t, bio_cost_0_homo_s,
                   color=colors[0], line_width=line_width,
-                  legend='β={}'.format(cost_0))
+                  legend='β={}'.format(np.round(cost_0, 3)))
 cost_ss_plot.triangle(t, bio_cost_0_homo_s,
                       color=colors[0], size=point_size,
-                      legend='β={}'.format(cost_0))
+                      legend='β={}'.format(np.round(cost_0, 3)))
 
 cost_ss_plot.line(t, bio_cost_1_homo_s,
                   color=colors[2], line_width=line_width,
-                  legend='β={}'.format(cost_1))
+                  legend='β={}'.format(np.round(cost_1, 3)))
 
 cost_ss_plot.line(t, bio_cost_2_homo_s,
                   color=colors[3], line_width=line_width,
                   line_dash='dashed',
-                  legend='β={}'.format(cost_2))
+                  legend='β={}'.format(np.round(cost_2, 3)))
 
 cost_ss_plot.line(t, bio_cost_3_homo_s,
                   color=colors[4], line_width=line_width,
                   line_dash='dotted',
-                  legend='β={}'.format(cost_3))
+                  legend='β={}'.format(np.round(cost_3, 3)))
 
 cost_ss_plot.line(t, bio_cost_4_homo_s,
                   color=colors[1], line_width=line_width,
-                  legend='β={}'.format(cost_4))
+                  legend='β={}'.format(np.round(cost_4, 3)))
 cost_ss_plot.circle(t, bio_cost_4_homo_s,
                     color=colors[1], size=point_size,
-                    legend='β={}'.format(cost_4))
+                    legend='β={}'.format(np.round(cost_4, 3)))
 
 cost_ss_plot.legend.location = "top_left"
 
@@ -686,7 +686,7 @@ cost_ss_plot.xgrid.grid_line_width = grid_line_width
 cost_rr_plot = plt.figure(plot_width=plot_width,
                           plot_height=plot_height)
 cost_rr_plot.title.text       = 'Growth with Different Maintenance Costs, α={}'. \
-    format(param.alpha_rr)
+    format(np.round(param.alpha_rr, 3))
 cost_rr_plot.yaxis.axis_label = 'biomass (mg)'
 cost_rr_plot.xaxis.axis_label = 'time (days)'
 
@@ -697,31 +697,31 @@ cost_rr_plot.add_layout(fin_mass_homo_s)
 
 cost_rr_plot.line(t, bio_cost_0_homo_r,
                   color=colors[0], line_width=line_width,
-                  legend='β={}'.format(cost_0))
+                  legend='β={}'.format(np.round(cost_0, 3)))
 cost_rr_plot.triangle(t, bio_cost_0_homo_r,
                       color=colors[0], size=point_size,
-                      legend='β={}'.format(cost_0))
+                      legend='β={}'.format(np.round(cost_0, 3)))
 
 cost_rr_plot.line(t, bio_cost_1_homo_r,
                   color=colors[2], line_width=line_width,
-                  legend='β={}'.format(cost_1))
+                  legend='β={}'.format(np.round(cost_1, 3)))
 
 cost_rr_plot.line(t, bio_cost_2_homo_r,
                   color=colors[3], line_width=line_width,
                   line_dash='dashed',
-                  legend='β={}'.format(cost_2))
+                  legend='β={}'.format(np.round(cost_2, 3)))
 
 cost_rr_plot.line(t, bio_cost_3_homo_r,
                   color=colors[4], line_width=line_width,
                   line_dash='dotted',
-                  legend='β={}'.format(cost_3))
+                  legend='β={}'.format(np.round(cost_3, 3)))
 
 cost_rr_plot.line(t, bio_cost_4_homo_r,
                   color=colors[1], line_width=line_width,
-                  legend='β={}'.format(cost_4))
+                  legend='β={}'.format(np.round(cost_4, 3)))
 cost_rr_plot.circle(t, bio_cost_4_homo_r,
                     color=colors[1], size=point_size,
-                    legend='β={}'.format(cost_4))
+                    legend='β={}'.format(np.round(cost_4, 3)))
 
 cost_rr_plot.legend.location = "top_left"
 
