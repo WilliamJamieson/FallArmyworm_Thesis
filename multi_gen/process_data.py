@@ -1,316 +1,304 @@
 import datetime
-import os
 import pickle
 
 import dataclasses   as dclass
 import pandas        as pd
-import sqlalchemy    as sql
+
+import numpy as np
 
 import source.hint as hint
 
-egg    = '(0,)_egg'
-larva  = '(0,)_larva'
-pupa   = '(0,)_pupa'
-female = '(0,)_female'
-tables = [egg, larva, pupa, female]
+import multi_gen.runs as runs
 
-homo_r = 'genotype_resistant'
-hetero = 'genotype_heterozygous'
-homo_s = 'genotype_susceptible'
-
-columns = [homo_r, hetero, homo_s]
-
-
-simulation_runs = [
-    'resistant_sim',
-    'susceptible_sim_0_bt',
-    'susceptible_sim_70_bt_high',
-    'susceptible_sim_70_bt_low',
-    'susceptible_sim_90_bt_high',
-    'susceptible_sim_90_bt_low',
-    'susceptible_sim_100_bt_high',
-    'susceptible_sim_100_bt_low',
-]
+start_point     = runs.start_point
+tables          = runs.tables
+columns         = runs.columns
+simulation_runs = runs.runs
 
 
 @dclass.dataclass
-class ReadData(object):
+class ProcessData(object):
     """
     Class to read data
     """
-
     base_name:  str
-    table_names = tables
+    dataframes: dict = dclass.field(default=dict)
+    cut_frames: dict = dclass.field(default=dict)
+    means:      dict = dclass.field(default=dict)
+    medians:    dict = dclass.field(default=dict)
+    stds:       dict = dclass.field(default=dict)
 
-    def _get_file_list(self) -> list:
-        """
-        Get list of all the files with base name
+    def __post_init__(self):
+        """read the data frames"""
 
-        Returns:
-            list of all the files
-        """
+        data_file = '{}.data'.format(self.base_name)
 
-        files = os.listdir('./data/{}'.format(self.base_name))
-        files = [f for f in files if self.base_name in f]
-        files = [f for f in files if 'sqlite'       in f]
+        with open(data_file, 'rb') as read_file:
+            self.dataframes = pickle.load(read_file)
 
-        print('    {} Number of files is {}'.
-              format(datetime.datetime.now(),
-                     len(files)))
+        self.cut_frames = self.cut_dataframes()
+        self.percent_dataframes()
 
-        return files
-
-    def _get_run_file_lists(self) -> dict:
-        """
-        Get a dictionary of run files
-            key:   run number
-            value: list of files
-
-        Returns:
-            run dictionary
-        """
-
-        files = self._get_file_list()
-
-        file_dict = {}
-        for f in files:
-            end_tag    = f.split('_')[-1]
-            end_number = int(end_tag.split('.')[0])
-
-            if end_number in file_dict:
-                file_dict[end_number].append(f)
-            else:
-                file_dict[end_number] = [f]
-
-        print('        {} Number of runs is {}'.
-              format(datetime.datetime.now(), len(file_dict)))
-
-        return file_dict
+        self.means   = self.mean_dataframes()
+        self.medians = self.median_dataframes()
+        self.stds    = self.std_dataframes()
 
     @staticmethod
-    def _sort_files(files: list) -> list:
+    def _cut_dataframe(dataframe: hint.dataframe) -> hint.dataframe:
         """
-        Sort a list of files in order of run for processing
+        Cut the dataframe to start at the new point
 
         Args:
-            files: list of files to sort
+            dataframe: dataframe to cut
 
         Returns:
-            list of file names sorted in order
+            the cut dataframe
         """
 
-        file_dict = {}
-        for f in files:
-            f_num = int(f.split('_')[0])
-            if f_num in file_dict:
-                raise RuntimeError('Repeated run time frame')
-            else:
-                file_dict[f_num] = f
+        new = dataframe.copy()
+        new = new.iloc[start_point:]
+        new.reset_index(inplace=True, drop=True)
 
-        f_nums = list(file_dict.keys())
-        f_nums.sort()
+        return new
 
-        return [file_dict[f_num] for f_num in f_nums]
-
-    def _get_run_files(self) -> dict:
+    def _cut_dataframes(self, dataframes: hint.dataframes) -> hint.dataframes:
         """
-        Get a dictionary of file name lists by run tag that are sorted
-
-        Returns:
-            a sorted dictionary of names
-        """
-
-        files_dict = self._get_run_file_lists()
-
-        return {run_num: self._sort_files(files)
-                for run_num, files in files_dict.items()}
-
-    def get_run_files(self) -> dict:
-        """
-        Get all the file names ordered
-
-        Returns:
-            dictionary of all the file names
-        """
-
-        print('    {} Getting files'.format(datetime.datetime.now()))
-
-        file_dict = self._get_run_files()
-
-        run_nums = list(file_dict.keys())
-        run_nums.sort()
-
-        return {run_num: file_dict[run_num] for run_num in run_nums}
-
-    @staticmethod
-    def get_low_runs(run_files: dict) -> list:
-        """
-        Get the list of runs that did not complete all the way
+        Cut the dataframes in a given run
 
         Args:
-            run_files: list of run files
+            dataframes: all the dataframes for a given run
 
         Returns:
-            the list of runs that did not make it all the way
+            the cut dataframes
         """
 
-        count_dict = {run_num: len(files)
-                      for run_num, files in run_files.items()}
-
-        run_length = max(count_dict.values())
-
-        print('        {} Run length: {}'.
-              format(datetime.datetime.now(), run_length))
-
-        return [run_num for run_num in count_dict
-                if count_dict[run_num] < run_length]
-
-    def get_complete_runs(self) -> dict:
-        """
-        Getting complete files
-
-        Returns:
-            dictionary of all completed runs
-        """
-
-        run_files = self.get_run_files()
-        failures  = self.get_low_runs(run_files)
-
-        print('        {} Run failures {}'.
-              format(datetime.datetime.now(), failures))
-
-        return {run_num: files for run_num, files in run_files.items()
-                if run_num not in failures}
-
-    def _sql_filename(self, file_name: str) -> str:
-        """
-        Return the sql filename for sql alchemy
-
-        Args:
-            file_name: name of the file
-
-        Returns:
-            argument for sql alchemy
-        """
-
-        dialect = 'sqlite:///'
-
-        return '{}data/{}/{}'.format(dialect, self.base_name, file_name)
-
-    def _read(self, table_name: str,
-                    file_name: str) -> hint.dataframe:
-        """
-        Read the table from the sql file
-        Args:
-            table_name: name of the sql table
-            file_name:  name of the sql file
-
-        Returns:
-            a pandas dataframe
-        """
-
-        sql_filename = self._sql_filename(file_name)
-        engine       = sql.create_engine(sql_filename)
-
-        return pd.read_sql(table_name, engine)
-
-    def _read_dataframe(self, files:      list,
-                              table_name: str) -> hint.dataframe:
-        """
-        Merge data into single dataframe
-
-        Args:
-            files:      list of files to combine into single dataframe
-            table_name: name of the sql table
-
-        Returns:
-            table merge across the files
-        """
-
-        dataframe0 = self._read(table_name, files[0])
-        dataframes = [dataframe0]
-
-        for file_name in files[1:]:
-            dataframe1 = self._read(table_name, file_name)
-            dataframe1 = dataframe1.iloc[1:]
-
-            dataframes.append(dataframe1)
-
-        dataframe = pd.concat(dataframes)
-        dataframe.reset_index(inplace=True, drop=True)
-        dataframe['index'] = range(len(dataframe.index))
-
-        return dataframe
-
-    def _read_dataframes(self, files: list) -> hint.dataframes:
-        """
-        Get all of the dataframes that we wish to use
-
-        Args:
-            files: list of files to combine the read on
-
-        Returns:
-            dictionary of all the dataframes we want
-        """
-
-        dataframes = {}
-
-        for table_name in self.table_names:
-            print('                {} Reading table: {}'.
+        new = {}
+        for table_name, dataframe in dataframes.items():
+            print('        {} Cutting table: {}'.
                   format(datetime.datetime.now(), table_name))
-            dataframes[table_name] = self._read_dataframe(files, table_name)
+            new[table_name] = self._cut_dataframe(dataframe)
 
-        return dataframes
+        return new
 
-    def read(self) -> dict:
+    def cut_dataframes(self) -> dict:
         """
-        Read all of the complete run data
+        Cut all the runs to the new start point
 
         Returns:
-            dictionary of run data
+            dictionary of cut runs
         """
-
-        run_files = self.get_complete_runs()
 
         data = {}
-        for run_num, files in run_files.items():
-            print('            {} Reading Run: {}'.
+        for run_num, dataframes in self.dataframes.items():
+            print('    {} Cutting Run: {}'.
                   format(datetime.datetime.now(), run_num))
-            data[run_num] = self._read_dataframes(files)
+            data[run_num] = self._cut_dataframes(dataframes)
 
         return data
 
-    def save(self) -> None:
+    @staticmethod
+    def _percent_dataframe(dataframe: hint.dataframe) -> None:
         """
-        Save the read data in python binary
+        Add percent resist column
+
+        Args:
+            dataframe: dataframe to process
 
         Effects:
-            writes the read data to a python binary
+            add percent column
         """
 
-        pickle_name = '{}.data'.format(self.base_name)
-        data        = self.read()
+        def resist(row) -> float:
+            """
+            Percent resistant of row value
+
+            Args:
+                row: row of dataframe
+
+            Returns:
+                percent resistant
+            """
+
+            ss = row[columns[2]]
+            sr = row[columns[1]]
+            rr = row[columns[0]]
+
+            total = 2*(ss + sr + rr)
+
+            if total == 0:
+                return np.nan
+            else:
+                r = 2*rr + sr
+
+                return r / total
+
+        dataframe[columns[3]] = dataframe.apply(lambda row: resist(row), axis=1)
+
+    def _percent_dataframes(self, dataframes: hint.dataframes) -> None:
+        """
+        Add percent resist column to all dataframes in a run
+
+        Args:
+            dataframes: run's dataframes
+
+        Effects:
+            add percent columns
+        """
+
+        for table_name, dataframe in dataframes.items():
+            print('        {} Calculating Percent for: {}'.
+                  format(datetime.datetime.now(), table_name))
+            self._percent_dataframe(dataframe)
+
+    def percent_dataframes(self) -> None:
+        """
+        Add percent resist column to all cut dataframes
+
+        Effects:
+            add percent columns
+        """
+
+        for run_num, dataframes in self.cut_frames.items():
+            print('    {} Calculating Percent for: {}'.
+                  format(datetime.datetime.now(), run_num))
+            self._percent_dataframes(dataframes)
+
+    def _mean_dataframe(self, table_name: str) -> hint.dataframe:
+        """
+        Get the mean of the given table over all runs
+
+        Args:
+            table_name: name of the table to compute
+
+        Returns:
+            a mean dataframe table
+        """
+
+        data_list = []
+        for data in self.cut_frames.values():
+            data_list.append(data[table_name])
+
+        concat     = pd.concat(data_list)
+        row_concat = concat.groupby(concat.index)
+
+        return row_concat.mean()
+
+    def mean_dataframes(self) -> hint.dataframes:
+        """
+        Get the mean of all the different tables
+
+        Returns:
+            tables of mean values
+        """
+
+        means = {}
+        for table_name in tables:
+            print('    {} Mean for: {}'.
+                  format(datetime.datetime.now(), table_name))
+            means[table_name] = self._mean_dataframe(table_name)
+
+        return means
+
+    def _median_dataframe(self, table_name: str) -> hint.dataframe:
+        """
+        Get the median of the given table over all runs
+
+        Args:
+            table_name: name of the table to compute
+
+        Returns:
+            a median dataframe table
+        """
+
+        data_list = []
+        for data in self.cut_frames.values():
+            data_list.append(data[table_name])
+
+        concat     = pd.concat(data_list)
+        row_concat = concat.groupby(concat.index)
+
+        return row_concat.median()
+
+    def median_dataframes(self) -> hint.dataframes:
+        """
+        Get the median of all the different tables
+
+        Returns:
+            tables of median values
+        """
+
+        medians = {}
+        for table_name in tables:
+            print('    {} Median for: {}'.
+                  format(datetime.datetime.now(), table_name))
+            medians[table_name] = self._median_dataframe(table_name)
+
+        return medians
+
+    def _std_dataframe(self, table_name: str) -> hint.dataframe:
+        """
+        Get the std of the given table over all runs
+
+        Args:
+            table_name: name of the table to compute
+
+        Returns:
+            a std dataframe table
+        """
+
+        data_list = []
+        for data in self.cut_frames.values():
+            data_list.append(data[table_name])
+
+        concat     = pd.concat(data_list)
+        row_concat = concat.groupby(concat.index)
+
+        return row_concat.std()
+
+    def std_dataframes(self) -> hint.dataframes:
+        """
+        Get the std of all the different tables
+
+        Returns:
+            tables of std values
+        """
+
+        stds = {}
+        for table_name in tables:
+            print('    {} Stds for: {}'.
+                  format(datetime.datetime.now(), table_name))
+            stds[table_name] = self._std_dataframe(table_name)
+
+        return stds
+
+    @classmethod
+    def process_data(cls, base_name: str) -> None:
+        """
+        Process the simulation data into summary tables
+
+        Args:
+            base_name:  simulation base name
+
+        Effects:
+            save the summary data
+        """
+
+        process = cls(base_name)
+
+
+        pickle_name = '{}_summary.data'.format(base_name)
+        data        = {
+            runs.summaries[0]: process.means,
+            runs.summaries[1]: process.medians,
+            runs.summaries[2]: process.stds
+        }
 
         with open(pickle_name, 'wb') as save_file:
             pickle.dump(data, save_file, protocol=pickle.HIGHEST_PROTOCOL)
 
-    @classmethod
-    def read_data(cls, base_name: str) -> None:
-        """
-        Read the simulation data to a binary file
-
-        Args:
-            base_name: simulation base name
-
-        Effects:
-            saves unified data to a file
-        """
-
-        read = cls(base_name)
-        read.save()
 
 
 for simulation_run in simulation_runs:
     print('{} Processing Simulation: {}'.
           format(datetime.datetime.now(), simulation_run))
-    ReadData.read_data(simulation_run)
+    ProcessData.process_data(simulation_run)
