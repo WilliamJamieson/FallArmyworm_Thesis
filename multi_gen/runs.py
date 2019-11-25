@@ -30,3 +30,13 @@ summaries = [
 ]
 
 start_point = 200
+
+freq     = 'freq'
+power    = 'power'
+period   = 'period'
+primary  = 'primary'
+genotype = 'genotype'
+comb     = 'comb'
+
+reg = 'regular'
+log = 'log'
