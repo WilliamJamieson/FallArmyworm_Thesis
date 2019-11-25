@@ -140,5 +140,8 @@ simulation_data/*/*.html
 simulation_data/*.tar.gz
 simulation_data/*.zip
 
+multi_gen/*.data
+multi_gen/data/*.tar.gz
+
 models/*.graph
 plots/*.html
