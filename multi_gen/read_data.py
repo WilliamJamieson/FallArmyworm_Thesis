@@ -291,7 +291,7 @@ class ReadData(object):
         read.save()
 
 
-for simulation_run in simulation_runs:
+for simulation_run in runs.mix:
     print('{} Processing Simulation: {}'.
           format(datetime.datetime.now(), simulation_run))
     ReadData.read_data(simulation_run)

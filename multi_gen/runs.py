@@ -9,6 +9,11 @@ runs = [
     'susceptible_sim_100_bt_low',
 ]
 
+mix = [
+    'mix_sim_90_bt_0_D_0_cannib_high',
+    'mix_sim_90_bt_0_D_0_cannib_low',
+]
+
 tables = [
     '(0,)_egg',
     '(0,)_larva',
@@ -40,3 +45,8 @@ comb     = 'comb'
 
 reg = 'regular'
 log = 'log'
+
+observed = 'observed'
+trend    = 'trend'
+season   = 'seasonal'
+resid    = 'residual'
