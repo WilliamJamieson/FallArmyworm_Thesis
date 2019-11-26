@@ -19,11 +19,11 @@ import multi_gen.runs as runs
 
 simulation_runs = runs.runs
 
-plot_width  = 800
+plot_width  = 2000
 plot_height = 500
 
 colors    = palettes.Colorblind[8]
-save_file = 'periodogram_plots.html'
+save_file = 'seasonal_plots.html'
 
 plt.output_file(save_file)
 
@@ -147,14 +147,128 @@ class PlotData(object):
                        title:     str):
         """
         Plot a seasonal dataframe
+
         Args:
-            dataframe:
-            columns:
-            title:
+            dataframe: dataframe to plot
+            columns:   list of columns to plot
+            title:     title of plot
 
         Returns:
-
+            a plot
         """
 
+        reg_plot            = plt.figure(plot_height=plot_height,
+                                         plot_width=plot_width)
+        reg_plot.title.text = title
+        reg_plot.xaxis.axis_label = 'time (days)'
+        reg_plot.yaxis.axis_label = 'population'
 
-resistant_sim = Seasonal(simulation_runs[0], 82).seasonal()
+        for index, column in enumerate(columns):
+            reg_plot.line(dataframe.index, dataframe[column],
+                          line_width=line_width,
+                          color=colors[index],
+                          legend=column)
+
+        reg_plot.legend.location = "top_right"
+
+        reg_plot.legend.label_text_font_size = legend_font_size
+
+        reg_plot.title.text_font_size = title_font_size
+        reg_plot.yaxis.axis_line_width = axis_line_width
+        reg_plot.xaxis.axis_line_width = axis_line_width
+        reg_plot.yaxis.axis_label_text_font_size = axis_font_size
+        reg_plot.xaxis.axis_label_text_font_size = axis_font_size
+        reg_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+        reg_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+        reg_plot.ygrid.grid_line_width = grid_line_width
+        reg_plot.xgrid.grid_line_width = grid_line_width
+
+        return reg_plot
+
+    def plot_seasonal(self, dataframes: hint.dataframes,
+                            columns:    list,
+                            title:      str) -> dict:
+        """
+        Create all of the plots for a seasonal decomposition
+        Args:
+            dataframes: dataframes of the decomposition
+            columns:    columns to plot
+            title:      base title
+
+        Returns:
+            dictionary of plots
+        """
+
+        decomp = {}
+        for decomp_title, dataframe in dataframes.items():
+            plot_title = '{} {}'.format(title, decomp_title)
+            decomp[decomp_title] = self._plot_seasonal(dataframe,
+                                                       columns,
+                                                       plot_title)
+
+        return decomp
+
+    def plot_seasonals(self, dataframes: dict,
+                             columns:    list,
+                             title:      str) -> dict:
+        """
+        Create all of the decomposition plots for all of the life stages
+
+        Args:
+            dataframes: dataframes of the decomposition
+            columns:    columns to plot
+            title:      base title
+
+        Returns:
+            dictionary of plots
+        """
+
+        decomp = {}
+        for table_name, data in dataframes.items():
+            name = table_name.split('_')[1]
+            plot_title = '{} {}'.format(title, name)
+            decomp[table_name] = self.plot_seasonal(data,
+                                                    columns,
+                                                    plot_title)
+
+        return decomp
+
+    def plot(self, columns: list) -> dict:
+        """
+        Plot all the seasonal decompositions
+
+        Args:
+            columns: columns to plot
+
+        Returns:
+            dictionary of plots
+        """
+
+        decomp = {}
+        for title, dataframes in self.seasonal.items():
+            decomp[title] = self.plot_seasonals(dataframes,
+                                                columns,
+                                                title)
+
+        return decomp
+
+    @classmethod
+    def create(cls, base_name: str,
+                    frequency: int,
+                    columns:   list) -> dict:
+        """
+        Create all of the seasonal plots
+
+        Args:
+            base_name: name of the simulation
+            frequency: decomposition frequency
+            columns:   list of columns to use
+
+        Returns:
+            all of the plots
+        """
+
+        dataframes = Seasonal.create(base_name, frequency)
+        plot       = cls(dataframes)
+
+        return plot.plot(columns)
