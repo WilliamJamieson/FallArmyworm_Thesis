@@ -272,3 +272,165 @@ class PlotData(object):
         plot       = cls(dataframes)
 
         return plot.plot(columns)
+
+
+@dclass.dataclass
+class PlotLowHighData(object):
+    """
+    Class to plot seasonal decompositions
+    """
+
+    seasonal_low: dict
+    seasonal_high: dict
+
+    @staticmethod
+    def _plot_seasonal(dataframe_low:  hint.dataframe,
+                       dataframe_high: hint.dataframe,
+                       columns:        list,
+                       title:          str):
+        """
+        Plot a seasonal dataframe
+
+        Args:
+            dataframe_low:  dataframe to plot low
+            dataframe_high: dataframe to plot high
+            columns:        list of columns to plot
+            title:          title of plot
+
+        Returns:
+            a plot
+        """
+
+        reg_plot            = plt.figure(plot_height=plot_height,
+                                         plot_width=plot_width)
+        reg_plot.title.text = title
+        reg_plot.xaxis.axis_label = 'time (days)'
+        reg_plot.yaxis.axis_label = 'population'
+
+        for index, column in enumerate(columns):
+            reg_plot.line(dataframe_low.index, dataframe_low[column],
+                          line_width=line_width,
+                          color=colors[index],
+                          legend='Low {}'.format(column))
+            reg_plot.line(dataframe_high.index, dataframe_high[column],
+                          line_width=line_width,
+                          color=colors[index],
+                          line_dash='dashed',
+                          legend='High {}'.format(column))
+
+        reg_plot.legend.location = "top_right"
+
+        reg_plot.legend.label_text_font_size = legend_font_size
+
+        reg_plot.title.text_font_size = title_font_size
+        reg_plot.yaxis.axis_line_width = axis_line_width
+        reg_plot.xaxis.axis_line_width = axis_line_width
+        reg_plot.yaxis.axis_label_text_font_size = axis_font_size
+        reg_plot.xaxis.axis_label_text_font_size = axis_font_size
+        reg_plot.yaxis.major_label_text_font_size = axis_tick_font_size
+        reg_plot.xaxis.major_label_text_font_size = axis_tick_font_size
+        reg_plot.ygrid.grid_line_width = grid_line_width
+        reg_plot.xgrid.grid_line_width = grid_line_width
+
+        return reg_plot
+
+    def plot_seasonal(self, dataframes_low:  hint.dataframes,
+                            dataframes_high: hint.dataframes,
+                            columns:         list,
+                            title:           str) -> dict:
+        """
+        Create all of the plots for a seasonal decomposition
+        Args:
+            dataframes_low:  dataframes of the decomposition low
+            dataframes_high: dataframes of the decomposition high
+            columns:         columns to plot
+            title:           base title
+
+        Returns:
+            dictionary of plots
+        """
+
+        decomp = {}
+        for decomp_title, dataframe_low in dataframes_low.items():
+            dataframe_high = dataframes_high[decomp_title]
+            plot_title = '{} {}'.format(title, decomp_title)
+            decomp[decomp_title] = self._plot_seasonal(dataframe_low,
+                                                       dataframe_high,
+                                                       columns,
+                                                       plot_title)
+
+        return decomp
+
+    def plot_seasonals(self, dataframes_low:  dict,
+                             dataframes_high: dict,
+                             columns:         list,
+                             title:           str) -> dict:
+        """
+        Create all of the decomposition plots for all of the life stages
+
+        Args:
+            dataframes_low:  dataframes of the decomposition low
+            dataframes_high: dataframes of the decomposition high
+            columns:         columns to plot
+            title:           base title
+
+        Returns:
+            dictionary of plots
+        """
+
+        decomp = {}
+        for table_name, data_low in dataframes_low.items():
+            data_high = dataframes_high[table_name]
+            name = table_name.split('_')[1]
+            plot_title = '{} {}'.format(title, name)
+            decomp[table_name] = self.plot_seasonal(data_low,
+                                                    data_high,
+                                                    columns,
+                                                    plot_title)
+
+        return decomp
+
+    def plot(self, columns: list) -> dict:
+        """
+        Plot all the seasonal decompositions
+
+        Args:
+            columns: columns to plot
+
+        Returns:
+            dictionary of plots
+        """
+
+        decomp = {}
+        for title, dataframes_low in self.seasonal_low.items():
+            dataframes_high = self.seasonal_high[title]
+            decomp[title] = self.plot_seasonals(dataframes_low,
+                                                dataframes_high,
+                                                columns,
+                                                title)
+
+        return decomp
+
+    @classmethod
+    def create(cls, base_name_low:  str,
+                    base_name_high: str,
+                    frequency:      int,
+                    columns:        list) -> dict:
+        """
+        Create all of the seasonal plots
+
+        Args:
+            base_name_low:  name of the simulation low
+            base_name_high: name of the simulation low
+            frequency:      decomposition frequency
+            columns:        list of columns to use
+
+        Returns:
+            all of the plots
+        """
+
+        dataframes_low  = Seasonal.create(base_name_low, frequency)
+        dataframes_high = Seasonal.create(base_name_high, frequency)
+        plot       = cls(dataframes_low, dataframes_high)
+
+        return plot.plot(columns)
