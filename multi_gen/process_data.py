@@ -285,7 +285,6 @@ class ProcessData(object):
 
         process = cls(base_name)
 
-
         pickle_name = '{}_summary.data'.format(base_name)
         data        = {
             runs.summaries[0]: process.means,

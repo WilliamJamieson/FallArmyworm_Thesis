@@ -25,7 +25,7 @@ columns = [
     'genotype_resistant',
     'genotype_heterozygous',
     'genotype_susceptible',
-    'percent'
+    # 'percent'
 ]
 
 summaries = [

@@ -1,5 +1,5 @@
 import bokeh.plotting as plt
-import bokeh.layouts      as lay
+import bokeh.layouts  as lay
 
 import multi_gen.period as period
 import multi_gen.runs   as runs
