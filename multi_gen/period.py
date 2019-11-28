@@ -14,6 +14,8 @@ import scipy.signal as signal
 
 import source.hint as hint
 
+import parameters.model_parameters as param
+
 import multi_gen.runs as runs
 
 simulation_runs = runs.runs
@@ -388,11 +390,11 @@ class PlotLowHighData(object):
         reg_plot.line(x=runs.freq, y=runs.power, source=source_low,
                       line_width=line_width,
                       color=colors[0],
-                      legend='Low Survival')
+                      legend='Survival: {}'.format(np.round(param.larva_prob_bt_low_ss, 3)))
         reg_plot.line(x=runs.freq, y=runs.power, source=source_high,
                       line_width=line_width,
                       color=colors[1],
-                      legend='High Survival')
+                      legend='Survival: {}'.format(np.round(param.larva_prob_bt_high_ss, 3)))
 
         reg_hover = tools.HoverTool()
         reg_hover.tooltips = [
@@ -428,11 +430,11 @@ class PlotLowHighData(object):
         log_plot.line(x=runs.freq, y=runs.power, source=source_low,
                       line_width=line_width,
                       color=colors[0],
-                      legend='Low Survival')
+                      legend='Survival: {}'.format(np.round(param.larva_prob_bt_low_ss, 3)))
         log_plot.line(x=runs.freq, y=runs.power, source=source_high,
                       line_width=line_width,
                       color=colors[1],
-                      legend='High Survival')
+                      legend='Survival: {}'.format(np.round(param.larva_prob_bt_high_ss, 3)))
 
         log_hover = tools.HoverTool()
         log_hover.tooltips = [

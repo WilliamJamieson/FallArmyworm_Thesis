@@ -10,8 +10,12 @@ runs = [
 ]
 
 mix = [
-    'mix_sim_90_bt_0_D_0_cannib_high',
     'mix_sim_90_bt_0_D_0_cannib_low',
+    'mix_sim_90_bt_0_D_2_cannib_low',
+    'mix_sim_90_bt_0_D_4_cannib_low',
+    'mix_sim_90_bt_0_D_0_cannib_high',
+    'mix_sim_90_bt_0_D_2_cannib_high',
+    'mix_sim_90_bt_0_D_4_cannib_high',
 ]
 
 tables = [
@@ -25,7 +29,7 @@ columns = [
     'genotype_resistant',
     'genotype_heterozygous',
     'genotype_susceptible',
-    # 'percent'
+    'percent'
 ]
 
 summaries = [
