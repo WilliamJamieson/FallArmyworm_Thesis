@@ -16,6 +16,9 @@ mix = [
     'mix_sim_90_bt_0_D_0_cannib_high',
     'mix_sim_90_bt_0_D_2_cannib_high',
     'mix_sim_90_bt_0_D_4_cannib_high',
+    'mix_sim_70_bt_0_D_0_cannib_low',
+    # 'mix_sim_70_bt_0_D_2_cannib_low',
+    'mix_sim_70_bt_0_D_4_cannib_low',
 ]
 
 tables = [

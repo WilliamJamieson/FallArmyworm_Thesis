@@ -196,14 +196,12 @@ class PlotData(object):
 
         source = mdl.ColumnDataSource(dataframe)
 
-        base_title = 'for {}, main period: {}'.\
-            format(dataframe[runs.genotype].iloc[0],
-                   np.round(dataframe[runs.primary].iloc[0], 3))
+        base_title = 'Main period: {}'.\
+            format(np.round(dataframe[runs.primary].iloc[0], 3))
 
         reg_plot            = plt.figure(plot_height=plot_height,
                                          plot_width=plot_width)
-        reg_plot.title.text = '{} {}'.\
-            format(title, base_title)
+        reg_plot.title.text = base_title
         reg_plot.xaxis.axis_label = 'Frequency'
         reg_plot.yaxis.axis_label = 'Power Spectral Density'
 
@@ -234,8 +232,8 @@ class PlotData(object):
         log_plot = plt.figure(plot_height=plot_height,
                               plot_width=plot_width,
                               y_axis_type='log')
-        log_plot.title.text = '{} log-scale {}'.\
-            format(title, base_title)
+        log_plot.title.text = 'Log-scale {}'.\
+            format(base_title)
         log_plot.xaxis.axis_label = 'Frequency'
         log_plot.yaxis.axis_label = 'log(Power Spectral Density)'
 
@@ -375,15 +373,13 @@ class PlotLowHighData(object):
         source_low  = mdl.ColumnDataSource(dataframe_low)
         source_high = mdl.ColumnDataSource(dataframe_high)
 
-        base_title = 'for {}, main period: {} or {}'. \
-            format(dataframe_low[runs.genotype].iloc[0],
-                   np.round(dataframe_low[runs.primary].iloc[0], 3),
+        base_title = 'Main period: Low: {} or High: {}'. \
+            format(np.round(dataframe_low[runs.primary].iloc[0], 3),
                    np.round(dataframe_high[runs.primary].iloc[0], 3))
 
         reg_plot            = plt.figure(plot_height=plot_height,
                                          plot_width=plot_width)
-        reg_plot.title.text = '{} {}'. \
-            format(title, base_title)
+        reg_plot.title.text = base_title
         reg_plot.xaxis.axis_label = 'Frequency'
         reg_plot.yaxis.axis_label = 'Power Spectral Density'
 
@@ -422,8 +418,8 @@ class PlotLowHighData(object):
         log_plot = plt.figure(plot_height=plot_height,
                               plot_width=plot_width,
                               y_axis_type='log')
-        log_plot.title.text = '{} log-scale {}'. \
-            format(title, base_title)
+        log_plot.title.text = 'Log-scale {}'. \
+            format(base_title)
         log_plot.xaxis.axis_label = 'Frequency'
         log_plot.yaxis.axis_label = 'log(Power Spectral Density)'
 
