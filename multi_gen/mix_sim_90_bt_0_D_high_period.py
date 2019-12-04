@@ -11,7 +11,7 @@ import multi_gen.period as period
 import multi_gen.runs   as runs
 
 colors    = palettes.Colorblind[8]
-save_file = 'mix_sim_90_bt_0_D_low_period.html'
+save_file = 'mix_sim_90_bt_0_D_high_period.html'
 plt.output_file(save_file)
 
 plot_width  = 800
@@ -30,23 +30,23 @@ axis_font_size      = '12pt'
 axis_tick_font_size = '10pt'
 
 
-sim_0 = period.Periodogram.create(runs.low_90[0])
-sim_1 = period.Periodogram.create(runs.low_90[1])
-sim_2 = period.Periodogram.create(runs.low_90[2])
-sim_3 = period.Periodogram.create(runs.low_90[3])
-sim_4 = period.Periodogram.create(runs.low_90[4])
+sim_0 = period.Periodogram.create(runs.high_90[0])
+sim_1 = period.Periodogram.create(runs.high_90[1])
+sim_2 = period.Periodogram.create(runs.high_90[2])
+sim_3 = period.Periodogram.create(runs.high_90[3])
+sim_4 = period.Periodogram.create(runs.high_90[4])
 
-source_0 = mdl.ColumnDataSource(sim_0[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
-source_1 = mdl.ColumnDataSource(sim_1[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
-source_2 = mdl.ColumnDataSource(sim_2[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
-source_3 = mdl.ColumnDataSource(sim_3[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
+source_0 = mdl.ColumnDataSource(sim_0[runs.summaries[0]][runs.tables[2]][runs.columns[2]])
+source_1 = mdl.ColumnDataSource(sim_1[runs.summaries[0]][runs.tables[2]][runs.columns[2]])
+source_2 = mdl.ColumnDataSource(sim_2[runs.summaries[0]][runs.tables[2]][runs.columns[2]])
+source_3 = mdl.ColumnDataSource(sim_3[runs.summaries[0]][runs.tables[2]][runs.columns[2]])
 source_4 = mdl.ColumnDataSource(sim_4[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
 
 
 reg_plot = plt.figure(plot_height=plot_height,
                       plot_width=plot_width)
 reg_plot.title.text = 'Periodogram 90% Bt, {} Survival'.\
-    format(np.round(param.larva_prob_bt_low_ss, 3))
+    format(np.round(param.larva_prob_bt_high_ss, 3))
 reg_plot.xaxis.axis_label = 'Frequency'
 reg_plot.yaxis.axis_label = 'Power Spectral Density'
 
@@ -65,15 +65,15 @@ reg_plot.yaxis.axis_label = 'Power Spectral Density'
 #               color=colors[2],
 #               legend='Cannibalism: {}'.format(np.round(param.cannib_2, 3)))
 
-# reg_plot.line(x=runs.freq, y=runs.power, source=source_3,
-#               line_width=line_width,
-#               color=colors[3],
-#               legend='Cannibalism: {}'.format(np.round(param.cannib_3, 3)))
-
-reg_plot.line(x=runs.freq, y=runs.power, source=source_4,
+reg_plot.line(x=runs.freq, y=runs.power, source=source_3,
               line_width=line_width,
-              color=colors[4],
-              legend='Cannibalism: {}'.format(np.round(param.cannib_4, 3)))
+              color=colors[3],
+              legend='Cannibalism: {}'.format(np.round(param.cannib_3, 3)))
+
+# reg_plot.line(x=runs.freq, y=runs.power, source=source_4,
+#               line_width=line_width,
+#               color=colors[4],
+#               legend='Cannibalism: {}'.format(np.round(param.cannib_4, 3)))
 
 reg_hover = tools.HoverTool()
 reg_hover.tooltips = [

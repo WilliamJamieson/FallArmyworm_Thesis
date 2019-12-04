@@ -30,12 +30,16 @@ axis_font_size      = '12pt'
 axis_tick_font_size = '10pt'
 
 
-sim_0 = period.Periodogram.create(runs.mix[6])
-# sim_2 = period.Periodogram.create(runs.mix[1])
-sim_4 = period.Periodogram.create(runs.mix[7])
+sim_0 = period.Periodogram.create(runs.low_70[0])
+sim_1 = period.Periodogram.create(runs.low_70[1])
+sim_2 = period.Periodogram.create(runs.low_70[2])
+sim_3 = period.Periodogram.create(runs.low_70[3])
+sim_4 = period.Periodogram.create(runs.low_70[4])
 
-source_0 = mdl.ColumnDataSource(sim_0[runs.summaries[0]][runs.tables[2]][runs.columns[2]])
-# source_2 = mdl.ColumnDataSource(sim_2[runs.summaries[0]][runs.tables[2]][runs.columns[2]])
+source_0 = mdl.ColumnDataSource(sim_0[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
+source_1 = mdl.ColumnDataSource(sim_1[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
+source_2 = mdl.ColumnDataSource(sim_2[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
+source_3 = mdl.ColumnDataSource(sim_3[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
 source_4 = mdl.ColumnDataSource(sim_4[runs.summaries[0]][runs.tables[2]][runs.columns[0]])
 
 
@@ -51,11 +55,21 @@ reg_plot.yaxis.axis_label = 'Power Spectral Density'
 #               color=colors[0],
 #               legend='Cannibalism: {}'.format(np.round(param.cannib_0, 3)))
 
+# reg_plot.line(x=runs.freq, y=runs.power, source=source_1,
+#               line_width=line_width,
+#               color=colors[1],
+#               legend='Cannibalism: {}'.format(np.round(param.cannib_1, 3)))
+
 # reg_plot.line(x=runs.freq, y=runs.power, source=source_2,
 #               line_width=line_width,
 #               color=colors[2],
 #               legend='Cannibalism: {}'.format(np.round(param.cannib_2, 3)))
-#
+
+# reg_plot.line(x=runs.freq, y=runs.power, source=source_3,
+#               line_width=line_width,
+#               color=colors[3],
+#               legend='Cannibalism: {}'.format(np.round(param.cannib_3, 3)))
+
 reg_plot.line(x=runs.freq, y=runs.power, source=source_4,
               line_width=line_width,
               color=colors[4],

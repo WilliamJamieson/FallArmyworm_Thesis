@@ -11,13 +11,43 @@ runs = [
 
 mix = [
     'mix_sim_90_bt_0_D_0_cannib_low',
+    'mix_sim_90_bt_0_D_1_cannib_low',
     'mix_sim_90_bt_0_D_2_cannib_low',
+    'mix_sim_90_bt_0_D_3_cannib_low',
     'mix_sim_90_bt_0_D_4_cannib_low',
     'mix_sim_90_bt_0_D_0_cannib_high',
+    'mix_sim_90_bt_0_D_1_cannib_high',
     'mix_sim_90_bt_0_D_2_cannib_high',
+    'mix_sim_90_bt_0_D_3_cannib_high',
     'mix_sim_90_bt_0_D_4_cannib_high',
     'mix_sim_70_bt_0_D_0_cannib_low',
-    # 'mix_sim_70_bt_0_D_2_cannib_low',
+    'mix_sim_70_bt_0_D_1_cannib_low',
+    'mix_sim_70_bt_0_D_2_cannib_low',
+    'mix_sim_70_bt_0_D_3_cannib_low',
+    'mix_sim_70_bt_0_D_4_cannib_low',
+]
+
+low_90 = [
+    'mix_sim_90_bt_0_D_0_cannib_low',
+    'mix_sim_90_bt_0_D_1_cannib_low',
+    'mix_sim_90_bt_0_D_2_cannib_low',
+    'mix_sim_90_bt_0_D_3_cannib_low',
+    'mix_sim_90_bt_0_D_4_cannib_low',
+]
+
+high_90 = [
+    'mix_sim_90_bt_0_D_0_cannib_high',
+    'mix_sim_90_bt_0_D_1_cannib_high',
+    'mix_sim_90_bt_0_D_2_cannib_high',
+    'mix_sim_90_bt_0_D_3_cannib_high',
+    'mix_sim_90_bt_0_D_4_cannib_high',
+]
+
+low_70 = [
+    'mix_sim_70_bt_0_D_0_cannib_low',
+    'mix_sim_70_bt_0_D_1_cannib_low',
+    'mix_sim_70_bt_0_D_2_cannib_low',
+    'mix_sim_70_bt_0_D_3_cannib_low',
     'mix_sim_70_bt_0_D_4_cannib_low',
 ]
 

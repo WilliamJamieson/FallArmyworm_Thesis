@@ -297,7 +297,7 @@ class ProcessData(object):
 
 
 
-for simulation_run in runs.mix[6:]:
+for simulation_run in runs.mix:
     print('{} Processing Simulation: {}'.
           format(datetime.datetime.now(), simulation_run))
     ProcessData.process_data(simulation_run)
